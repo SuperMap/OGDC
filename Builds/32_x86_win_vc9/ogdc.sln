@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Base", "Base\Base.vcproj", "{50201DBF-3553-4965-BC36-FC195ACD9C45}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Element", "Element\Element.vcproj", "{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{50201DBF-3553-4965-BC36-FC195ACD9C45} = {50201DBF-3553-4965-BC36-FC195ACD9C45}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OGDC", "OGDC\OGDC.vcproj", "{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D} = {B429F86F-0F13-46B2-8205-CF0D30AE9C7D}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Viewer", "Viewer\Viewer.vcproj", "{797676CC-97B3-4478-A524-7A64DCC0AF14}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OGDCProviderMdb", "OGDCProviderMdb\OGDCProviderMdb.vcproj", "{F244E632-2947-43FA-B3E6-826E004069C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		DebugTest|Win32 = DebugTest|Win32
+		Release|Win32 = Release|Win32
+		ReleaseTest|Win32 = ReleaseTest|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{50201DBF-3553-4965-BC36-FC195ACD9C45}.Debug|Win32.ActiveCfg = Debug|Win32
+		{50201DBF-3553-4965-BC36-FC195ACD9C45}.Debug|Win32.Build.0 = Debug|Win32
+		{50201DBF-3553-4965-BC36-FC195ACD9C45}.DebugTest|Win32.ActiveCfg = Debug_Unicode|x64
+		{50201DBF-3553-4965-BC36-FC195ACD9C45}.Release|Win32.ActiveCfg = Release|Win32
+		{50201DBF-3553-4965-BC36-FC195ACD9C45}.Release|Win32.Build.0 = Release|Win32
+		{50201DBF-3553-4965-BC36-FC195ACD9C45}.ReleaseTest|Win32.ActiveCfg = Release_Unicode|x64
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}.Debug|Win32.Build.0 = Debug|Win32
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}.DebugTest|Win32.ActiveCfg = Debug_Unicode|x64
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}.Release|Win32.ActiveCfg = Release|Win32
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}.Release|Win32.Build.0 = Release|Win32
+		{B429F86F-0F13-46B2-8205-CF0D30AE9C7D}.ReleaseTest|Win32.ActiveCfg = Release_Unicode|x64
+		{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}.Debug|Win32.Build.0 = Debug|Win32
+		{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}.DebugTest|Win32.ActiveCfg = Debug_Unicode|x64
+		{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}.Release|Win32.ActiveCfg = Release|Win32
+		{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}.Release|Win32.Build.0 = Release|Win32
+		{7379D26D-9B22-4E36-86DA-7AA7CBCDE2F3}.ReleaseTest|Win32.ActiveCfg = Release_Unicode|x64
+		{797676CC-97B3-4478-A524-7A64DCC0AF14}.Debug|Win32.ActiveCfg = Debug|Win32
+		{797676CC-97B3-4478-A524-7A64DCC0AF14}.Debug|Win32.Build.0 = Debug|Win32
+		{797676CC-97B3-4478-A524-7A64DCC0AF14}.DebugTest|Win32.ActiveCfg = Debug_Unicode|x64
+		{797676CC-97B3-4478-A524-7A64DCC0AF14}.Release|Win32.ActiveCfg = Release|Win32
+		{797676CC-97B3-4478-A524-7A64DCC0AF14}.Release|Win32.Build.0 = Release|Win32
+		{797676CC-97B3-4478-A524-7A64DCC0AF14}.ReleaseTest|Win32.ActiveCfg = Release_Unicode|x64
+		{F244E632-2947-43FA-B3E6-826E004069C8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.Debug|Win32.Build.0 = Debug|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.DebugTest|Win32.ActiveCfg = Debug|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.DebugTest|Win32.Build.0 = Debug|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.Release|Win32.ActiveCfg = Release|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.Release|Win32.Build.0 = Release|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.ReleaseTest|Win32.ActiveCfg = Release|Win32
+		{F244E632-2947-43FA-B3E6-826E004069C8}.ReleaseTest|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
