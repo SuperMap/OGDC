@@ -1,0 +1,10 @@
+﻿SampleData 是 Viewer.exe 的示例数据
+
+下载地址：http://www.supermap.com.cn/downloadp/6.1.2/SampleData.rar
+
+下载解压后放在 SampleData 目录下，目录结构：
+SampleData --
+           |-MDB
+           |-SDB
+           |-SIT
+           |-UDB
