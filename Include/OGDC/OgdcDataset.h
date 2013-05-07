@@ -60,7 +60,7 @@ public:
 		Line3D		=103,
 		//! \brief 三维面
 		Region3D	=105,
-		//! 复合D数据集
+		//! 复合CAD数据集
 		Compound	=149,	
 	};
 	
