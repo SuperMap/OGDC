@@ -25,6 +25,9 @@
 #include "Element/OgdcElemMultiPoint.h"
 #include "Element/OgdcElemLine.h"
 #include "Element/OgdcElemText.h"
+#include "Element/OgdcElemPoint3D.h"
+#include "Element/OgdcElemLine3D.h"
+#include "Element/OgdcElemRegion3D.h"
 
 class CDrawing  
 {
@@ -56,6 +59,10 @@ public:
 
 	//! 地理坐标到设备坐标转换。
 	BOOL GeoToDevice(OgdcPoint2D* pPoint2Ds, int nCount, CPoint*& pPoints);	
+
+	//! 地理坐标到设备坐标转换。
+	BOOL GeoToDevice(OgdcPoint3D* pPoint3Ds, int nCount, CPoint*& pPoints);	
+
 	//! 设备坐标到地理坐标转换。
 	BOOL DeviceToGeo(CPoint* pPoints, int nCount, OgdcPoint2D*& pPoint2Ds);
 
@@ -70,6 +77,9 @@ protected:
 	BOOL DrawElement(CDC* pDC, OgdcElemLine* pElemLine, BOOL bSelected=FALSE);
 	BOOL DrawElement(CDC* pDC, OgdcElemRegion* pElemRegion, BOOL bSelected=FALSE);
 	BOOL DrawElement(CDC* pDC, OgdcElemText* pElemText, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, OgdcElemPoint3D* pElemPoint3D, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, OgdcElemLine3D* pElemLine3D, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, OgdcElemRegion3D* pElemRegion3D, BOOL bSelected=FALSE);
 
 	unsigned short BitCount(PixelFormat pixelFormat);
 	BOOL DrawRasterBlock(CDC* pDC, OgdcRasterBlock* pIBlock, OgdcDatasetRaster* pDatasetR, BITMAPINFO* pBitmapInfo);

@@ -109,7 +109,7 @@ protected:
 	//! \return 引擎插件句柄有效就返回true，否则就返回false。。
 	OgdcBool CheckProvider(void* hHandle, OgdcProvider& provider);	
 	
-protected:
+public:
 	//! \brief 动态加载的OGDC引擎插件数组。
 	OgdcArray<OgdcProvider> m_providers;
 

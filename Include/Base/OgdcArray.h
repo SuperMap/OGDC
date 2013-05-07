@@ -21,7 +21,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "ogdcdefs.h"
+#include "Base/ogdcdefs.h"
 #include <vector>
 #include <algorithm>
 

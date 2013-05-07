@@ -203,6 +203,12 @@ public:
 	//! \param 		nNewValue 蓝颜色分量的新值 		
 	void SetBlue(OgdcInt nIndex,OgdcUchar nNewValue);
 
+	//! \brief     设置是否使用水平线
+	void SetUsingWaterLevel(OgdcBool isUsing);
+
+	//! \brief     获取是否使用水平线
+	OgdcBool GetUsingWaterLevel();
+
 private:
 	OgdcColor InterColor(OgdcColorset &colorset,OgdcDouble dUpperLimit,OgdcDouble dLowerLimit,OgdcDouble dValue) const;
 

@@ -93,12 +93,12 @@ public:
 	//! \param x		x坐标值
 	//! \param y		y坐标值
 	//! \param nPixel	像素颜色值
-	OgdcBool SetPixel(OgdcInt x,OgdcInt y,OgdcInt nPixel);
+	OgdcBool SetPixel(OgdcInt x,OgdcInt y,OgdcUint nPixel);
 	
 	//! \brief  获取像素颜色
 	//! \param x		x坐标值
 	//! \param y		y坐标值
-	OgdcInt GetPixel(OgdcInt x,OgdcInt y);
+	OgdcUint GetPixel(OgdcInt x,OgdcInt y);
 	
 	//! \brief  设置像素值
 	//! \param x		x坐标值
@@ -152,6 +152,10 @@ public:
 	//! \brief  获取栅格块最大值
 	//! \param nNoValue 无值[in]
 	OgdcDouble GetMaxValue(OgdcInt nNoValue = OGDC_NOVALUE);
+
+	//! \brief Block的版本号,配合版本管理时使用
+	OgdcInt GetVersionID() { return m_nVersionID; }
+	void SetVersionID(OgdcInt nVersionID) { m_nVersionID = nVersionID; }
 	
 	//{{管理引用基数,在使用ImgBlockRef操作ImgBlock时,记录当前ImgBlock的被引用次数, 
 	//! \brief 增加引用基数
@@ -303,7 +307,7 @@ private:
 
 	//! \brief  判断是否修改
 	OgdcBool m_bModified;    
-
+	OgdcInt m_nVersionID;
 	//! \brief 数据块引用基数
 	OgdcInt m_nRefCount;
   };

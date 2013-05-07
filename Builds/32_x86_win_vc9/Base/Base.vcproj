@@ -1040,6 +1040,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\Src\Base\OgdcHistogram.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\Src\Base\OgdcPlatform.cpp"
 				>
 			</File>
@@ -2150,6 +2154,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\Include\Base\ogdcexports.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\Include\Base\OgdcHistogram.h"
 				>
 			</File>
 			<File

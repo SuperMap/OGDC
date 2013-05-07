@@ -27,6 +27,7 @@
 #endif
 #include <string>
 #include "OgdcArray.h"
+#define WhiteBox_Ignore
 
 #ifdef _UGUNICODE
 namespace icu_3_8
@@ -496,7 +497,7 @@ public:
 	//! \brief 把OgdcUint型的数据转化为OgdcMBString型字符串
 	static OgdcMBString From(OgdcUint nVal, OgdcUint base=10);
 	//! \brief 考虑到OgdcArray.GetSize(),返回了OgdcSizeT,在Linux上该类型为unsigned long,特为此添加转换函数
-	static OgdcMBString From(unsigned long nVal, OgdcUint base=10);
+	static OgdcMBString From(unsigned long nVal, OgdcUint base=10);	WhiteBox_Ignore
 
 	//Convert string to a integer number, assuming given number base
 	//! \brief 把字符串转换为OgdcInt型数值
@@ -941,7 +942,7 @@ public:
 	//! \brief 把OgdcUint型的数据转化为OgdcUnicodeString型字符串
 	static OgdcUnicodeString From(OgdcUint nVal, OgdcUint base=10);
 	//! \brief 考虑到OgdcArray.GetSize(),返回了OgdcSizeT,在Linux上该类型为unsigned long,特为此添加转换函数
-	static OgdcUnicodeString From(unsigned long nVal, OgdcUint base=10);
+	static OgdcUnicodeString From(unsigned long nVal, OgdcUint base=10);	WhiteBox_Ignore
 
 	//Convert string to a integer number, assuming given number base
 	//! \brief 把字符串转换为OgdcInt型数值

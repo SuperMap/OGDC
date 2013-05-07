@@ -90,6 +90,18 @@ BOOL CDrawing::DrawElement(CDC* pDC, OgdcElement* pElement, BOOL bSelected)
 		{
 			return DrawElement(pDC,(OgdcElemText*)pElement, bSelected);
 		}
+	case OgdcElement::ElemPoint3D:
+		{
+			return DrawElement(pDC,(OgdcElemPoint3D*)pElement, bSelected);
+		}
+	case OgdcElement::ElemLine3D:
+		{
+			return DrawElement(pDC,(OgdcElemLine3D*)pElement, bSelected);
+		}
+	case OgdcElement::ElemRegion3D:
+		{
+			return DrawElement(pDC,(OgdcElemRegion3D*)pElement, bSelected);
+		}
 	default:
 		{
 			break;
@@ -696,6 +708,80 @@ BOOL CDrawing::DrawElement(CDC* pDC, OgdcElemText* pElemText, BOOL bSelected)
 	return TRUE;
 }
 
+BOOL CDrawing::DrawElement(CDC* pDC, OgdcElemPoint3D* pElemPoint3D, BOOL bSelected)
+{
+	OGDCASSERT(!OGDCIS0(m_dCoordRatio) && !m_rcClient.IsRectEmpty());
+
+	OgdcPoint3D* pPoint3Ds = &pElemPoint3D->m_point;
+	OgdcPoint2D pnt;
+	pnt.x = pPoint3Ds->x;
+	pnt.y = pPoint3Ds->y;
+	CPoint* pPoints = NULL;
+	if(!GeoToDevice(&pnt, 1, pPoints))
+	{
+		return FALSE;
+	}
+
+	CPen* pPen = pDC->GetCurrentPen();
+	COLORREF color = RGB(0,0,0);
+	if(pPen != NULL)
+	{		
+		LOGPEN logPen;
+		pPen->GetLogPen(&logPen);
+		color = logPen.lopnColor;			
+	}
+
+	CBrush brush(color);
+	CBrush* pOldBrush = pDC->SelectObject(&brush);
+
+	int nRadius = m_curStyle.m_nMarkerSize / 2;
+	pDC->Ellipse(CRect(pPoints[0].x-nRadius, pPoints[0].y-nRadius, pPoints[0].x+nRadius, pPoints[0].y+nRadius));
+
+	pDC->SelectObject(pOldBrush);
+
+	delete[] pPoints;
+	pPoints = NULL;
+	return TRUE;
+}
+
+BOOL CDrawing::DrawElement(CDC* pDC, OgdcElemLine3D* pElemLine3D, BOOL bSelected)
+{
+	OGDCASSERT(!OGDCIS0(m_dCoordRatio) && !m_rcClient.IsRectEmpty());
+
+	OgdcPoint3D* pPoint3Ds = pElemLine3D->m_points.GetData();
+	CPoint* pPoints = NULL;
+	if(!GeoToDevice(pPoint3Ds, pElemLine3D->m_points.GetSize(), pPoints))
+	{
+		return FALSE;
+	}
+
+	pDC->PolyPolyline(pPoints, (unsigned long *)pElemLine3D->m_polyCounts.GetData(), pElemLine3D->m_polyCounts.GetSize());
+
+	delete[] pPoints;
+	pPoints = NULL;
+
+	return TRUE;
+}
+BOOL CDrawing::DrawElement(CDC* pDC, OgdcElemRegion3D* pElemRegion3D, BOOL bSelected)
+{
+	OGDCASSERT(!OGDCIS0(m_dCoordRatio) && !m_rcClient.IsRectEmpty());
+
+	OgdcPoint3D* pPoint3Ds = pElemRegion3D->m_points.GetData();
+	CPoint* pPoints = NULL;
+	if(!GeoToDevice(pPoint3Ds, pElemRegion3D->m_points.GetSize(), pPoints))
+	{
+		return FALSE;
+	}
+
+	pDC->PolyPolygon(pPoints, pElemRegion3D->m_polyCounts.GetData(), pElemRegion3D->m_polyCounts.GetSize());
+
+	delete[] pPoints;
+	pPoints = NULL;
+
+	return TRUE;
+}
+
+
 //! 地理坐标到设备坐标转换。
 BOOL CDrawing::GeoToDevice(OgdcPoint2D* pPoint2Ds, int nCount, CPoint*& pPoints)
 {
@@ -718,6 +804,31 @@ BOOL CDrawing::GeoToDevice(OgdcPoint2D* pPoint2Ds, int nCount, CPoint*& pPoints)
 	{
 		pPoints[i].x = OGDCROUND((pPoint2Ds[i].x - m_rcViewBounds.left)/m_dCoordRatio);
 		pPoints[i].y = OGDCROUND((m_rcViewBounds.top - pPoint2Ds[i].y)/m_dCoordRatio);
+	}
+	return TRUE;
+}
+
+BOOL CDrawing::GeoToDevice(OgdcPoint3D* pPoint3Ds, int nCount, CPoint*& pPoints)	
+{
+	OGDCASSERT(!OGDCIS0(m_dCoordRatio) && !m_rcClient.IsRectEmpty() && 
+		!m_rcViewBounds.IsEmpty());
+
+	if(nCount <=0 || pPoint3Ds == NULL)
+	{
+		return FALSE;
+	}
+
+	if(pPoints != NULL)
+	{
+		delete[] pPoints;
+		pPoints = NULL;
+	}
+
+	pPoints = new CPoint[nCount];
+	for(int i=0;i<nCount;i++)
+	{
+		pPoints[i].x = OGDCROUND((pPoint3Ds[i].x - m_rcViewBounds.left)/m_dCoordRatio);
+		pPoints[i].y = OGDCROUND((m_rcViewBounds.top - pPoint3Ds[i].y)/m_dCoordRatio);
 	}
 	return TRUE;
 }

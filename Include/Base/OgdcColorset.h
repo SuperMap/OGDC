@@ -102,6 +102,7 @@ public:
 	void SetColorSize(OgdcInt nSize);
 
 public:
+	OgdcInt GetSize() const { return (OgdcInt)OgdcArray<OgdcColor>::GetSize(); };
 	//! \brief 		指定颜色生成随机渐变色
 	//! \param 		nCount  颜色数
 	//! \param 		nIndex  颜色集类型

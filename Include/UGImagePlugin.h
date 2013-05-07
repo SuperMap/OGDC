@@ -1,7 +1,6 @@
 // UGImagePlugIn.h: interface for the UGImagePulgIn class.
 //
 //////////////////////////////////////////////////////////////////////
-
 #if !defined(AFX_UGIMAGEPLUGIN_H__8C978A6D_1011_4B0F_A221_C9BEDA07CCD8__INCLUDED_)
 #define AFX_UGIMAGEPLUGIN_H__8C978A6D_1011_4B0F_A221_C9BEDA07CCD8__INCLUDED_
 
@@ -13,8 +12,15 @@
 	#define IMAGEEXPORT
 #endif
 
+#include "Stream/ugplatform.h"
 #include "Stream/ugdefs.h"
+#include "Toolkit/UGPalette.h"
 #include "NetToolkit/UGDownloadListener.h"
+#include "Geometry/UGDataCodec.h"
+#include "FileParser/UGExchangeFileType.h"
+#include "FileParser/UGRasterConfigParams.h"
+#include "FileParser/UGFileParseRaster.h"
+
 
 //! \brief 象素格式类型.
 enum ImagePixelFormat 
@@ -86,14 +92,38 @@ enum PluginClass {
 	PC_GLOBALCACHE,
 	PC_COMMON,
 	PC_GECACHE,
+	PC_WEBCACHE,
+	PC_ECW,
 };
 
 using namespace UGC;
 
+namespace UGC
+{	
+
+
+	typedef void (UGSTDCALL * DownloadResponseFunc) (UGDownloadTileInfo result, UGlong pWnd);
+	typedef void (UGSTDCALL * DataChangedProc) (const UGDataChangeInfo& ChangeInfo, UGlong pWnd);
+}
+
 class IMAGEEXPORT UGImagePlugin : public UGC::UGDownloadListener
 {
 public:
-	UGImagePlugin(){m_nCurBandIndex = -1; m_dNoValue = -9999; m_nPluginClass = PC_UNKNOWN; m_bBackTransparent = FALSE;}
+
+	//! \brief 图层服务类型。
+	enum UGImageServiceType
+	{	
+		//! \brief 空图层
+		IST_NONE				= 0,	
+		//! \brief SuperMap 影像文件缓存数据图层
+		IST_FILE				= 1, 
+		//! \brief WMS图层
+		IST_WMS					= 2,
+		//! \brief WMTS图层
+		IST_WMTS				= 3,
+	};
+
+	UGImagePlugin(){m_nCurBandIndex = -1; m_dNoValue = -9999; m_nPluginClass = PC_UNKNOWN; m_bBackTransparent = FALSE; m_nImageServiceType = IST_NONE;}
 	virtual ~UGImagePlugin(){}
 
 public:
@@ -152,6 +182,8 @@ public:
 	//! \remarks 对于多分辨率的图象，可以按照窗口大小和显示范围大小，确定图象的分辨率,从而决定从那一层取得影像数据
 	virtual bool SetViewPort(double dLeft,double dTop, double dRight, double dBottom, int nDeviceWidth, int nDeviceHeight) = 0;
 
+	virtual bool setPymidLevel(UGint viewWidth,UGint nDeviceWidth){return TRUE;};
+
 	//! \brief 设置当前显示范围后,返回显示范围内影像数据的宽度。
 	//! \remarks 对于多分辨率图象，可能从另外一层读取数据，所以输出的宽度可能和显示范围的宽度不一样
 	//! \param  nViewWidth 显示数据影像宽度。[out]
@@ -171,14 +203,205 @@ public:
 	//! \brief pCallBack 用来设置固定比例尺的回调函数。该回调函数第一个参数为 UGMap 指针，第二个参数为所需要设置的固定比例尺 [in]
 	virtual void ConfigureMap(void *pMap, void (*pCallBack) (void *, std::vector<double>)) { /* do nothing */ }
 
+	// ******** 因为以上的结构不支持多线程 故增加几个接口 [ by jiangrs 2012/10/12 ]*********  
+
+	//! \brief 通过设置当前显示范围，获取显示范围内需要的影像数据的宽高
+	//! \param  dLeft, dTop,显示范围的左边和上边。dLeft < dRight，dTop < dBottom.[in]
+	//! \param  dRight, dBottom 显示范围的右边和下边。这是个值给的是地理坐标[in]
+	//! \param  nDeviceWidth, nDeviceHeight,真实显示窗口的大小，屏幕象素单位。[in]
+	//! \param  nViewWidth 显示数据影像宽度。 [out]
+	//! \param  nViewHeight 显示数据影像高度。[out]
+	//! \param  nTierIndex 显示数据影像金字塔索引号。 [out]
+	//! \remarks 即SetViewPort() + GetViewImageSize()的合体
+	virtual UGbool GetViewImageSize(UGint dLeft, UGint dTop, UGint dRight, UGint dBottom, UGint nDeviceWidth, UGint nDeviceHeight, UGint& nViewWidth, UGint& nViewHeight, UGint& nTierIndex){return FALSE;}
+
+	//! \brief 通过获取的影像数据的宽高和显示范围  构造ImgBlock后 然后在用此ImgBlock去获取数据
+	//! \param  pResBlock 影像数据，函数外分配空间。[out]
+	//! \remarks 即GetViewImageData(unsigned char* pDataBuffer, int nSize)的改版
+	virtual UGbool GetViewImageData(UGImgBlock* pResBlock, UGint nTierIndex = -1){return FALSE;}
+	//  ******** 因为以上的结构不支持多线程 故增加几个接口 [ by jiangrs 2012/10/12 ]*********  
+	
+	//! \brief 得到扫描线
+	virtual UGbool GetScanline(UGint nRowIndex,UGImgScanline& ScanLine, UGint nStartCol = 0, UGint nWidth = 0){return FALSE;}
+
+	//===================================================
+	//! \brief  获取图片最大值
+	//! \param 
+	//! \return 
+	//! \remarks 
+	//! \attention 
+	virtual UGdouble GetMaxZ(UGint nBandIndex = 0){return 0.0;}
+
+	//===================================================
+	//! \brief 获取图片最小值
+	//! \param 
+	//! \return 
+	//! \remarks 
+	//! \attention 
+	virtual UGdouble GetMinZ(UGint nBandIndex = 0){return 0.0;}
+
+	//===================================================
+	//! \brief  
+	//! \param 
+	//! \return   
+	//! \remarks 
+	//! \attention
+	virtual void GetExtremum(UGdouble &dMaxZ, UGdouble &dMinZ, UGint nBandIndex = 0){return;}
+
+	//===================================================
+	//! \brief  得到栅格信息
+	//! \param 
+	//! \return   
+	//! \remarks 
+	//! \attention
+	virtual RasterStatisticInfo* GetStatisticsInfo(UGint nBandIndex){return NULL;}
+
+	//===================================================
+	//! \brief  统计栅格信息
+	//! \param 
+	//! \return   
+	//! \remarks 
+	//! \attention
+	virtual RasterStatisticInfo* BuildStatistic(UGint nBandIndex){return NULL;}
+
+	//===================================================
+	//! \brief  计算统计直方图
+	//! \param 
+	//! \return   
+	//! \remarks 
+	//! \attention
+	virtual UGHistogram* GetHistogram( 
+		UGdouble dMin, 
+		UGdouble dMax,
+		UGint nBandIndex = 0,
+		UGint nBuckets = 256){return FALSE;}
+
+	//===================================================
+	//! \brief  获取图片的宽
+	//! \param 
+	//! \return   
+	//! \remarks 
+	//! \attention
+	virtual UGint GetWidth() const{return 0;}
+
+	//===================================================
+	//! \brief  获取图片高
+	//! \param 
+	//! \return   
+	//! \remarks 
+	//! \attention
+	virtual UGint GetHeight() const{return 0;}
+
+	//===================================================
+	//! \brief  获取波段信息列表。
+	//! \param  bandInfos[out]  要输出的波段信息列表。
+	//! \return   
+	//! \remarks 
+	//! \attention 导入多波段时用。
+	virtual UGbool GetBandInfos(UGArray<BandInfo>& bandInfos){return FALSE;}	
+
+	//! \brief获取请求块返回的准确bounds
+	virtual  UGRect2D GetViewImageBounds(){return m_rcViewImgBounds;} 
+
+public:
+	/*
+		网络地图服务插件加载方式
+	*/
+	//! \brief 设置Web服务的用户名 密码使用Open()里头的接口吧！！！
+	virtual void SetUser(const UGString strUser){return ;}
+
+	//! \brief 设置取到数据并把数据区域的外接矩形返回给用户的回调函数
+	//! \param pFunc 回调函数[in]。
+	//! \param pWnd 句柄[in]。
+	//! \remarks 二维使用的啊！！！
+	virtual void SetDataChangedFunc(DataChangedProc pFunc,UGlong pWnd){return; }
+
+	//! \brief 设置回调函数
+	//! \remarks 三维使用的啊！！！
+	virtual void SetDownloadResponseFunc(DownloadResponseFunc pFunc,UGlong pWnd){return; }
+
+	//! \brief 设置请求参数
+	//! \dScale param[in] 当前地图的比例尺
+	//! \bound param[in] 当前地图范围
+	virtual UGbool Request(const UGdouble& dScale, const UGRect2D& bound, UGbool bCallBack = TRUE){return FALSE;}
+
+	//! \brief 通过比例尺转换瓦片边长对应的地理大小
+	//! \param dMapScale 地图比例尺
+	virtual UGSize2D GetTileMPSize(UGdouble dMapScale){return UGSize2D();}
+
+	//! \brief 获取瓦片的DP大小
+	virtual UGSize GetTileSize(){return UGSize();}
+
+	//! \brief 返回所有的比例尺级别
+	virtual const UGArray<UGdouble> GetScales() const {return UGArray<UGdouble>();}	
+	
+	//! \brief 判断一次请求是否已经完成，Request之后调用
+	//! \remarks 和IsFinished()不一样  IsFinished()是判断GetViewBlock()加载的是否完全
+	//! \return 完成返回True，否则返回False
+	virtual UGbool IsCompleteRequest() {return TRUE;}
+
+	//! \brief 根据范围和比例尺，查询记录集。
+	//! \param rcMapBounds [in] 范围。
+	//! \param dScale [in] 比例尺。
+	//! \return 返回范围内所有瓦片的信息 
+	virtual UGTiles* QueryWithBounds(const UGRect2D& rcMapBounds, UGdouble dScale) const {return NULL;}
+
+	//! \brief 加载缓存影像块数据
+	//! \tile param 单个瓦片信息[in]
+	//! \return 瓦片的ImageData
+	virtual UGImageData* LoadTileImageData(const UGTile& tile){return NULL;}
+
+	//! \brief 获取最接近的比例尺
+	//! \param dScale 传入比例尺
+	//! \return 返回最接近的固定比例尺
+	virtual UGdouble ScaleToNearFixScale(UGdouble dScale){return 0.0;}
+
+	//! \brief 计算一个范围扩张几个瓦片之后的范围
+	//! \param dMapScale 地图比例尺
+	//! \param rcMapBounds 地图范围
+	//! \param nExtTileSize 扩张瓦片的个数
+	//! \return 扩张之后的地图范围
+	virtual UGRect2D ComputeTilesBounds(UGdouble dMapScale, const UGRect2D& rcMapBounds, UGint nExtTileSize = 1){return UGRect2D();}
+
+	//! \brief 获取当前服务瓦片DP-->LP的转换比率
+	virtual UGdouble GetCoordRatio() {return 3.0;}
+
+	//! \brief 根据范围和比例尺，判断该范围内的瓦片是否全都存在。
+	//! \param rcMapBounds [in] 范围。
+	//! \param dScale [in] 比例尺。
+	//! \return 
+	virtual UGbool IsAllTilesExist(const UGRect2D& rcMapBounds, UGdouble dScale) const {return FALSE;}
+
+	//! \brief 获取本地缓存的版本号(嵌入式使用)
+	virtual UGint GetCacheVersion() const {return 0;}
+
+	//! \brief 获取当前服务SCI中DP-->LP的转换比率(嵌入式使用，主要是使用GetCoordRatio有误差)
+	virtual UGdouble GetCacheCoordRatio(){return 0.0;}
+
+	//! \brief 获取像素值
+	//!\param nSaveBandIndex 存储的波段索引,默认的波段索引启始值为0
+	virtual UGColor GetPixel(UGint X,UGint Y,UGint nSavedBandIndex=0){return UGColor(0);};
+
+	//! \brief 获取数值
+	//!\param nSaveBandIndex 存储的波段索引,默认的波段索引启始值为0
+	virtual UGdouble GetValue(UGint X,UGint Y, UGbool bIsNeedLock = TRUE,UGint nSavedBandIndex=0){return UGdouble(0.0);};
+
+	//! \brief 保护继承获取块儿内存数据函数
+	//! \param nBlockRow 块儿行编号
+	//! \Param nBblockCol 块儿列编号
+	//! \param pImgBlock 指向块儿内存地址
+	//! \Param nSaveBandIndex 块儿所在波段索引位置
+	virtual UGbool GetBlockAt(UGint nBlockRow,UGint nBlockCol,
+		UGImgBlock*& pImgBlock,UGint nSaveBandIndex=0){return FALSE;};
+
 public:
 	//! \brief 释放自己。加这个方法主要是一个动态库内分配的堆内存，
 	//! \remarks 在另外一个动态库中释放可能会出错，所以给各方法释放自己。
-	virtual bool BuildPyramid(bool bShhowProgress){return FALSE;}
+	virtual UGbool BuildPyramid(UGbool bShhowProgress){return FALSE;}
 
-	virtual bool RemovePyramids(){return FALSE;}
+	virtual UGbool RemovePyramids(){return FALSE;}
 
-	virtual bool IsBuildPyramid() const{return FALSE;}
+	virtual UGbool IsExistPyramid() const {return FALSE;}
 
 	//! \brief 为栅格文件修改密码
 	//! \param  bool 修改密码操作是否成功[out]
@@ -258,8 +481,8 @@ public:
 	// 获取是否背景透明
 	virtual bool IsTransparentBack() { return m_bBackTransparent; }
 
-	//! \brief判断影像插件是否解析的是OGC服务
-	virtual UGbool IsOGCServerMap(){ return false; };
+	//! \brief图层类型
+	virtual UGImageServiceType GetImageServiceType() { return m_nImageServiceType; }
 
 	//! \brief 以下用中UGPluginGlobalCache中,支持下载WMS数据
 	//! \brief 获取网络数据集所有图层
@@ -281,9 +504,23 @@ public:
 	//! \attention 。
 	virtual void SetCachePath(const UGString& strCachePath) { }
 
+	//! \brief 读取金字塔的个数
+	//! \得到第几波段的金字塔的个数
+	virtual UGint GetPyramidCount(UGint nBand){return 0;}
+
+	//===================================================
+	//! \brief  获取金字塔数据集信息列表。
+	//! \param  rasterInfos[out]要输出的金字塔信息集合列表
+	//! \return   
+	//! \remarks 
+	//! \attention 导入多波段时用。
+	virtual UGbool GetPyramidInfos(UGArray<PyramidInfo>& pyramidInfos){return FALSE;}
+
 public:
 	//! \brief  调色板数据。
-	UGImagePaletteEntry m_palette[MAXIMGAEPALETTEENTRY];  
+	//{{修改为UGArray，以便动态添加 Modified by liyq [2012/11/1]
+	UGArray<UGImagePaletteEntry> m_arrPalette;  
+	//}}
 	//! \brief  无值数据
 	double m_dNoValue;
 
@@ -297,6 +534,10 @@ protected:
 	UGbool m_bBackTransparent; 
 
 	PluginClass m_nPluginClass;		// 当前影像插件类型
+
+	UGImageServiceType m_nImageServiceType;
+
+	UGRect2D m_rcViewImgBounds; //获取影像的bounds
 };
 
 // 插件需要实现一个导出的全局函数用来返回 UGImagePlugin 派生的类。

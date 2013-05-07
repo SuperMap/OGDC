@@ -60,7 +60,7 @@
 // 估计是中间的某个头文件中定义了_ILP32，因此把link.h放到最前面中，以避免此编译错误
 // modified by yanbg 08.1.6 增加多HP UNIX系统的判断
 //#ifdef _AIX
-#if !defined(OS_ANDROID) && !defined IOS
+#if !defined(OS_ANDROID) && !defined IOS 
 #if defined(_AIX) || defined(hpux)
 	#include <dlfcn.h> // for dlopen() & dlsym()
 #else 
@@ -81,7 +81,7 @@
 	#include <sys/stat.h> // for lstat
 	#include <sys/time.h>
 	#include <assert.h>
-#if !defined SYMBIAN60 && !defined OS_ANDROID && !defined IOS
+#if !defined SYMBIAN60 && !defined OS_ANDROID && !defined IOS 
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
 	#include <X11/cursorfont.h>
@@ -228,14 +228,20 @@ typedef OgdcWchar OgdcChar;
 typedef OgdcAchar OgdcChar;
 #endif
 
+#ifdef OS_ANDROID
+#ifndef WhiteBox_Ignore
+#define WhiteBox_Ignore
+#endif 
+#endif
+
 #if defined(_MSC_VER) || (defined(__BCPLUSPLUS__) && __BORLANDC__ > 0x500) || defined(__WATCOM_INT64__)
 	typedef unsigned __int64       OgdcUlong;
 	typedef __int64                OgdcLong;	
 
 #elif defined(__GNUG__) || defined(__GNUC__) || defined(__SUNPRO_CC) || defined(__MWERKS__) || defined(__SC__) || defined(__xlC__)
 
-	typedef unsigned long long int OgdcUlong;
-	typedef long long int          OgdcLong;
+	typedef unsigned long long int OgdcUlong;	//	WhiteBox_Ignore
+	typedef long long int          OgdcLong;	//	WhiteBox_Ignore
 	
 #endif
 
@@ -328,7 +334,9 @@ typedef size_t                   OgdcSizeT;
 
 #ifdef OS_ANDROID
 #include <Android/log.h>
-#define ANDROID_PRINT(TAG,...) __android_log_print(ANDROID_LOG_DEBUG, TAG,__VA_ARGS__)
+#define LOGD(TAG,...) __android_log_print(ANDROID_LOG_DEBUG, TAG,__VA_ARGS__)
+#define LOGE(TAG,...) __android_log_print(ANDROID_LOG_ERROR, TAG,__VA_ARGS__)
+#define LOGHERE(s) LOGD("Debug","%s In %d line:%s",__FILE__,__LINE__,s);
 #endif
 
 #ifndef NDEBUG

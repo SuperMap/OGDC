@@ -606,7 +606,7 @@
 			<sml:Type>53004</sml:Type>
 			<sml:Units>METER</sml:Units>
 			<sml:DistUnits>METER</sml:DistUnits>
-			<sml:GeoCoordType>4035</sml:GeoCoordType>
+			<sml:GeoCoordType>4326</sml:GeoCoordType>
 			<sml:ProjectionType>43045</sml:ProjectionType>
 			<sml:Parameters>
 				<sml:FalseEasting>0</sml:FalseEasting>
@@ -27815,7 +27815,7 @@
 			<sml:Name>WGS_1984</sml:Name>
 			<sml:Type>7030</sml:Type>
 			<sml:SemiMajorAxis>6378137</sml:SemiMajorAxis>
-			<sml:InverseFlattening>298.25722042702859</sml:InverseFlattening>
+			<sml:InverseFlattening>298.257223563</sml:InverseFlattening>
 		</sml:Spheroid>
 		<sml:Spheroid>
 			<sml:Name>WGS_1966</sml:Name>
@@ -27869,7 +27869,7 @@
 			<sml:Name>International_1975</sml:Name>
 			<sml:Type>40023</sml:Type>
 			<sml:SemiMajorAxis>6378140</sml:SemiMajorAxis>
-			<sml:InverseFlattening>298.25701582521901</sml:InverseFlattening>
+			<sml:InverseFlattening>298.257</sml:InverseFlattening>
 		</sml:Spheroid>
 		<sml:Spheroid>
 			<sml:Name>Everest_Adjustment_1937</sml:Name>

@@ -14,8 +14,13 @@
 <CustomGraphicsEnable>false</CustomGraphicsEnable>
 <GraphicsType>1</GraphicsType>
 
+<!-- FreeType PoolSize -->
+<FreeTypeLibPoolSize>5</FreeTypeLibPoolSize>
+
 <!-- Font Path for GraphicsMem-->
 <WorldFilePath>C:/Windows/Fonts/</WorldFilePath>
+
+
 
 <!-- Fonts Path for GraphicsMem-->
 <FontsPath>C:/Windows/Fonts/</FontsPath>
@@ -31,16 +36,23 @@
 <CustomDPIY>96</CustomDPIY> 
 
 <!--whether to expand the query range of the map-->
-<IsMapInflated>true</IsMapInflated> 
-<IsOutputSceneInfo>false</IsOutputSceneInfo>
+<IsMapInflated>false</IsMapInflated> 
 <IsShowShaderAtmosphere>true</IsShowShaderAtmosphere>
 
 <!-- full screen anti-aliasing-->
-<IsSceneAntialias>false</IsSceneAntialias>
+<IsSceneAntialias>true</IsSceneAntialias>
 <SceneAntialiasValue>2</SceneAntialiasValue>
 
 <RasterPrint_BlockSize>10</RasterPrint_BlockSize>
 <LayoutOverlap>10</LayoutOverlap>
+
+<!-- whether support HighPrecisionMode --> 
+<IsHighPrecisionMode>false</IsHighPrecisionMode>
+
+<!-- GeoLegend PointStyleSize -->
+<GeoLegendPointStyleSize>10</GeoLegendPointStyleSize>
+<!-- GeoLegend TextStyleSize -->
+<GeoLegendTextStyleSize>100</GeoLegendTextStyleSize>
 
 <!-- SystemPath Format Path1;Path2;Path3 -->
 <SystemPath>./Resource</SystemPath> 
@@ -92,12 +104,23 @@
 	<!-- Log Save Mode, include: Text, XML, Memory --> 
 	<StorageType>Text</StorageType> 
 
+	<!-- Log database connection Driver --> 
+	<!-- OraclePlus, SqlPlus --> 
+	<LogDBConnectDriver></LogDBConnectDriver> 
+	
+	<!-- Log database connection Information--> 
+	<!-- Connection Format: Server@Database:User/Pwd--> 
+	<LogDBConnectionInfo></LogDBConnectionInfo> 
 	<!-- whether Log info is saved into the physical media, such as logfile or database; when false, the log info only storage at memory --> 
 	<LogPhysicalSave>true</LogPhysicalSave>
 
 	<!-- Log Level from debug, info, warning, error, fatal-->
 	<LogLevel>error</LogLevel>
-	
+
+	<!-- operationLog Level from  Level0, Level1, Level2, Level3, Level4, LevelErr-->
+	<!-- Level0 record all Oplog and ErrLog,Level1 only record Level1 OpLog, Level2 only record Level1&2 OpLog -->
+	<!-- Level3 only record Level1&2&3 OpLog,Level4 only record Level1&2&3&4 OpLog, LevelErr only record ErrLog(debug, info, warning, error, fatal)-->
+	<OpLogLevel>Level0</OpLogLevel>
 	<!-- When LogCount reach,the logitems will write in physical media -->
 	<LogCountToDisk>1</LogCountToDisk>
 	
@@ -135,4 +158,13 @@
 <!-- Dump File path -->
 <DumpEnabled>false</DumpEnabled>
 <DumpPath>./Dumps/</DumpPath>
+
+<!-- wmts TopLeftCorner parameter--> 
+<IsTopLeftCornerExchange>false</IsTopLeftCornerExchange>
+
+<!-- wmts BoundsCorner parameter--> 
+<IsBoundsCornerExchange>false</IsBoundsCornerExchange>
+
+<!-- OpenMP Number of Threads, default value is 2 Threads-->
+<OMPNumThreads>2</OMPNumThreads>
 </ugc>

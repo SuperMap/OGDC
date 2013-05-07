@@ -151,6 +151,7 @@
 			<res name="UGS_FAILED_TO_ALLOT_MEMORY" id="EBa003">内存分配失败</res>
 			<res name="UGS_MEMORY_SIZE_ILLEGAL" id="EBa004">内存大小非法</res>
 			<res name="UGS_MEMORY_APPLY_UNEXPECTED" id="EBa005">内存分配异常</res>
+			<res name="UGS_FAILED_APPLY_CONTINUOUS_MEMORY" id="EBa006">申请连续%dM内存失败</res>
 		</ECode>
 	</Section>
 	<Section description="字段错误">
@@ -198,6 +199,7 @@
 
 			<res name="THE_FILED_VALUE_IS_ZERO" id="ECc013">字段值为0</res>
 			<res name="UGS_ILLEGAL_ID" id="ECc014">传入 ID =%s 非法</res>
+			<res name="UGS_THE_FILED_VALUE_CANNOT_IS_EMPTY" id="ECc015"> 字段%s的值不能为空</res>
 		</ECode>
 		<ECode description="字段的相关操作错误">
 			<res name="UGS_FAILED_TO_GET_FIELD_INFO" id="ECd001">获取字段信息失败</res>
@@ -1051,6 +1053,7 @@
 			<res name="UGS_FAILED_TO_CREATE_RASTER_FOR_INVALID_PIXEL_FORMAT" id="EIa003">不支持的像素格式,创建栅格数据集失败</res>
 			<res name="UGS_INVALID_PIXELFORMAT" id="EIa004">像素格式非法</res>
 			<res name="UGS_PIXELFORMAT_LESS_THAN_SIXTEEN" id="EIa005">像素格式小于16位</res>
+			<res name="UGS_PIXELFORMAT_CONVERT_TO_8BITS" id="EIa006">像素转换为8位</res>
 		</ECode>
 		<ECode description="影像块">
 			<res name="UGS_IMAGE_BLOCK_POINTER_IS_NULL" id="EIb001">影像块指针为空</res>
@@ -1087,6 +1090,7 @@
 			<res name="UGS_FAILED_TO_CODE" id="EId009">编码失败</res>
 			<res name="UGS_UNSUPPORT_CODE_TYPE" id="EId010">不支持此种编码类型</res>
 			<res name="UGS_FAILED_TO_COMPRESS" id="EId011">数据压缩失败</res>
+			<res name="UGS_UNSUPPORT_REMOVEPYRAMIDS" id="EId012">只读文件不支持删除金字塔操作</res>
 
 		</ECode>
 		<ECode description="栅格数据集操作相关错误，包括打开、关闭、删除、追加等">
@@ -1125,9 +1129,23 @@
 			<res name="UGS_CANNOT_SUPPORT_COMPOSITE" id="EIe030">此数据不支持合成波段模式</res>
 			<res name="UGS_RASTOR_FILE_INVALID" id="EIe031">影像地理坐标参考文件非法！</res>
 
-
-		</ECode>
-	</Section>
+      <res name="UGS_RASTER_TYPE_NOT_MATCH" id="EIf001">数据集类型与集合不匹配，不能加入集合</res>
+      <res name="UGS_RASTER_PROJECT_NOT_EQUAL" id="EIf002">投影与集合的不一致，添加失败</res>
+      <res name="UGS_RASTER_BANDCOUNT_NOT_EQUAL" id="EIf003">数据集波段数与集合不一致，不能加入集合</res>
+      <res name="UGS_OPEN_FILE_FAIL_BY_IMGPlUGINS" id="EIf004">影像插件打开影像文件失败</res>
+      <res name="UGS_GET_SUBDATASET_FAIL" id="EIf005">获取子数据集失败</res>
+      <res name="UGS_NOT_FIND_SUBDATASET" id="EIf006">指定的别名在数据集合中未找到</res>
+      <res name="UGS_ADD_SUBDATASET_FAIL" id="EIf007">往栅格数据集集合中添加子数据集失败</res>
+      <res name="UGS_DELETE_SUBDATASET_FAIL" id="EIf008">删除栅格数据集集合中的子数据集失败</res>
+      <res name="UGS_ALIAS_EMPTY_OR_EXIT" id="EIf009">添加失败，子数据集别名为空或已存在</res>
+      <res name="UGS_CANNOT_OPEN_SUBDATASET" id="EIf010">无法打开所指定名称的数据集</res>
+      <res name="UGS_DATASOURCE_NOTSAME_CANNOT_APPEND" id="EIf011">跨数据源的数据集，现在不支持追加</res>
+      <res name="UGS_ALIAS_NAME_INVALID" id="EIf012">别名不合法</res>
+      <res name="UGS_ALIAS_NAME_NOT_FIND" id="EIf013">未找到合法的别名</res>
+      <res name="UGS_SUBDATASET_CANNOT_VIEW" id="EIf014">子数据集[%s]宽或高大于5000，且集合无金字塔，不显示</res>
+    </ECode>
+    
+  </Section>
 	<Section description="系统支持类错误">
 		<ECode description="SuperMap各产品、各版本之间的兼容性错误信息">
 			<res name="UGS_INVALID_GML_VERSION" id="EJa001">GML版本信息非法</res>
@@ -1432,6 +1450,9 @@
       <res name="UGC_DYNAMIC_DATASET_NOT_SUPPORT_DELETE" id="ELc136">拥有动态分段角色的数据集不能被删除</res>
       <res name="UGC_DYNAMIC_FIELD_VALUE_EXCEED_RANGE" id="ELc137">动态分段FM或TM字段值超过超过范围</res>
 	  <res name="UGC_DYNAMIC_RESULT_CAN_NOT_SET" id="ELc138">动态分段结果数据集集合对象不能被直接修改</res>
+			<res name="UGC_DATABASENAMEERR_FOR_SINGLEFILE" id="ELc139">单文件打开时数据库名必须设置成:memory:</res>
+			<res name="UGS_OPEN_REGISTER_FAILED" id="ELc140">读取数据源系统表信息失败</res>
+			<res name="UGS_DATASET_PIXELFORMAT_NOT_SUPPORT" id="ELc141">数据集[%s]的像素类型不支持,请使用高版本的桌面打开</res>
 
 		</ECode>
 		<ECode description="各种分析类错误，包括网络分析、叠加分析、缓冲区分析、栅格分析等分析错误">
@@ -1577,9 +1598,11 @@
 			<res name="UGS_BUFFERANALYST_CLERA_BREAK_LINE" id="ELd125">正在清除非法线</res>
 			<res name="UGS_BUFFERANALYST_MERGE_PART_SEG" id="ELd126">正在合并碎线</res>		
 			<res name="UGS_BUFFERANALYST_MERGE_PART_SEG" id="ELd127">正在构建面对象</res>
-			<res name="UGS_BUFFERANALYST_BUILDING_MATRIX_START" id="ELd128">开始构建邻接矩阵</res>	
-			
-		</ECode>
+			<res name="UGS_BUFFERANALYST_BUILDING_MATRIX_START" id="ELd128">开始构建邻接矩阵</res>
+      		<res name="UGS_HAVE_NOT_ARCNAME" id="ELd129">没有设置弧段名称字段</res>
+      <res name="UGS_NOT_MATCH_POINT" id="ELd130">第%d个点没有被捕捉</res>
+
+    </ECode>
 		<ECode description="引擎各种状态特征不匹配，（数据库当前事务，时序，版本等的状态不适合某类操作）">
 			<res name="UGS_ODBC_DS_DISPOSE_VERSION_FAILED" id="ELe001">处理版本失败</res>			
 			<res name="UGS_DATASETVECTOR_VERSION_REGISTEROPTION_FAILED" id="ELe002">SQLPLUS矢量数据集版本注册失败</res>
@@ -1660,6 +1683,7 @@
 			<res name="UGS_AIMED_VERSION_UPDATED_AND_NEED_RECONCLIE" id="ELe064">目标版本被更新，请重新协调</res>
 			<res name="UGS_DISOBEYED_WCS_LIMIT" id="ELe065">违返wcs约束条件</res>
 			<res name="UGS_LAYER_IS_NULL" id="ELe066">图层为空</res>
+			<res name="UGS_SETPPJCOORDSYS_FAIL" id="ELe067">数据集不为空，Oracle Spatial不允许设置投影</res>
 		</ECode>
 		<ECode description="数据库连接错误">
 			<res name="UGS_USERNAME_IS_EMPTY" id="ELf001">用户名为空</res>
@@ -1823,7 +1847,7 @@
 			<res name="UGS_THE_CURRENT_VERSION_OF_PLUGIN_IS_LATEST" id="IMa012">当前插件已经是最新版本</res>
 			<res name="UGS_SHOULD_CLOSE_DATASET_BEFORE_CREATE_INDEX" id="IMa013">建索引前必须关闭数据集</res>
 			<res name="UGS_SHOULD_CLOSE_DATASET_BEFORE_DELETE_INDEX" id="IMa014">删除索引前必须关闭数据集</res>
-			<res name="UGS_DATASOURCE_COPYING_DATASET" id="IMa015">数据源{%s}复制数据集{%s}</res>
+			<res name="UGS_DATASOURCE_COPYING_DATASET" id="IMa015">数据源(%s)复制数据集(%s)</res>
 		 </ICode>
 		<ICode description="进程信息">
 			<res name="UGS_BUILDING_SPATIAL_INDEX" id="IMb001">正在建立索引......</res>
@@ -1958,10 +1982,10 @@
 			<res name="UGS_IS_PRODUCING_VECTOR_CACHE" id="IMb114">矢量缓存生成中...</res>
 			
 			<res name="UGS_IS_CREATING_3DCACHE" id="IMb115">生成三维缓存[%s]</res>
-			<res name="UGS_BUILD_3DCACHE_STATUS" id="IMb117">正在生成第%d层缓存，剩余%d层缓存，当前图片%d/%d</res>
-			<res name="UGS_BUILD_3DCACHE_STATUS_LAST" id="IMb118">正在生成第%d层缓存，这是最后一层，当前图片%d/%d</res>
-			<res name="UGS_BUILD_2DCACHE_STATUS" id="IMb119">正在生成1:%s的缓存，剩余%d个比例尺，当前图片%d/%d</res>
-			<res name="UGS_BUILD_2DCACHE_STATUS_LAST" id="IMb120">正在生成1:%s的缓存，这是最后一个比例尺，当前图片%d/%d</res>
+			<res name="UGS_BUILD_3DCACHE_STATUS" id="IMb117">生成第%d层，剩余%d层，图片%d/%d</res>
+			<res name="UGS_BUILD_3DCACHE_STATUS_LAST" id="IMb118">生成第%d层，这是最后一层，图片%d/%d</res>
+			<res name="UGS_BUILD_2DCACHE_STATUS" id="IMb119">生成1:%s的缓存，剩余%d个比例尺，图片%lld/%lld</res>
+			<res name="UGS_BUILD_2DCACHE_STATUS_LAST" id="IMb120">生成1:%s的缓存，这是最后一个比例尺，图片%lld/%lld</res>
       <res name="UGS_BUILD_3DTERRAIN_CACHE_STATUS" id="IMb121">正在生成第 %d 层缓存，剩余 %d 层缓存\n该层一共有 %d 块地形需要生成，正在生成第 %d 块地形</res>
       <res name="UGS_BUILD_3DTERRAIN_CACHE_STATUS_LAST" id="IMb122">正在生成第 %d 层缓存，这是最后一层缓存\n该层下一共有 %d 块地形需要生成，正在生成第 %d 块地形</res>
       <res name="UGS_SPATIALREF_CONVERTING" id="IMb123">正在进行投影转换</res>
@@ -2050,7 +2074,38 @@
 			<res name="UGS_STEP_1_LINE_NET_BUILD" id="IMb203">创建结点图层[%d/%d]...</res>
 			<res name="UGS_STEP_2_LINE_NET_BUILD" id="IMb204">弧段结点编码[%d/%d]...</res>
 			<res name="UGS_STEP_3_LINE_NET_BUILD" id="IMb205">创建网络图层[%d/%d]...</res>
-			
+			<res name="UGS_IN_PROCESS_OF_BUILDPYRAMID" id="IMb206">正在为波段%d创建金字塔...</res>
+			<res name="UGS_CALCULATE_COST_DISTANCE" id="IMb207">正在计算耗费距离栅格...</res>
+			<res name="UGS_CALCULATE_STRAIGHT_DISTANCE" id="IMb208">正在计算直线距离栅格...</res>
+			<res name="UGS_CALCULATE_COSTPATH" id="IMb209">耗费距离栅格最短路径分析...</res>
+			<res name="UGS_CALCULATE_PTOP_PATHLINE" id="IMb210">计算两点间最优路径...</res>
+			<res name="UGS_GRID_NEIBORHOOD_STATISTICS" id="IMb211">栅格邻域统计...</res>
+			<res name="UGS_GRID_ZONAL_STATISTICS" id="IMb212">栅格分带统计...</res>
+			<res name="UGS_GRID_REPLACE" id="IMb213">栅格数据查找替换...</res>
+			<res name="UGS_RASTERCOLLECTION_SYNC" id="IMb214">正在同步栅格数据集集合...</res>
+			<res name="UGS_GRID_COMMON_STATISTICS" id="IMb215">栅格常用统计...</res>
+			<res name="UGS_GRID_BUILDLAKE" id="IMb216">地形挖湖...</res>
+			<res name="UGS_GRID_CREATEDEM" id="IMb217">地形构建...</res>
+			<res name="UGS_INTERPOLATE_TIN_NUM" id="IMb218">正在进行TIN插值[%d/%d]...</res>
+			<res name="UGS_RASTER_SPLIT" id="IMb219">栅格切割...</res>
+      <res name="UGS_IS_CREATING_BASE_PYRAMID" id="IMb220">正在创建集合第一层金字塔...</res>
+      <res name="UGS_BUILDING_ROUTE" id="IMb221">生成路由数据...</res>
+      <res name="UGS_CREATE_ROUTE" id="IMb222">正在生成路由[%d/%d]...</res>
+      <res name="UGS_CREATE_ROUTE_ONLY_PERCENT" id="IMb223">正在生成路由[%d %%]...</res>
+      <res name="UGS_CALIBRATE_ROUTE" id="IMb224">正在校准路由数据...</res>
+      <res name="UGS_TRAVERSE_ROUTE" id="IMb225">正在遍历路由数据[%d/%d]...</res>
+      <res name="UGS_TRAVERSE_POINT" id="IMb226">正在遍历校准点数据[%d/%d]...</res>
+      <res name="UGS_RESULT_ROUTE" id="IMb227">正在生成结果数据[%d/%d]...</res>
+      <res name="UGS_BUILDING_EVENT_TABLE" id="IMb228">生成事件表...</res>
+      <res name="UGS_CREATE_EVENT_TABLE" id="IMb229">正在生成事件表[%d/%d]...</res>
+      <res name="UGS_BUILDING_GEOMETRY" id="IMb230">生成空间数据...</res>
+      <res name="UGS_TRAVERSE_EVENT_TABLE" id="IMb231">正在遍历事件表数据[%d/%d]...</res>
+      <res name="UGS_OVERLAY_EVENT" id="IMb232">正在叠加事件表...</res>
+      <res name="UGS_CREATE_RESULT_EVENT" id="IMb233">正在生成结果事件表...</res>
+      <res name="UGS_DISSOLVE_EVENT" id="IMb234">正在融合事件表...</res>
+	  	<res name="UGS_IS_COPYING_TEXTURE" id="IMb235">正在复制纹理...</res>
+	  	<res name="UGS_CREATE_SEMAPHORE_FAILED" id="IMb236">创建信号量失败</res>
+
     </ICode>
 		<ICode description="地图单位信息">
 			<res name="UGS_SYMBOL_DEGREE" id="IMc001">°</res>
@@ -2168,7 +2223,7 @@
 			<res name="UGS_CREATE_SPATIALREF" id="IMf012">创建空间参考系</res>
 			<res name="UGS_CREATE_COLORTABLE" id="IMf013">创建颜色表</res>
 			<res name="UGS_EDITBULKOPERATE" id="IMf014">请设置批量更新标志</res>
-			
+			<res name="UGS_FME_LICENSE_NOT_EXIST" id="IMf015">FME许可不存在</res>
 
 			
 		</ICode>
@@ -2231,7 +2286,7 @@
 			<res name="UGS_DEPTHGAUGE" id="IMh0044">深  度  表</res>
 			<res name="UGS_NATIONAL_BASIC_SCALE_TERRAIN_MAP" id="IMh0045">国家基本比例尺地形图</res>
 
-			<res name="UGS_MAP_IS_OUTPUTINGTODATASETIAMGE" id="IMh0046">地图正在输出为Image数据集[%s]</res>
+			<res name="UGS_MAP_IS_OUTPUTINGTODATASETIAMGE" id="IMh0046">地图正在输出为影像数据集[%s]</res>
 
 	    </ICode>
 		<ICode description="topo数据集相关信息，包括拓扑预处理、拓扑构建、拓扑规则">
@@ -2395,10 +2450,201 @@
 		<ICode description="三维填充符号库参数说明信息">
 		    <res name="UGS_WAVE_SIZE"  id="IMo001">影响水波的大小</res>
 			<res name="UGS_WAVE_FREQUENCY"  id="IMo002">影响水波起伏的快慢</res>
-			<res name="UGS_REFLECTION_BRIGHTNESS"  id="IMo003">影响水面中反射物体的亮度</res>			
+			<res name="UGS_REFLECTION_BRIGHTNESS"  id="IMo003">菲涅耳反射偏移量</res>			
 			<res name="UGS_WAVE_DIRECTION"  id="IMo004">影响水流动的方向和速度</res>		
-			<res name="UGS_WATER_BOTTOM_TEXTURE"  id="IMo005">影响通过折射看到了水底纹理</res>	
+			<res name="UGS_WATER_BOTTOM_TEXTURE"  id="IMo005">影响通过折射看到了水底纹理</res>
+			<res name="UGS_WATER_COLOR"  id="IMo006">影响水的色调</res>		
+			<res name="UGS_FRESNELSCALE"  id="IMo007">菲涅耳反射缩放系数</res>
+			<res name="UGS_FRESNELPOWER"  id="IMo008">反射比率</res>
+			<res name="UGS_FRESNELBIAS"  id="IMo010">菲涅耳偏移量</res>
+			<res name="UGS_MINFRESNEL"  id="IMo011">反射比率取值范围最小值</res>
+			<res name="UGS_MAXFRESNEL"  id="IMo012">反射比率取值范围最大值</res>
+
+			<res name="UGS_WAVE_SIZE_LABEL"  id="IMo001L">水波大小</res>
+			<res name="UGS_WAVE_FREQUENCY_LABEL"  id="IMo002L">水波频率</res>
+			<res name="UGS_REFLECTION_BRIGHTNESS_LABEL"  id="IMo003L">水面亮度</res>			
+			<res name="UGS_WAVE_DIRECTION_LABEL"  id="IMo004L">水波速度</res>		
+			<res name="UGS_WATER_BOTTOM_TEXTURE_LABEL"  id="IMo005L">水底纹理</res>
+			<res name="UGS_WATER_COLOR_LABEL"  id="IMo006L">水面颜色</res>		
+			<res name="UGS_FRESNELSCALE_LABEL"  id="IMo007L">菲涅耳缩放系数</res>
+			<res name="UGS_FRESNELPOWER_LABEL"  id="IMo008L">反射比率指数</res>
+		    <res name="UGS_FRESNELBIAS_LABEL"  id="IMo010L">菲涅耳偏移量</res>
+			<res name="UGS_MINFRESNEL_LABEL"  id="IMo011L">反射比率下限</res>
+			<res name="UGS_MAXFRESNEL_LABEL"  id="IMo012L">反射比率上限</res>			
 		</ICode>
+		<ICode description="常规操作日志">
+      <res name="UGS_LOG_PREPARE_CREATE_DS" id="IMu001">准备创建数据源...</res>
+      <res name="UGS_LOG_CREATE_DS_SUCCESS" id="IMu002">创建数据源成功!</res>
+      <res name="UGS_LOG_PREPARE_OPEN_DS" id="IMu003">准备打开数据源...</res>
+      <res name="UGS_LOG_OPEN_DS_SUCCESS" id="IMu004">打开数据源成功!</res>
+      <res name="UGS_LOG_PREPARE_CLOSE_DS" id="IMu005">关闭数据源...</res>
+      <res name="UGS_LOG_CREATING_TABLE" id="IMu006">创建(%s)表...</res>
+      <res name="UGS_LOG_CHANGE_PASS" id="IMu007">修改密码</res>
+      <res name="UGS_LOG_BEGIN_TRANS" id="IMu008">开始事务</res>
+      <res name="UGS_LOG_COMMIT_TRANS" id="IMu009">提交事务</res>
+      <res name="UGS_LOG_ROLLBACK_TRANS" id="IMu010">回滚事务</res>
+      <res name="UGS_LOG_READING_INFO_OF_VDT" id="IMu011">正在读取矢量数据集(%s)的相关信息...</res>
+      <res name="UGS_LOG_READING_INFO_OF_RDT" id="IMu012">正在读取栅格数据集(%s>)的相关信息...</res>
+      <res name="UGS_LOG_LOGIN_LONG_TRANS" id="IMu013">登录数据源(%s)的长事务环境</res>
+      <res name="UGS_LOG_LOGOUT_LONG_TRANS" id="IMu014">退出数据源(%s)的长事务环境</res>
+      <res name="UGS_LOG_LONG_TRANS_LOCK_DATA" id="IMu015">{%s}按长事务方式锁定数据</res>
+      <res name="UGS_LOG_LONG_TRANS_UNLOCK_DATA" id="IMu016">{%s}按长事务方式解锁数据</res>
+      <res name="UGS_LOG_LONG_TRANS_ROLLBACK" id="IMu017">{%s}按长事务方式回滚操作</res>
+      <res name="UGS_LOG_CREATE_VECTOR" id="IMu018">创建矢量数据集：%s</res>
+      <res name="UGS_LOG_CREATE_RASTER" id="IMu019">创建栅格数据集：%s</res>
+      <res name="UGS_LOG_DELETE_DATASET" id="IMu020">删除数据集：%s</res>
+      <res name="UGS_LOG_DV_APPEND" id="IMu021">向矢量数据集 (%s) 中追加记录</res>
+      <res name="UGS_LOG_DV_BUILD_SPATIAL_INDEX" id="IMu022">为矢量数据集 (%s) 建立空间索引 ... ...</res>
+      <res name="UGS_LOG_DV_COMPUTE_BOUNDS" id="IMu023">为矢量数据集 ( %s ) 计算范围...</res>
+      <res name="UGS_LOG_DV_CREATE_FIELD" id="IMu024">为矢量数据集 ( %s ) 创建字段 ( %s ) ...</res>
+      <res name="UGS_LOG_DV_DELETE_FIELD" id="IMu025">为矢量数据集( %s ) 删除字段 ( %s )</res>
+      <res name="UGS_LOG_DV_CREATE_INDEX" id="IMu026">为矢量数据集 (%s) 创建字段索引 ( %s )</res>
+      <res name="UGS_LOG_DV_DROP_INDEX" id="IMu027">为矢量数据集 ( %s ) 移除索引 ( %s ) </res>
+      <res name="UGS_LOG_DV_RENAME" id="IMu028">将矢量数据集 ( %s ) 重命名为：( %s )</res>
+      <res name="UGS_LOG_DV_RESET_BOUNDS" id="IMu029">矢量数据集( %s )重设Bounds。</res>
+      <res name="UGS_LOG_DV_SET_FIELD_INFO" id="IMu030">矢量数据集 ( %s ) : 修改字段 ( %s ) 的相关信息</res>
+      <res name="UGS_LOG_RS_ADD_RECORDSET" id="IMu031">数据集(%s)的记录集添加了一条记录</res>
+      <res name="UGS_LOG_RS_DELETE_RECORDSET" id="IMu032">数据集(%s)的记录集删除了一条记录</res>
+      <res name="UGS_LOG_RS_MODIFY_RECORDSET" id="IMu033">数据集(%s)的记录集修改了一条记录</res>
+      <res name="UGS_LOG_CALC_EXTREMUM" id="IMu034">计算字段 %s 的极值</res>
+      <res name="UGS_LOG_OPEN_DV" id="IMu035">打开矢量数据集 (%s)</res>
+      <res name="UGS_LOG_CLOSE_DV" id="IMu036">关闭矢量数据集(%s)</res>
+      <res name="UGS_LOG_CONNECT_DS" id="IMu037">数据源(%s)连接到数据库</res>
+      <res name="UGS_LOG_COPYDATASET" id="IMu038">数据源(%s)复制数据集(%s)</res>
+      <res name="UGS_LOG_DV_ADDMETADATADESC" id="IMu039">矢量数据集(%s)添加元数据</res>
+      <res name="UGS_LOG_DV_LONGTRAN_CHECKIN" id="IMu040">矢量数据集(%s)按长事务方式提交修改</res>
+      <res name="UGS_LOG_DV_LONGTRAN_CHECKOUT" id="IMu041">矢量数据集(%s)按长事务方式锁定记录</res>
+      <res name="UGS_LOG_DV_CLEARMETADATADESC" id="IMu042">矢量数据集(%s)清除元数据</res>
+      <res name="UGS_LOG_DV_COPYFIELD" id="IMu043">矢量数据集(%s)复制字段(%s)</res>
+      <res name="UGS_LOG_DV_DELETEMETADATADESC" id="IMu044">矢量数据集(%s)删除元数据节点</res>
+      <res name="UGS_LOG_OPEN_DR" id="IMu045">打开栅格数据集(%s)</res>
+      <res name="UGS_LOG_CLOSE_DR" id="IMu046">关闭栅格数据集(%s)</res>
+      <res name="UGS_LOG_DR_CREATEECW" id="IMu047">创建ECW文件(%s)的外部连接</res>
+      <res name="UGS_LOG_DR_CREATEMRSID" id="IMu048">创建MrSID文件(%s)的外部连接</res>
+      <res name="UGS_LOG_DR_RESET" id="IMu049">栅格数据集(%s)图层清空</res>
+      <res name="UGS_LOG_DV_TRUNCATE" id="IMu050">矢量数据集(%s)清空数据</res>
+      <res name="UGS_LOG_DR_RELEASEPYRAMIDDATASETS" id="IMu051">栅格数据集(%s)释放影像金字塔数据集</res>
+      <res name="UGS_LOG_DR_ADDMETADATADESC" id="IMu052">栅格数据集(%s)添加元数据</res>
+      <res name="UGS_LOG_DR_CLEARMETADATADESC" id="IMu053">栅格数据集(%s)清除元数据</res>
+      <res name="UGS_LOG_DR_DELETEMETADATADESC" id="IMu054">栅格数据集(%s)删除元数据描述的节点</res>
+      <res name="UGS_LOG_DR_REMOVEPYRAMIDS" id="IMu055">栅格数据集(%s)删除影像金字塔</res>
+      <res name="UGS_LOG_DR_BUILDPYRAMID" id="IMu056">栅格数据集(%s)建立影像金字塔</res>
+      <res name="UGS_LOG_RS_DELETEALL" id="IMu057">记录集删除所有记录</res>
+      <res name="UGS_LOG_DV_LONGTRAN_UNDOCHECKOUT" id="IMu058">矢量数据集(%s) 按长事务方式取消锁定</res>
+      <res name="UGS_LOG_DV_SETFIELDINFO" id="IMu059">矢量数据集(%s) 设置字段(%s) 属性</res>
+      <res name="UGS_LOG_DV_UPDATEFIELD" id="IMu060">矢量数据集(%s) 更新字段(%s) 属性</res>
+      <res name="UGS_LOG_RS_CHECKIN" id="IMu061">提交对当前记录集所做的修改</res>
+      <res name="UGS_LOG_RS_CHECKOUT" id="IMu062">将记录集查询出来的且没有被别人锁定的记录锁定</res>
+      <res name="UGS_LOG_RS_UNDOCHECKOUT" id="IMu063">放弃对当前记录集所做的修改</res>
+      <res name="UGS_LOG_RS_CHECKINCURRENT" id="IMu064">提交对当前记录所做的修改</res>
+      <res name="UGS_LOG_RS_CHECKOUTCURRENT" id="IMu065">锁定当前记录</res>
+      <res name="UGS_LOG_RS_UNDOCHECKOUTCURRENT" id="IMu066">撤消对当前记录所做的修改</res>
+      <res name="UGS_LOG_RS_COPYFIELD" id="IMu067">记录集复制字段(%s)</res>
+      <res name="UGS_LOG_RS_SETFIELDVALUE" id="IMu068">记录集修改当前属性字段值</res>
+      <res name="UGS_LOG_RS_SETGEOMETRY" id="IMu069">记录集修改当前空间数据</res>
+      <res name="UGS_LOG_DV_QUERYFIELDINFOS" id="IMu070">矢量数据集(%s) 查询字段集合</res>
+      <res name="UGS_LOG_DV_STATISTIC" id="IMu071">矢量数据集(%s)执行统计操作</res>
+      <res name="UGS_LOG_DV_CALCULATEEXTREMUM" id="IMu072">矢量数据集(%s) 计算极值</res>
+      <res name="UGS_LOG_DV_COMPUTERBOUNDS" id="IMu073">矢量数据集(%s) 计算边界</res>
+      <res name="UGS_LOG_DR_SAVEBLOCK"	id="IMu074">栅格数据集(%s) 保存影像数据到存储设备</res>
+      <res name="UGS_LOG_DR_LOADBLOCK"	id="IMu075">栅格数据集(%s) 读取影像数据</res>
+      <res name="UGS_LOG_RS_FINDFIRST" id="IMu076">记录集光标移到第一个位置</res>
+      <res name="UGS_LOG_RS_FINDLAST" id="IMu077">记录集光标移到最后一个位置</res>
+      <res name="UGS_LOG_RS_FINDNEXT" id="IMu078">记录集光标移到下一个位置</res>
+      <res name="UGS_LOG_RS_FINDPREV" id="IMu079">记录集光标移到前一个位置</res>
+      <res name="UGS_LOG_RS_SEEKBYID" id="IMu080">根据ID移动记录集光标</res>
+      <res name="UGS_LOG_RS_STATISTIC" id="IMu081">记录集执行统计操作</res>
+      <res name="UGS_LOG_RS_CREATEWITHBOUNDS" id="IMu082">记录集执行Bounds查询</res>
+      <res name="UGS_LOG_RS_CREATEWITHGENERAL" id="IMu083">记录集执行普通查询</res>
+      <res name="UGS_LOG_RS_CREATEWITHIDS" id="IMu084">记录集执行IDS查询</res>
+      <res name="UGS_LOG_RS_CREATEWITHSPATIAL" id="IMu085">记录集执行空间查询</res>
+      <res name="UGS_LOG_RS_COMPUTERBOUNDS" id="IMu086">记录集计算边界</res>
+      <res name="UGS_LOG_RS_FLUSHCURRENTRECORDSET" id="IMu087">记录集提交当前记录到存储设备</res>
+      <res name="UGS_LOG_RS_MODIFY" id="IMu088">记录集正在执行更新操作...</res>
+      <res name="UGS_LOG_RS_UPDATE" id="IMu089">记录集更新成功</res>
+      <res name="UGS_LOG_CREATEDATASET" id="IMu090">数据源(%s)创建数据集(%s)</res>
+      <res name="UGS_LOG_DS_CONNECT" id="IMu091">数据源(%s)建立连接</res>
+      <res name="UGS_LOG_DR_RENAME" id="IMu092">将栅格数据集 (%s) 重命名为 (%s)</res>
+		<res name="UGS_LOG_VM_CREATE" id="IMu093">创建版本 (%s)</res>
+		<res name="UGS_LOG_VM_DELETE" id="IMu094">删除版本 (%s)</res>
+	  	<res name="UGS_LOG_VM_SWAP" id="IMu095">切换版本 (%s)</res>
+	  	<res name="UGS_LOG_VM_UPDATEINFO" id="IMu096">修改版本信息 (%s)</res>
+	  	<res name="UGS_LOG_VM_REGISTER" id="IMu097">注册版本数据集 (%s)</res>
+	  	<res name="UGS_LOG_VM_UNREGISTER" id="IMu098">反注册版本数据集 (%s)</res>
+		<res name="UGS_LOG_VM_RECONCILE" id="IMu099">版本协调 (%s)</res>
+	  	<res name="UGS_LOG_VM_COMMIT" id="IMu0100">版本提交 (%s)</res>
+	  	<res name="UGS_LOG_VM_TRANCONFLICT" id="IMu0101">版本冲突解决 (%s)</res>
+	  	<res name="UGS_LOG_DR_UPDATE"	id="IMu0102">栅格数据集(%s) 更新</res>
+	  	<res name="UGS_LOG_DV_PJCONVERT" id="IMu0103">矢量数据集(%s) 投影转换</res>
+	  	<res name="UGS_LOG_DR_PJCONVERT" id="IMu0104">栅格数据集(%s) 投影转换</res>
+		<res name="UGS_LOG_DR_CLIP" id="IMu0105">栅格数据集(%s) 裁剪</res>
+	  	<res name="UGS_LOG_DR_RESAMPLE" id="IMu0106">栅格数据集(%s) 重采样</res>
+		<res name="UGS_LOG_DR_MATH_ANALYST" id="IMu0107">栅格数据集(%s) 代数运算</res>
+		</ICode>
+
+    <ICode description="3dsMax插件信息">
+      <res name="UGS_MAX_MENU"  id="IMp000">超图Max插件</res>
+      <res name="UGS_MAX_BATCH_IMPORT"  id="IMp001">批量导入模型...</res>
+      <res name="UGS_MAX_BATCH_EXPORT"  id="IMp002">批量导出模型...</res>
+      <res name="UGS_MAX_SCRIPT"  id="IMp003">脚本工具...</res>
+      <res name="UGS_MAX_IMPORT_TERRAIN"  id="IMp004">导入地形...</res>
+      <res name="UGS_MAX_EXPORT_TERRAIN"  id="IMp005">导出地形...</res>
+      <res name="UGS_MAX_BATCH_CONVERT_TERRAIN"  id="IMp006">批量转换地形...</res>
+      <res name="UGS_MAX_EXPORT_REGION3D"  id="IMp007">导出三维面...</res>
+      <res name="UGS_MAX_EXPORT_DATASET"  id="IMp008">生成数据集...</res>
+      <res name="UGS_MAX_EXPORT_CACHE"  id="IMp009">生成缓存...</res>
+      <res name="UGS_MAX_APPEND_CACHE"  id="IMp010">追加到缓存中...</res>
+      <res name="UGS_MAX_EXPORT_KML"  id="IMp011">生成KML...</res>
+      <res name="UGS_MAX_TEXTURE_SETTING"  id="IMp012">纹理设置...</res>
+      <res name="UGS_MAX_HELP"  id="IMp013">帮助</res>
+      <res name="UGS_MAX_ABOUT"  id="IMp014">关于</res>
+
+      <res name="UGS_MAX_ERROR"  id="IMp015">错误</res>
+      <res name="UGS_MAX_HINT"  id="IMp016">提示</res>
+      <res name="UGS_MAX_CONVERT"  id="IMp017">转换</res>
+      <res name="UGS_MAX_ORIGINAL"  id="IMp018">原始</res>
+      <res name="UGS_MAX_COMPACT"  id="IMp019">紧凑</res>
+      <res name="UGS_MAX_SAVE_FAIL"  id="IMp020">保存失败</res>
+      <res name="UGS_MAX_SAVE_SUCCESS"  id="IMp021">保存成功</res>
+      <res name="UGS_MAX_IMPORT_FAIL"  id="IMp022">导入失败</res>
+
+      <res name="UGS_MAX_LATLONG_HINT"  id="IMp023">经纬度信息请输入正确的数值类型（整数或者小数）</res>
+      <res name="UGS_MAX_LATLONG_WARNING"  id="IMp024">经纬度信息超过正常大小</res>
+      <res name="UGS_MAX_LIMITS_WARNING"  id="IMp025">导入范围未设置</res>
+      <res name="UGS_MAX_LOCATION_NOT_FULL"  id="IMp026">插入点经纬度输入不全</res>
+
+      <res name="UGS_MAX_FILE_PATH_HINT"  id="IMp027">指示文件路径</res>
+      <res name="UGS_MAX_TEXTURE_PATH_HINT"  id="IMp028">请指明所需纹理路径</res>
+
+      <res name="UGS_MAX_SCENE_IS_NULL"  id="IMp029">场景中没有数据</res>
+      <res name="UGS_MAX_REGION3D_IS_NULL"  id="IMp030">场景中没有可导出的三维面数据</res>
+
+      <res name="UGS_MAX_EXPORT_MODEL_COUNT"  id="IMp031">导出%d个模型</res>
+      <res name="UGS_MAX_EXPORT_END"  id="IMp032">导出完毕</res>
+      <res name="UGS_MAX_ADD_MODEL_COUNT"  id="IMp033">添加%d个模型</res>
+
+      <res name="UGS_MAX_DATASET_NAME_IS_NULL"  id="IMp034">数据集名称为空</res>
+      <res name="UGS_MAX_IMAGE_IS_NONENTITY"  id="IMp035">影像数据为空</res>
+
+      <res name="UGS_MAX_TERRAIN_IS_NONENTITY"  id="IMp036">未包含有效的地形数据</res>
+      <res name="UGS_MAX_SCT_WARNING"  id="IMp037">SCT地形缓存暂不支持修改后导出</res>
+      <res name="UGS_MAX_OUTPUT_PATH"  id="IMp038">输出路径</res>
+      <res name="UGS_MAX_SUCCESS"  id="IMp039">成功</res>
+      <res name="UGS_MAX_OUTPUT_FAIL" id="IMp040">导出失败</res>
+      <res name="UGS_MAX_OUTPUT_SUCCESS" id="IMp041">导出成功</res>
+    </ICode>
+    
+    <ICode description="场景输出信息">
+      <res name="UGS_FLAT_OUTPUT_ENTERMOUSEKEYROAM"  id="IMp100">进入键鼠漫游模式，Esc或鼠标右键退出，鼠标滚轮或+-更改步长</res>
+      <res name="UGS_FLAT_OUTPUT_ROAMSTEPADJUST"  id="IMp101">漫游步长</res>
+      <res name="UGS_FLAT_OUTPUT_EXITMOUSEKEYROAM"  id="IMp102">退出键鼠漫游模式</res>
+      
+      <res name="UGS_SCENE_FRAMESTATE_AVGFPS" id="IMp103">平均帧率_</res>
+      <res name="UGS_SCENE_FRAMESTATE_BESTFPS" id="IMp104">最好帧率_</res>
+      <res name="UGS_SCENE_FRAMESTATE_WORSTFPS" id="IMp105">最差帧率_</res>
+      <res name="UGS_SCENE_FRAMESTATE_TRIANGLESCOUNT" id="IMp106">三角面数量_</res>
+    </ICode>
+    
 	</Section>
 </Resource>
 

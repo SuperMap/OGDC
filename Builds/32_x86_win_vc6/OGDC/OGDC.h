@@ -6,7 +6,7 @@
 #endif // _MSC_VER >= 1000
 
 //OGDC Ð¡°æ±¾ºÅ
-#define OGDCVERSION 9222
+#define OGDCVERSION 10107
 
 #include "../Element/Element.h"
 
