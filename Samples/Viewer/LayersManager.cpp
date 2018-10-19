@@ -92,7 +92,7 @@ void CLayersManager::OnButtonLayerAdd()
 			style.m_nFillStyle = 1;
 		}
 
-		OgdcString strName = dlg.m_pDataset->GetName() + "@" + dlg.m_pDataSource->GetAlias();		
+		OgdcString strName = dlg.m_pDataset->GetName() + _U("@") + dlg.m_pDataSource->GetAlias();		
 		for(int i=0;i<m_datasets.GetSize();i++)
 		{
 			if(dlg.m_pDataset == m_datasets[i])
@@ -261,7 +261,7 @@ void CLayersManager::OnChangeEditLinewidth()
 		OgdcStyle style = m_styles[nCount-1-nSel];
 		CString str;
 		GetDlgItem(IDC_EDIT_LINEWIDTH)->GetWindowText(str);
-		style.m_nLineWidth = atoi(str);
+		style.m_nLineWidth = _wtoi(str);
 		m_styles[nCount-1-nSel] = style;
 	}		
 }
@@ -318,7 +318,7 @@ void CLayersManager::OnSelchangeListLayers()
 	{
 		OgdcStyle style = m_styles[nCount-1-nSel];
 		CString str;
-		str.Format("%d", style.m_nLineWidth);
+		str.Format(_U("%d"), style.m_nLineWidth);
 		GetDlgItem(IDC_EDIT_LINEWIDTH)->SetWindowText(str);
 
 		BOOL bNullFill = FALSE;
@@ -361,7 +361,7 @@ void CLayersManager::OnChangeEditMarkersize()
 		OgdcStyle style = m_styles[nCount-1-nSel];
 		CString str;
 		GetDlgItem(IDC_EDIT_MARKERSIZE)->GetWindowText(str);
-		style.m_nMarkerSize = atoi(str);
+		style.m_nMarkerSize = _wtoi(str);
 		m_styles[nCount-1-nSel] = style;
 	}
 	

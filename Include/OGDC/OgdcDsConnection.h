@@ -143,7 +143,13 @@ public:
 	OgdcInt		m_nConnIncNum;
 	
 	//! \brief 数据库是否扩展打开	
-	OgdcBool	m_bExpandOpen;	
+	OgdcBool	m_bExpandOpen;
+    
+    //! \brief udb加密类型。
+    OgdcInt m_nEncryType;
+
+	//! \brief 坐标参考系,用于OGC服务 add by huangkj 2015-12-8
+	OgdcString  m_strWebCoordinate;
 };
 }
 #endif // !defined(OGDCDSCONNECTION_H)

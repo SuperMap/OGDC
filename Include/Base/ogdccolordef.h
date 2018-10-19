@@ -12,10 +12,14 @@ enum PixelFormat
 	IPF_MONO			= 1,
 	//! \brief 4位,16色
 	IPF_FBIT			= 4,
-	//! \brief 8位,256色
-	IPF_BYTE			= 8,
-	//! \brief 16位,彩色
+	//! \brief 8位无符号,256色
+	IPF_UBYTE			= 8,
+	//! \brief 8位有符号,256色,新增
+	IPF_BYTE			= 80,
+	//! \brief 16位有符号,彩色
 	IPF_TBYTE			= 16,
+	//! \brief 16位无符号,彩色，新增
+	IPF_UTBYTE			= 160,
 	//! \brief 24位,真彩色
 	IPF_RGB				= 24,
 	//! \brief 32位,增强真彩色
@@ -26,8 +30,12 @@ enum PixelFormat
 	IPF_LONGLONG		= 64,
 	//! \brief LONG
 	IPF_LONG			= 320,
+	//! \brief LONG
+	IPF_ULONG			= 321,
 	//! \brief 32位,浮点型
 	IPF_FLOAT			= 3200,
+	//! \brief 96位格式，R通道32位（float），B通道32位（float），G通道32位（float）
+	IPF_FLOAT32_RGB     = 4800,
 	//! \brief 64位,双精度浮点型
 	IPF_DOUBLE			= 6400	
 };

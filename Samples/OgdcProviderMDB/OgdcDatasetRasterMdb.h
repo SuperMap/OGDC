@@ -92,62 +92,63 @@ public:
 	virtual OgdcBool IsBuildPyramid() const;
 
 	//! \brief 得到扫描线
-	virtual OgdcBool GetScanline(OgdcInt nRowIndex,OgdcRasterScanline& ScanLine, OgdcInt nStartCol = 0);
+	virtual OgdcBool GetScanline(OgdcInt nRowIndex,OgdcRasterScanline& ScanLine, 
+		OgdcInt nBandIndex=0,OgdcInt nStartCol = 0);
 
 	//! \brief 通过行列索引设置扫描线
 	virtual OgdcBool SetScanline(OgdcInt nRowIndex,OgdcInt nColIndex,
-		const OgdcRasterScanline& ScanLine);
+		const OgdcRasterScanline& ScanLine, OgdcInt nBandIndex=0);
 
 	//! \brief 读入指定块数据。
 	//! \param nRowBlock 影像块行号[in]。
 	//! \param nColBlock 影像块列号[in]。
 	//! \return 影像块指针。
 	//! \attention 返回的的栅格块指针由外面负责释放
-	virtual OgdcRasterBlock* LoadBlock(OgdcInt nRowBlock, OgdcInt nColBlock);	
+	virtual OgdcRasterBlock* LoadBlock(OgdcInt nRowBlock, OgdcInt nColBlock,OgdcInt nBandIndex=0);	
     
 	//! \brief 将一内存中的影像块存入磁盘。
 	//! \param pImgBlock 影像块指针[in]。
 	//! \return 是否成功保存，成功返回TRUE，失败返回FALSE。
-	virtual OgdcBool SaveBlock(OgdcRasterBlock* pImgBlock);	
+	virtual OgdcBool SaveBlock(OgdcRasterBlock* pImgBlock,OgdcInt nBandIndex=0);	
 	
 	//! \brief 释放在内存中的所有栅格块
-	virtual void ReleaseAllBlocks();
+	virtual void ReleaseAllBlocks(OgdcInt nBandIndex=0);
 	
-	//! \brief 获取影像数据集指定行列某一像素点的颜色值。
-	//! \param nCol 像素点列号[in]。
-	//! \param nRow 像素点行号[in]。
-	//! \return 颜色值。
-	//! \remarks 颜色值的数值因数据集的像素格式不同而不同。
-	virtual OgdcColor GetPixel(OgdcInt nCol, OgdcInt nRow);	
-	
-	//! \brief  设置影像数据集指定行列某一像素点的颜色值。
-	//! \param nCol 像素点列号[in]。
-	//! \param nRow 像素点行号[in]。
-	//! \param nColor 颜色值[in]。
-	//! \remarks 要根据数据集的像素格式正确设置像素点的颜色值。
-	virtual void SetPixel(OgdcInt nCol, OgdcInt nRow, OgdcColor nColor);	
+// 	//! \brief 获取影像数据集指定行列某一像素点的颜色值。
+// 	//! \param nCol 像素点列号[in]。
+// 	//! \param nRow 像素点行号[in]。
+// 	//! \return 颜色值。
+// 	//! \remarks 颜色值的数值因数据集的像素格式不同而不同。
+// 	virtual OgdcColor GetPixel(OgdcInt nCol, OgdcInt nRow);	
+// 	
+// 	//! \brief  设置影像数据集指定行列某一像素点的颜色值。
+// 	//! \param nCol 像素点列号[in]。
+// 	//! \param nRow 像素点行号[in]。
+// 	//! \param nColor 颜色值[in]。
+// 	//! \remarks 要根据数据集的像素格式正确设置像素点的颜色值。
+// 	virtual void SetPixel(OgdcInt nCol, OgdcInt nRow, OgdcColor nColor);	
 	
 	//! \brief 获取Grid数据集指定行列某一点的特性值。
 	//! \param nCol 网格列号[in]。
 	//! \param nRow 网格行号[in]。
 	//! \return 特性值。
-	virtual OgdcDouble GetValue(OgdcInt nCol, OgdcInt nRow);
+	virtual OgdcDouble GetValue(OgdcInt nCol, OgdcInt nRow,OgdcInt nBandIndex=0);
 	
 	//! \brief 设置Grid数据集指定行列某一点的特性值。
 	//! \param nCol 网格列号[in]。
 	//! \param nRow 网格行号[in]。
 	//! \param dValue 特性值[in]。
 	//! \remarks 要根据数据集的白化值正确设置网格点的特性值。
-	virtual void SetValue(OgdcInt nCol, OgdcInt nRow, OgdcDouble dValue);
+	virtual void SetValue(OgdcInt nCol, OgdcInt nRow, OgdcDouble dValue,OgdcInt nBandIndex=0);
 	
-	//! \brief 获取可见栅格块
-	//! \param rcView 可视范围[in]。
-	//! \param nDeviceWidth 设备宽度，主要指当前窗口的宽度[in]。
-	//! \param nDeviceHeight 设备高度，主要指当前窗口的高度[in]。
-	//! \return 返回可见栅格块指针。
-	//! \attention 返回的指针由外面管理，负责释放。
-	virtual OgdcRasterBlock* GetViewBlock(const OgdcRect2D& rcView, 
-		OgdcInt nDeviceWidth, OgdcInt nDeviceHeight);
+// 	//! \brief 获取可见栅格块
+// 	//! \param rcView 可视范围[in]。
+// 	//! \param nDeviceWidth 设备宽度，主要指当前窗口的宽度[in]。
+// 	//! \param nDeviceHeight 设备高度，主要指当前窗口的高度[in]。
+// 	//! \return 返回可见栅格块指针。
+// 	//! \attention 返回的指针由外面管理，负责释放。
+// 	virtual OgdcRasterBlock* GetViewBlock(const OgdcRect2D& rcView, 
+// 		OgdcInt nDeviceWidth, OgdcInt nDeviceHeight);
 
 	//! \brief 返回数据源指针
 	virtual OgdcDataSource* GetDataSource() const;
@@ -165,15 +166,6 @@ public:
 	//! \param bModified 数据集是否有过修改，默认有修改[in]。
 	virtual void SetModifiedFlag(OgdcBool bModified = TRUE);
 
-	//! \brief 地理坐标换成像素坐标。
-	//! \param rectXY [in]。
-	//! \param rectImg [out]。
-	void XYToImg(const OgdcRect2D& rectXY, OgdcRect& rectImg);
-
-	//! \brief 像素坐标换成地理坐标
-	//! \param rectImg [in]。
-	//! \param rectXY [out]。
-	void ImgToXY(const OgdcRect& rectImg, OgdcRect2D& rectXY);	
 	
 	//! \brief 获取相应层的金字塔
 	//! \param nImgWidth [in]。

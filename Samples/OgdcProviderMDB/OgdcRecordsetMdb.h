@@ -156,11 +156,13 @@ public:
 	//! \return 是否取几何对象成功，成功返回TRUE，失败返回FALSE。
 	//! \attention 外面负责删除，否则会有内存泄漏。
 	virtual OgdcBool GetElement(OgdcElement*& pElement) ;	
+	virtual OgdcBool GetElement(UGC::UGGeometry*& pGeometry);
 
 	//! \brief 设置当前记录的几何对象。
 	//! \param pElement 几何对象指针[in]。
 	//! \return 是否设置几何对象成功，成功返回TRUE，失败返回FALSE。
 	virtual OgdcBool SetElement(OgdcElement* pElement) ;	
+	virtual OgdcBool SetElement(UGC::UGGeometry* pGeometry);
 
 	//! \brief 增加新记录,成功，返回TRUE值，失败返回FALSE值；
 	//! \param pGeometry [in] 添加的Geometry指针
@@ -168,23 +170,27 @@ public:
 	//! \return True 和 False 的值
 	//! \remarks 如果想得到新对象的ID，那么马上调用GetId方法
 	virtual OgdcInt AddNew(OgdcElement *pElement, OgdcBool bReturnID=FALSE) ;
+	virtual OgdcInt AddNew(UGC::UGGeometry* pGeometry, OgdcBool bReturnID=FALSE);
 
 	//! \brief 取出数据集中某行特征要素。
 	//! \param nID 数据集记录ID号[in]。
 	//! \return 特征要素指针。
 	//! \attention 外面负责删除，否则会有内存泄漏。
 	virtual OgdcFeature* GetFeature() ;	
+	virtual UGC::UGFeature* GetFeatureEx();
 
 	//! \brief 将特征要素更新到数据集中。
 	//! \param pFeature 特征要素指针[in]。
 	//! \return 是否保存成功，成功返回TRUE，失败返回FALSE。
 	virtual OgdcBool UpdateFeature(const OgdcFeature* pFeature) ;
+	virtual OgdcBool UpdateFeature(const UGC::UGFeature* pFeature);
 	
 	//! \brief 将特征要素追加到数据集未尾。
 	//! \param pFeature 特征要素指针[in]。
 	//! \return 是否追加成功，成功返回TRUE，失败返回FALSE。
 	//! \remarks 追加时特征要素关联的数据集记录ID将不起作用。
 	virtual OgdcBool AddFeature(const OgdcFeature* pFeature) ;
+	virtual OgdcBool AddFeature(const UGC::UGFeature* pFeature);
 
 	//! \brief 通过ID定位记录指针。
 	//! \param nID 记录ID[in]。
@@ -258,6 +264,7 @@ protected:
 	
 	//! \brief 指向该记录的几何对象的指针
 	OgdcElement* m_pElement;
+	UGC::UGGeometry* m_pGeometry;
 
 };
 

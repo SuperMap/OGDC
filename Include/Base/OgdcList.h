@@ -358,6 +358,7 @@ private:
 	std::list<T> m_list;
 };
 
+
 }
 
 #endif // !defined(AFX_OGDCLIST_H__E90FD10D_6701_47C1_8726_BD749DE72C09__INCLUDED_)

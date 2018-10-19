@@ -53,6 +53,11 @@
 	#define OGDC_API OGDCIMPORT
 #endif
 
+#ifdef ANIMATION_EXPORTS
+#define ANIMATION_API UGEXPORT
+#else
+#define ANIMATION_API UGIMPORT
+#endif
 
 #endif // !defined(OGDCEXPORT_H)
 

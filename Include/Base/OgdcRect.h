@@ -152,7 +152,7 @@ public:
 	//! \param 		rc	矩形
 	//! \returen	相交返回true，否则，返回false。
 	//! \image html Intersect2.png
-	OgdcBool Intersects(const OgdcRect& rc) const;
+	OgdcBool IsIntersect(const OgdcRect& rc) const;
 
 
 	//! \brief 		规范矩形，确保left<=right,top<=bottom	

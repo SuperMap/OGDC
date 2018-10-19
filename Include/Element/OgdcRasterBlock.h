@@ -18,6 +18,8 @@
 #if !defined(AFX_OGDCRASTERBLOCK_H__A17D0A45_99AE_4A52_94AD_DFC0C2727811__INCLUDED_)
 #define AFX_OGDCRASTERBLOCK_H__A17D0A45_99AE_4A52_94AD_DFC0C2727811__INCLUDED_
 
+#pragma warning (disable:4244)
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -75,7 +77,8 @@ public:
 	void SetModifiedFlag(OgdcBool bFlag = TRUE);
 
 	//! \brief  清空数据，释放内存
-	void Empty();
+	//! \param bIsClearData 是否清空数据
+	void Empty(OgdcBool bIsClearData = TRUE);
 
 	//! \brief  是否有效
 	OgdcBool IsValid() const;
@@ -89,17 +92,19 @@ public:
 	//! \brief  获取字节数据。
 	const OgdcByte* GetBlockData() const;
 
+private:
 	//! \brief  设置像素颜色
 	//! \param x		x坐标值
 	//! \param y		y坐标值
 	//! \param nPixel	像素颜色值
-	OgdcBool SetPixel(OgdcInt x,OgdcInt y,OgdcUint nPixel);
+	OgdcBool SetPixel(OgdcInt x,OgdcInt y,OgdcColor nPixel);
 	
 	//! \brief  获取像素颜色
 	//! \param x		x坐标值
 	//! \param y		y坐标值
-	OgdcUint GetPixel(OgdcInt x,OgdcInt y);
+	OgdcColor GetPixel(OgdcInt x,OgdcInt y);
 	
+public:
 	//! \brief  设置像素值
 	//! \param x		x坐标值
 	//! \param y		y坐标值
@@ -139,7 +144,7 @@ public:
 	//! \param dMaxValue 最大值[out]
 	//! \param dMinValue 最小值[out]
 	//! \param nNoValue 无值[in]
-	OgdcBool CalcuExtremum(OgdcDouble& dMaxValue, OgdcDouble& dMinValue, OgdcInt nNoValue = OGDC_NOVALUE);
+	OgdcBool CalcuExtremum(OgdcDouble& dMaxValue, OgdcDouble& dMinValue, OgdcDouble nNoValue = OGDC_NOVALUE);
 	
 	//! \brief  计算栅格块极值，还原block块的每个栅格值，无值也是作为一个有效的栅格值参与运算
 	//! \param dMaxValue 最大值[out]
@@ -148,10 +153,10 @@ public:
 
 	//! \brief  获取栅格块最小值
 	//! \param nNoValue 无值[in]
-	OgdcDouble GetMinValue(OgdcInt nNoValue = OGDC_NOVALUE);
+	OgdcDouble GetMinValue(OgdcDouble nNoValue = OGDC_NOVALUE);
 	//! \brief  获取栅格块最大值
 	//! \param nNoValue 无值[in]
-	OgdcDouble GetMaxValue(OgdcInt nNoValue = OGDC_NOVALUE);
+	OgdcDouble GetMaxValue(OgdcDouble nNoValue = OGDC_NOVALUE);
 
 	//! \brief Block的版本号,配合版本管理时使用
 	OgdcInt GetVersionID() { return m_nVersionID; }
@@ -160,16 +165,16 @@ public:
 	//{{管理引用基数,在使用ImgBlockRef操作ImgBlock时,记录当前ImgBlock的被引用次数, 
 	//! \brief 增加引用基数
 	//! \attention 请勿在外部使用该方法,否则会导致内存泄漏
-	void AddRefCount(){ m_nRefCount++; }
+	inline void AddRefCount(){ m_nRefCount++; }
 
 	//! \brief 在使用ImgBlockRef操作ImgBlock时,记录当前ImgBlock的被引用次数, 减少引用基数
-	void ReduceRefCount() { m_nRefCount--; }
+	inline void ReduceRefCount() { m_nRefCount--; }
 
 	//! \brief 引用基数归0
-	void ResetRefCount() { m_nRefCount = 0; }
+	inline void ResetRefCount() { m_nRefCount = 0; }
 
 	//! \brief 获取当前引用基数
-	OgdcInt GetRefCount() { return m_nRefCount; }
+	inline OgdcInt GetRefCount() { return m_nRefCount; }
 	//}}
 protected:
 	//! \brief 获取像素颜色值（像素格式：1位，单色）
@@ -184,10 +189,18 @@ protected:
 	//! \param x	x坐标值
 	//! \param y	y坐标值
 	OgdcColor GetPixel8(OgdcInt x, OgdcInt y);
+	//! \brief 获取像素颜色值（像素格式：8位，256色）
+	//! \param x	x坐标值
+	//! \param y	y坐标值
+	OgdcColor GetPixelU8(OgdcInt x, OgdcInt y);
 	//! \brief 获取像素颜色值（像素格式：16位，彩色）
 	//! \param x	x坐标值
 	//! \param y	y坐标值
 	OgdcColor GetPixel16(OgdcInt x, OgdcInt y);
+	//! \brief 获取像素颜色值（像素格式：16位无符号，彩色）
+	//! \param x	x坐标值
+	//! \param y	y坐标值
+	OgdcColor GetPixelU16(OgdcInt x, OgdcInt y);
 	//! \brief 获取像素颜色值（像素格式：24位，真彩色）
 	//! \param x	x坐标值
 	//! \param y	y坐标值
@@ -219,11 +232,21 @@ protected:
 	//! \param y	y坐标值
 	//! \param color 颜色值
 	OgdcBool SetPixel8(OgdcInt x, OgdcInt y, OgdcColor color);
+	//! \brief 设置像素颜色值（像素格式：8位，256色）
+	//! \param x	x坐标值
+	//! \param y	y坐标值
+	//! \param color 颜色值
+	OgdcBool SetPixelU8(OgdcInt x, OgdcInt y, OgdcColor color);
 	//! \brief 设置像素颜色值（像素格式：16位，彩色）
 	//! \param x	x坐标值
 	//! \param y	y坐标值
 	//! \param color 颜色值
 	OgdcBool SetPixel16(OgdcInt x, OgdcInt y, OgdcColor color);
+	//! \brief 设置像素颜色值（像素格式：16位无符号，彩色）
+	//! \param x	x坐标值
+	//! \param y	y坐标值
+	//! \param color 颜色值
+	OgdcBool SetPixelU16(OgdcInt x, OgdcInt y, OgdcColor color);
 	//! \brief 设置像素颜色值（像素格式：24位，真彩色）
 	//! \param x	x坐标值
 	//! \param y	y坐标值
@@ -268,6 +291,9 @@ public:
 	//! \brief  高度
 	OgdcInt m_nHeight;
 
+	//! \brief  深度
+	OgdcInt m_nDepth;
+
 	//! \brief  字节宽度
 	OgdcInt m_nWidthBytes;
 
@@ -297,19 +323,29 @@ public:
 
 	//! \brief  标记该块是从数据集中获取，还是新添加的。
 	OgdcBool m_bNewBlock;
-
-	//! \brief 表示从Bits转换成Value值时是否是无符号的。（对于多波段影像的各波段块，该值为TRUE；对于GRID/DEM该值为FALSE，对于单波段影像目前没有影响）
-	OgdcBool m_bIsUnsign;
 	
+	// 指向空闲队列中的前一块
+	OgdcRasterBlock* m_pLruPrev;
+
+	// 指向空闲队列中的后一块
+	OgdcRasterBlock* m_pLruNext;
+
+	// 指向哈希表中的下一块
+	OgdcRasterBlock* m_pNext;
+
 private:
 	//! \brief  像素数组
-	OgdcArray<OgdcUchar> m_data;	
+	OgdcArray<OgdcUchar> m_data;
+
+	//! \brief  像素数组头指针
+	OgdcByte* m_lpBits;
 
 	//! \brief  判断是否修改
 	OgdcBool m_bModified;    
 	OgdcInt m_nVersionID;
 	//! \brief 数据块引用基数
 	OgdcInt m_nRefCount;
+
   };
 
 }

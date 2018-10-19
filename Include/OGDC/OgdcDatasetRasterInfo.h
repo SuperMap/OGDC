@@ -38,6 +38,8 @@ public:
 public:
 	//! \brief 拷贝构造函数
 	void operator=(const OgdcBandInfo& bInfo);
+	//! \brief 波段数据集在数据库中的索引
+	OgdcInt m_nBandID;
 	//! \brief 波段数据集的波段序号，Base 0。
 	OgdcInt m_nBandIndex;
 	//! \brief 波段的名字
@@ -58,6 +60,8 @@ public:
 	OgdcColorset m_colorset;
 	//! \brief 无效值，如果某一点的值是m_NoValue,将认为这一点没有值
 	OgdcDouble m_dNoValue;
+	//! \brief 波段高程值
+	OgdcDouble m_dAltitude;
 };
 
 //! \brief Ogdc栅格数据集描述信息类。
@@ -116,17 +120,11 @@ public:
 	//! \brief 数据集类型。
 	OgdcDataset::Type m_nType;
 		
-	//! \brief 像素格式。
-	PixelFormat m_nPixelFormat;
-	
 	//! \brief 影像宽度，单位：像素值。
-	OgdcInt m_nWidth;
+	OgdcLong m_nWidth;
 	
 	//! \brief 影像高度，单位：像素值。
-	OgdcInt m_nHeight;
-	
-	//! \brief 影像每一行的字节数。
-	OgdcInt m_nWidthBytes;
+	OgdcLong m_nHeight;
 	
 	//! \brief 单位影像块边长。
 	OgdcDatasetRasterInfo::IBSizeOption m_nBlockSize;
@@ -140,29 +138,8 @@ public:
 	//! \brief 纵向分块总数(包含余数)。
 	OgdcInt m_nRowBlocks;	
 
-	//! \brief 调色板
-	OgdcColorset m_colorset;
-	
-	//! \brief 无效值，如果某一点的值是m_NoValue,将认为这一点没有值。
-	OgdcDouble m_dNoValue;
-	//! \brief 波段数
-	OgdcInt m_nBandCount;
-
-	//! \brief 波段数据集的波段序号，Base 0。
-	OgdcInt m_nBandIndex;
-	
-	//! \brief 波段所在数据表的列名称。
-	OgdcString m_strFieldName;
-
 	//! \brief 对数据集的描述信息。
 	OgdcString m_strDescription;
-
-	//! \brief 最小高程值 
-	OgdcDouble m_dMinZ;
-	
-	//! \brief 最大高程值
-	OgdcDouble m_dMaxZ;
-
 	//波段信息
 	OgdcArray<OgdcBandInfo> m_arrBandInfo;
 };

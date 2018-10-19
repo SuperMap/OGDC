@@ -64,8 +64,10 @@ public:
 	OgdcInt GetTotalSeconds() const;
 	//! \brief 获取秒,日时分不计算在内
 	OgdcInt GetSeconds() const;
-	
 
+	//! \brief 获取时间间隔
+	double GetTimeSpan() const;
+	
 	//! \brief 重载操作符 -
 	OgdcTimeSpan operator-(const OgdcTimeSpan &tms) const;
 	//! \brief 重载操作符 +
@@ -217,6 +219,16 @@ public:
     //!\param bias,与基础时间t的偏差，单位是分钟
 	//!\param return返回新的地方时
 	static OgdcTime ConvertToRegionalTime(OgdcTime t, OgdcInt bias);
+
+	//!\brief 转换为Long型的时间
+	//!\param t 时间
+	//!\return 返回Long型的时间
+	static OgdcLong ConvertToLongTime(OgdcTime t);
+
+	//!\brief 将普通的日期格式转换成UGTime接受的转换格式,暂时不支持星期，毫秒，英文格式
+	//!\timeFormat C#/Java日期格式，如“YYYY-MM-DD HH:mm:ss”
+	//!\ return "%Y-%m-%d %H:%M:%S"
+	static OgdcString ConvertToUGTimeFormat(OgdcString timeFormat);
 public: 
 	//! \brief 把年月日时分秒转化为内部的double数值
 	//! \param nYear 年
@@ -228,13 +240,14 @@ public:
 	void SetDateTime(OgdcInt nYear, OgdcInt nMonth, OgdcInt nDay, OgdcInt nHour, OgdcInt nMin, OgdcInt nSec);
 	//! \brief 把double数值转化为tm结构
 	void GetDateTime(struct tm& tmDest) const;
-private:
-	//! \brief 获取标准的tm结构
-	void GetStandardTm(struct tm& tmDest) const;
 
 	//! \brief 获取处理后的double值
 	//! \remarks 等同于MFC中的_AfxDoubleFromDate
 	OgdcDouble GetDoubleValue() const;
+private:
+	//! \brief 获取标准的tm结构
+	void GetStandardTm(struct tm& tmDest) const;
+	
 	//! \brief 从处理后的double值中得到时间
 	//! \remarks 等同于MFC中的_AfxDateFromDouble
 	void FromDoubleValue(OgdcDouble dValue);

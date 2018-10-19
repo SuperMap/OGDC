@@ -95,7 +95,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
 	//add title by siyh/////////////////
-	cs.lpszName = "OGDC Viewer";
+	cs.lpszName = _U("OGDC Viewer");
 	cs.style &= ~FWS_ADDTOTITLE;
 	//add title by siyh/////////////////
 

@@ -22,7 +22,7 @@
 #endif // _MSC_VER > 1000
 
 #include "OGDC/OgdcDataSource.h"
-#include "../../Include/Base/OgdcDict.h"
+#include "Base/OgdcDict.h"
 #include "afxdao.h"
 
 namespace OGDC

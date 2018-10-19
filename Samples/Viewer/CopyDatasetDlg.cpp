@@ -32,7 +32,7 @@ CCopyDatasetDlg::CCopyDatasetDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CCopyDatasetDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CCopyDatasetDlg)
-	m_strSrcDTName = _T("");
+	m_strSrcDTName = _U("");
 	//}}AFX_DATA_INIT
 	
 
@@ -137,8 +137,8 @@ void CCopyDatasetDlg::OnSelchangeSrcdatasource()
 				strName = m_pDataset->GetName();
 			}
 			else
-				strName = "";
-			m_cmbSrcDataset.AddString(_T(strName));				
+				strName = _U("");
+			m_cmbSrcDataset.AddString(strName);				
 		}
 		m_cmbSrcDataset.SetCurSel(0);
 		OnSelchangeDataset();
@@ -164,7 +164,7 @@ void CCopyDatasetDlg::OnSelchangeObjdatasource()
 		if (m_pDataset!=NULL) {
 			strDtName = m_pDataset->GetName();
 		}
-		else strDtName = "";
+		else strDtName = _U("");
 		CString m_strObjDTName = m_pObjDataSource->GetUnoccupiedDatasetName(strDtName);
 		m_editDTName.SetWindowText(m_strObjDTName);		
 	}

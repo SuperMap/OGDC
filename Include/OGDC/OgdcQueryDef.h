@@ -211,6 +211,9 @@ public:
 		//! \brief 空间查询算子\n
 		//!返回被搜索图层中内点在搜索对象内部的面对象。 
 		CentroidInPolygon	=32,
+
+		//! \brief 内部相交
+		InnerIntersect = 33,
 	};	
 	
 	//! \brief 查询选项枚举
@@ -345,6 +348,11 @@ public:
 	
 	//! \brief 距离查询单位，经纬度数据下可以采用米(AU_METER)等单位。
 	OgdcInt m_nDistUnit;
+
+	//! \brief 是否带id查询，udbx引擎，获取id需要一个单独的语句获取，对性能影响很大，
+	// 当数据量很大并且有些场景的recordset只用一次并且只执行movenext时,用eof判断recordset是否取完，其他操作均不支持，无需获取id从而提升性能，
+	// 因此可以用此参数设置,默认是true，获取id
+	OgdcBool m_bFetchID;
 };
 
 }

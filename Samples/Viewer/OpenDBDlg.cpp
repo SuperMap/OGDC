@@ -95,10 +95,10 @@ BOOL COpenDBDlg::OnInitDialog()
 	{
 		m_Provider = OgdcProviderManager::GetAt(i);
 		OgdcString m_EngineName = OgdcProviderManager::GetProviderName(m_Provider.m_nType);
-		m_cmbEngine.AddString(_T(m_EngineName));
+		m_cmbEngine.AddString(m_EngineName);
 		
 	}
-	m_cmbEngine.SelectString(0,"SDB Plus Engine");
+	m_cmbEngine.SelectString(0,_U("Universal DataBase Engine"));
 	OnSelchangeComboEnginetype();
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -106,30 +106,39 @@ BOOL COpenDBDlg::OnInitDialog()
 
 void COpenDBDlg::OnButtonPath() 
 {	
-	CString strFilter = _T("SuperMap sdbplus File(*.sdb)|*.sdb||");
+	CString strFilter = _U("SuperMap UDB File(*.udb)|*.udb||");
 
 	if(m_nEngineType == 5 )
 	{
-		strFilter = _T("SuperMap Image File(*.sit;*.bmp;*.jpg;*.png)|*.sit;*.bmp;*.jpg;*.png||");
+		strFilter = _U("SuperMap Image File(*.sit;*.bmp;*.jpg;*.png)|*.sit;*.bmp;*.jpg;*.png||");
 	}
 	else if( m_nEngineType == OGDC::oeFile)
 	{
-		strFilter = _T("SuperMap UDB File(*.udb)|*.udb||");
+		strFilter = _U("SuperMap UDB File(*.udb)|*.udb||");
 	}
 	else
 	{		
-	    strFilter = _T( m_Provider.m_strName+"("+ m_Provider.GetPostfix()+")"+"|"+ m_Provider.GetPostfix()+"||" );	
+	    strFilter = m_Provider.m_strName+ _U("(") + m_Provider.GetPostfix()+ _U(")") +_U("|")+ m_Provider.GetPostfix()+_U("||" );	
 	}
 	
 
-	CFileDialog FileDialog(m_bOpen, _T(""), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter);
-	
-	FileDialog.m_ofn.lpstrInitialDir = "..\\..\\..\\SampleData";
+	CFileDialog FileDialog(m_bOpen, _U(""), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter);
+	//////////////////////////////////////////////////////////////////////////
+	//获取数据所在的绝对路径
+	HMODULE module = GetModuleHandle(0);
+	OgdcChar path[MAX_PATH];
+	GetModuleFileName(module,path,MAX_PATH);
+	OgdcString strApplicationPath = path;
+	int nPos = strApplicationPath.Find(_U("Builds"));
+	OgdcString strDataPath = strApplicationPath.Left(nPos) + _U("SampleData\\");
+	//////////////////////////////////////////////////////////////////////////
+
+	FileDialog.m_ofn.lpstrInitialDir = strDataPath;
 	if(IDOK == FileDialog.DoModal())
 	{
-		m_strDatabase = _T("");
-		m_strPassWord = _T("");
-		m_strUser = _T("");
+		m_strDatabase = _U("");
+		m_strPassWord = _U("");
+		m_strUser = _U("");
 		m_strServer = FileDialog.GetPathName();
 		m_strAlias = FileDialog.GetFileTitle();
 		UpdateData(false);
@@ -152,10 +161,10 @@ void COpenDBDlg::OnOK()
 	if(n_Class == 2)
 	{
 		OgdcString strTmpServer = OgdcString(m_strServer);
-		char cTmp = '\\';
+		char cTmp = _U('\\');
 		if (strTmpServer.Find(cTmp,0)==-1) 
 		{
-			AfxMessageBox("请输入正确的路径！");
+			AfxMessageBox(_U("请输入正确的路径！"));
 		     return;
 		}
 	}
@@ -164,17 +173,17 @@ void COpenDBDlg::OnOK()
 
 void COpenDBDlg::OnSelchangeComboEnginetype() 
 {	
-	m_strAlias = _T("");
-	m_strDatabase = _T("");
-	m_strPassWord = _T("");
-	m_strServer = _T("");
-	m_strUser = _T("");
+	m_strAlias = _U("");
+	m_strDatabase = _U("");
+	m_strPassWord = _U("");
+	m_strServer = _U("");
+	m_strUser = _U("");
 	UpdateData(false);
 	
 	LONG nType = m_cmbEngine.GetCurSel();
 	if (nType==LB_ERR)
 	{
-		MessageBox("找不到Provider动态链接库文件（*.sdx、*.odx）");
+		MessageBox(_U("找不到Provider动态链接库文件（*.sdx、*.odx）"));
 		return;
 	}
 	CString strName;

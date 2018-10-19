@@ -132,7 +132,9 @@ public:
 		//! \brief 正球墨卡托
 		PRJ_SPHERE_MERCATOR					= 43045,		
 		//! \brief 南半球彭纳投影
-		PRJ_BONNE_SOUTH_ORIENTATED			= 43046		
+		PRJ_BONNE_SOUTH_ORIENTATED			= 43046,	
+		PRJ_OBLIQUE_STEREOGRAPHIC           = 43047,     /* Oblique stereographic , Esri 称为 double stereographic*/ 
+		PRJ_BAIDU_MERCATOR					= 43048     /* baidu Mercator*/ 
 	};
 
 public:

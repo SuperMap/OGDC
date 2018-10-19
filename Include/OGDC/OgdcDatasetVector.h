@@ -60,17 +60,20 @@ public:
 	//! \param nID 数据集记录ID号[in]。
 	//! \return 行特征要素指针。
 	virtual OgdcFeature* GetFeature(OgdcInt nID) = 0;	
+	virtual UGC::UGFeature* GetFeatureEx(OgdcInt nID) = 0;
 
 	//! \brief 将特征要素更新到数据集中。
 	//! \param pFeature 特征要素指针[in]。
 	//! \return 是否保存成功，成功返回TRUE，失败返回FALSE。
 	virtual OgdcBool UpdateFeature(const OgdcFeature* pFeature) = 0;
+	virtual OgdcBool UpdateFeature(const UGC::UGFeature* pFeature) = 0;
 	
 	//! \brief 将特征要素追加到数据集未尾。
 	//! \param pFeature 特征要素指针[in]。
 	//! \return 是否追加成功，成功返回TRUE，失败返回FALSE。
 	//! \remarks 追加时特征要素关联的数据集记录ID将不起作用。
-	virtual OgdcBool AddFeature(const OgdcFeature* pFeature) = 0;	
+	virtual OgdcBool AddFeature(const OgdcFeature* pFeature) = 0;
+	virtual OgdcBool AddFeature(const UGC::UGFeature* pFeature) = 0;
 
 	//! \brief 将特征要素从数据集中删除。
 	//! \param nID 数据集记录ID号[in]。
@@ -242,6 +245,8 @@ public:
 public:
 	//! \brief 矢量数据集描述信息
 	OgdcDatasetVectorInfo m_info;	
+	//! \brief 矢量数据集的子数据集指针
+	OgdcArray<OgdcDatasetVector*> m_arrSubDataset;
 };
 
 }

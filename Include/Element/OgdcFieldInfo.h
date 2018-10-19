@@ -66,7 +66,9 @@ public:
 		//! \brief 宽字节不定长字符串类型。
 		NText =127,
 		//! \brief 几何数据类型。
-		Geometry = 128
+		Geometry = 128,
+		//用作Pg中的Jsonb字段类型
+		JsonB =129
 	};
 	
 	//! \brief 特殊系统字段标识。
@@ -96,6 +98,10 @@ public:
 	OgdcFieldInfo();
     //! \brief Ogdc矢量数据集字段描述信息构造函数
 	OgdcFieldInfo(const OgdcFieldInfo& fieldInfo);
+	
+	OgdcFieldInfo(const OgdcString& strFieldName,const OgdcString& strForeignName,FieldType nType,OgdcInt nSize,
+		const OgdcString& strFormat,const OgdcString& strDomain,OgdcBool bUpdateable,OgdcBool bRequired,
+		const OgdcString& strDefault,FieldSign nSign);
     //! \brief Ogdc矢量数据集字段描述信息析构函数
 	~OgdcFieldInfo();
 public:

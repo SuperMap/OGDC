@@ -24,6 +24,16 @@
 #include "Element/OgdcElemPoint.h"
 #include "Element/OgdcElemLine.h"
 #include "Element/OgdcElemText.h"
+#include "Element/OgdcElemPoint3D.h"
+#include "Element/OgdcElemLine3D.h"
+#include "Element/OgdcElemRegion3D.h"
+
+#include "Geometry/UGGeometryManager.h"
+#include "GeometryCAD/UGGeoPointEPS.h"
+#include "GeometryCAD/UGGeoLineEPS.h"
+#include "GeometryCAD/UGGeoRegionEPS.h"
+#include "GeometryCAD/UGGeoTextEPS.h"
+#include "Geometry3D/UGGeoModelEntity.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -36,13 +46,12 @@ OgdcRecordsetMdb::OgdcRecordsetMdb()
 	m_nID = 0;
 	m_bEdited = FALSE;
 	m_pDataset = NULL;
-	m_strFilter = OGDCPCTSTR("");
-	m_strTableName = OGDCPCTSTR("");
 	m_nRecordCount = 0;
 	m_nEditMode = dbEditNone;
 	m_bFirstAddNew = FALSE; 
 	m_pElement = NULL;
 	m_pDaoRecordset = NULL;
+	m_pGeometry = NULL;
 }
 
 OgdcRecordsetMdb::OgdcRecordsetMdb( OgdcDatasetVectorMdb *pDataset )
@@ -51,13 +60,12 @@ OgdcRecordsetMdb::OgdcRecordsetMdb( OgdcDatasetVectorMdb *pDataset )
 	m_bEdited = FALSE;
 	m_pDataset = pDataset;
 	m_strTableName = pDataset->m_info.m_strName;
-	m_strFilter = OGDCPCTSTR("");
-	m_pDataset = pDataset;
 	m_nRecordCount = 0;
 	m_nEditMode = dbEditNone;
 	m_pElement = NULL;
 	m_bFirstAddNew = FALSE; 
 	m_pDaoRecordset = NULL;
+	m_pGeometry = NULL;
 }
 
 OgdcRecordsetMdb::~OgdcRecordsetMdb()
@@ -141,6 +149,10 @@ void OgdcRecordsetMdb::Close()
 		//m_pElement 是当前编辑对象，由外部传入的对象指针
 		m_pElement = NULL;
 	}
+	if (m_pGeometry != NULL)
+	{
+		m_pGeometry = NULL;
+	}
 }
 
 OgdcBool OgdcRecordsetMdb::GetFieldValue( const OgdcString& strName, OgdcVariant& varVal )
@@ -212,9 +224,9 @@ OgdcBool OgdcRecordsetMdb::SetFieldValue( const OgdcString& strName, const OgdcV
 	OgdcVariant myVarValue = varVal;
 	COleVariant var;
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("UPDATE [%s] set %s = '%s' WHERE OGID = %d "),
-		OGDCPCTSTR(m_strTableName), OGDCPCTSTR(strName),
-		OGDCPCTSTR(myVarValue.ToString()), GetID());
+	strSQL.Format(_U("UPDATE [%s] set %s = '%s' WHERE OGID = %d "),
+		m_strTableName.Cstr(), strName.Cstr(),
+		myVarValue.ToString().Cstr(), GetID());
 
 	try
 	{
@@ -458,6 +470,7 @@ OgdcBool OgdcRecordsetMdb::GetFieldInfos( OgdcFieldInfos& fieldInfos )
 		
 		//OgdcHelperMdb::CDaoFieldInfo2OgdcFieldInfo(info, fieldInfo);
 		OgdcHelperMdb::SetFieldSign(fieldInfo);
+		fieldInfo.m_strForeignName = fieldInfo.m_strName;
 		fieldInfos.SetAt(i, fieldInfo);
 		fieldInfo.m_nFieldSign = OgdcFieldInfo::signNone;
 		fieldInfo.m_bSystem = FALSE;
@@ -474,9 +487,9 @@ OgdcBool OgdcRecordsetMdb::GetFieldInfo( const OgdcString& strName,OgdcFieldInfo
 	CDaoFieldInfo info;
 	try
 	{
-		if (strName.CompareNoCase(OGDCPCTSTR("SMID")) == 0)
+		if (strName.CompareNoCase(_U("SMID")) == 0)
 		{
-			m_pDaoRecordset->GetFieldInfo("OGID", info);
+			m_pDaoRecordset->GetFieldInfo(_U("OGID"), info);
 		}
 		else
 		{
@@ -499,9 +512,9 @@ OgdcVariant OgdcRecordsetMdb::Statistic( const OgdcString& strFieldName, OgdcSta
 	OgdcVariant ogdcVar;
 	OgdcVariant errorVar = 0;
 	
-	OgdcString strOGFieldName = "OGID";
-	if (strFieldName.CompareNoCase(OGDCPCTSTR("SMID")) == 0)
-		strOGFieldName = "OGID";
+	OgdcString strOGFieldName = _U("OGID");
+	if (strFieldName.CompareNoCase(_U("SMID")) == 0)
+		strOGFieldName = _U("OGID");
 	else
 		strOGFieldName = strFieldName;
 
@@ -522,79 +535,78 @@ OgdcVariant OgdcRecordsetMdb::Statistic( const OgdcString& strFieldName, OgdcSta
 	case OgdcStatisticMode::smMax:
 		if(!m_strFilter.IsEmpty ()) 
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT Max(%s) FROM [%s] WHERE %s "),
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName),
-				OGDCPCTSTR(m_strFilter));
+			strSQL.Format(_U("SELECT Max(%s) FROM [%s] WHERE %s "),
+				strOGFieldName.Cstr(), m_strTableName.Cstr(),m_strFilter.Cstr());
 		}
 		else
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT Max(%s) FROM [%s] "),
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("SELECT Max(%s) FROM [%s] "),
+				strOGFieldName.Cstr(), m_strTableName.Cstr());
 		}
 		break;
 	case OgdcStatisticMode::smMin:
 		if (!m_strFilter.IsEmpty ())
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT MIN(%s) FROM [%s] WHERE %s "),
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName),
-				OGDCPCTSTR(m_strFilter));
+			strSQL.Format(_U("SELECT MIN(%s) FROM [%s] WHERE %s "),
+				strOGFieldName.Cstr(), m_strTableName.Cstr(),
+				m_strFilter.Cstr());
 		}
 		else
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT MIN(%s) FROM [%s] "), 
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("SELECT MIN(%s) FROM [%s] "), 
+				strOGFieldName.Cstr(), m_strTableName.Cstr());
 		}
 		break;
 	case OgdcStatisticMode::smAvg:
 		if (!m_strFilter.IsEmpty ())
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT AVG(%s) FROM [%s] WHERE %s"), 
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName), 
-				OGDCPCTSTR(m_strFilter));
+			strSQL.Format(_U("SELECT AVG(%s) FROM [%s] WHERE %s"), 
+				strOGFieldName.Cstr(), m_strTableName.Cstr(), 
+				m_strFilter.Cstr());
 		}
 		else
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT AVG(%s) FROM [%s] "), 
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("SELECT AVG(%s) FROM [%s] "), 
+				strOGFieldName.Cstr(), m_strTableName.Cstr());
 		}
 		break;
 	case OgdcStatisticMode::smSum:
 		if (!m_strFilter.IsEmpty ())
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT SUM(%s) FROM [%s] WHERE %s"),
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName), 
-				OGDCPCTSTR(m_strFilter));
+			strSQL.Format(_U("SELECT SUM(%s) FROM [%s] WHERE %s"),
+				strOGFieldName.Cstr(), m_strTableName.Cstr(), 
+				m_strFilter.Cstr());
 		}
 		else
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT SUM(%s) FROM [%s] "),
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("SELECT SUM(%s) FROM [%s] "),
+				strOGFieldName.Cstr(), m_strTableName.Cstr());
 		}
 		break;
 	case OgdcStatisticMode::smStdev:
 		if (!m_strFilter.IsEmpty ())
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT StDev(%s) FROM [%s] WHERE %s "), 
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName),
-				OGDCPCTSTR(m_strFilter));
+			strSQL.Format(_U("SELECT StDev(%s) FROM [%s] WHERE %s "), 
+				strOGFieldName.Cstr(), m_strTableName.Cstr(),
+				m_strFilter.Cstr());
 		}
 		else
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT StDev(%s) FROM [%s] "), 
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("SELECT StDev(%s) FROM [%s] "), 
+				strOGFieldName.Cstr(), m_strTableName.Cstr());
 		}
 		break;
 	case OgdcStatisticMode::smVar:
 		if (!m_strFilter.IsEmpty ())
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT Var(%s) FROM [%s] WHERE %s "),
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName),
-				OGDCPCTSTR(m_strFilter));
+			strSQL.Format(_U("SELECT Var(%s) FROM [%s] WHERE %s "),
+				strOGFieldName.Cstr(), m_strTableName.Cstr(),
+				m_strFilter.Cstr());
 		}
 		else
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT Var(%s) FROM [%s] "), 
-				OGDCPCTSTR(strOGFieldName), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("SELECT Var(%s) FROM [%s] "), 
+				strOGFieldName.Cstr(), m_strTableName.Cstr());
 		}
 		break;
 	default:
@@ -659,7 +671,8 @@ OgdcBool OgdcRecordsetMdb::ComputeBounds( OgdcRect2D &rc2Bounds, OgdcDouble &dMi
 	}
 	
 	OgdcDouble MinW, MaxE, MinS, MaxN;
-	if (m_pDataset->GetType() == OgdcDataset::Point)
+	if (m_pDataset->GetType() == OgdcDataset::Point ||
+		m_pDataset->GetType() == OgdcDataset::Point3D)
 	{
 		//如果是点，初始化bounds为点周围的距离10的矩形
 		m_pDaoRecordset->MoveFirst();
@@ -751,15 +764,15 @@ OgdcBool OgdcRecordsetMdb::CopyField( const OgdcString& strSrcExpression, const 
 
 	if (m_strFilter.IsEmpty())
 	{
-		strSQL.Format(OGDCPCTSTR("UPDATE %s SET %s = %s"),
-			OGDCPCTSTR(m_strTableName), OGDCPCTSTR(strDestFieldName),
-			OGDCPCTSTR(strSrcExpression));
+		strSQL.Format(_U("UPDATE %s SET %s = %s"),
+			m_strTableName.Cstr(), strDestFieldName.Cstr(),
+			strSrcExpression.Cstr());
 	}
 	else
 	{	
-		strSQL.Format(OGDCPCTSTR("UPDATE %s SET %s = %s WHERE %s"), 
-			OGDCPCTSTR(m_strTableName), OGDCPCTSTR(strDestFieldName),
-			OGDCPCTSTR(strSrcExpression), OGDCPCTSTR(m_strFilter));
+		strSQL.Format(_U("UPDATE %s SET %s = %s WHERE %s"), 
+			m_strTableName.Cstr(), strDestFieldName.Cstr(),
+			strSrcExpression.Cstr(),m_strFilter.Cstr());
 	}
 	try
 	{
@@ -823,7 +836,8 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 	OgdcByte *pData = NULL;
 	OgdcByte *pDataMirror = NULL;
 
-	if (m_pDataset->GetType() != OgdcDataset::Point)
+	if (m_pDataset->GetType() != OgdcDataset::Point &&
+		m_pDataset->GetType() != OgdcDataset::Point3D)
 	{
 		m_pDaoRecordset->GetFieldValue(OG_GEOMETRY,varArray);
 		
@@ -865,6 +879,24 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 			((OgdcElemPoint*)pElement)->m_point.x = var.dblVal;
 			m_pDaoRecordset->GetFieldValue(OG_Y, var);
 			((OgdcElemPoint*)pElement)->m_point.y = var.dblVal;
+			pElement->m_nID = nID;
+		}
+		break;
+	case OgdcDataset::Point3D:
+		{
+			if (NULL == pElement || pElement->GetType() != OgdcElement::ElemPoint3D)
+			{
+				delete pElement;
+				pElement = new OgdcElemPoint3D();
+			}
+			m_pDaoRecordset->GetFieldValue(OG_OBJ_ID, var);
+			((OgdcElemPoint3D*)pElement)->m_nID = var.lVal;
+			m_pDaoRecordset->GetFieldValue(OG_X, var);
+			((OgdcElemPoint3D*)pElement)->m_point.x = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_Y, var);
+			((OgdcElemPoint3D*)pElement)->m_point.y = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_Z, var);
+			((OgdcElemPoint3D*)pElement)->m_point.z = var.dblVal;
 			pElement->m_nID = nID;
 		}
 		break;
@@ -911,6 +943,52 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 			}
 		}
 		break;
+	case OgdcDataset::Line3D:
+		{
+			if (NULL == pElement || m_pDataset->GetType() != OgdcElement::ElemLine3D)
+			{
+				delete pElement;
+				pElement = new OgdcElemLine3D();
+			}
+
+			OgdcInt nPointCount=0, nSubCount=0;
+
+			((OgdcElemLine3D*)pElement)->m_nID = nID;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_W, var);
+			((OgdcElemLine3D*)pElement)->m_rcBounds.left = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_N, var);
+			((OgdcElemLine3D*)pElement)->m_rcBounds.top = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_E, var);
+			((OgdcElemLine3D*)pElement)->m_rcBounds.right = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_S, var);
+			((OgdcElemLine3D*)pElement)->m_rcBounds.bottom = var.dblVal;
+
+			memcpy(&nPointCount, pDataMirror, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			memcpy(&nSubCount, pDataMirror, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			((OgdcElemLine3D*)pElement)->m_polyCounts.SetSize(nSubCount);
+			((OgdcElemLine3D*)pElement)->m_points.SetSize(nPointCount);
+			for (i = 0; i< nSubCount; i++)
+			{
+				memcpy(&((OgdcElemLine3D*)pElement)->m_polyCounts[i], pDataMirror, 
+					sizeof(OgdcInt));
+				pDataMirror += sizeof(OgdcInt);
+			}
+			for (i = 0; i < nPointCount; i++)
+			{
+				memcpy(&((OgdcElemLine3D*)pElement)->m_points[i].x, pDataMirror, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(&((OgdcElemLine3D*)pElement)->m_points[i].y, pDataMirror, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(&((OgdcElemLine3D*)pElement)->m_points[i].z, pDataMirror, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+			}
+		}
+		break;
 	case OgdcDataset::Region:
 		{
 			if (NULL == pElement || m_pDataset->GetType() != OgdcElement::ElemRegion)
@@ -949,6 +1027,52 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 					sizeof(OgdcDouble));
 				pDataMirror += sizeof(OgdcDouble);
 				memcpy(&((OgdcElemRegion *)pElement)->m_points[i].y, pDataMirror, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+			}
+		}
+		break;
+	case OgdcDataset::Region3D:
+		{
+			if (NULL == pElement || m_pDataset->GetType() != OgdcElement::ElemRegion3D)
+			{
+				delete pElement;
+				pElement = new OgdcElemRegion3D();
+			}
+
+			OgdcInt nPointCount=0, nSubCount=0;
+
+			((OgdcElemRegion3D*)pElement)->m_nID = nID;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_W, var);
+			((OgdcElemRegion3D*)pElement)->m_rcBounds.left = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_N, var);
+			((OgdcElemRegion3D*)pElement)->m_rcBounds.top = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_E, var);
+			((OgdcElemRegion3D*)pElement)->m_rcBounds.right = var.dblVal;
+			m_pDaoRecordset->GetFieldValue(OG_SDRI_S, var);
+			((OgdcElemRegion3D*)pElement)->m_rcBounds.bottom = var.dblVal;
+
+			memcpy(&nPointCount, pDataMirror, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			memcpy(&nSubCount, pDataMirror, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			((OgdcElemRegion3D*)pElement)->m_polyCounts.SetSize(nSubCount);
+			((OgdcElemRegion3D*)pElement)->m_points.SetSize(nPointCount);	
+			for(i = 0; i < nSubCount; i++)
+			{
+				memcpy(&((OgdcElemRegion3D*)pElement)->m_polyCounts[i], pDataMirror, 
+					sizeof(OgdcInt));
+				pDataMirror += sizeof(OgdcInt);
+			}
+			for (i = 0; i < nPointCount; i++)
+			{
+				memcpy(&((OgdcElemRegion3D*)pElement)->m_points[i].x, pDataMirror, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(&((OgdcElemRegion3D*)pElement)->m_points[i].y, pDataMirror, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(&((OgdcElemRegion3D*)pElement)->m_points[i].z, pDataMirror, 
 					sizeof(OgdcDouble));
 				pDataMirror += sizeof(OgdcDouble);
 			}
@@ -1008,14 +1132,14 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 
 			((OgdcElemText*)pElementText)->m_strTexts.SetSize(nStrCount);
 			OgdcString *str = new OgdcString;
-			char *ch = new char;
+			OgdcChar* ch = new OgdcChar;
 			for (i = 0; i < nStrCount; i++)
 			{
 				((OgdcElemText*)pElementText)->m_strTexts[i].SetLength(nStrLength.GetAt(i));
 				for (OgdcInt j = 0; j < nStrLength.GetAt(i); j++)
 				{
-					memcpy(ch, pDataMirror ,1);
-					pDataMirror += 1;
+					memcpy(ch, pDataMirror ,sizeof(OgdcChar));
+					pDataMirror += sizeof(OgdcChar);
 					((OgdcElemText*)pElementText)->m_strTexts[i].SetAt(j, *ch);
 				}
 			}
@@ -1090,8 +1214,8 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 			((OgdcElemText*)pElementText)->m_textStyle.m_strFaceName.SetLength(nStrFaceNameLength);
 			for (i = 0; i < nStrFaceNameLength; i++)
 			{				
-				memcpy(ch, pDataMirror ,1);
- 				pDataMirror += 1;
+				memcpy(ch, pDataMirror , sizeof(OgdcChar));
+ 				pDataMirror +=  sizeof(OgdcChar);
 				((OgdcElemText*)pElementText)->m_textStyle.m_strFaceName.SetAt(i, *ch);
 			}
 			delete ch;
@@ -1106,13 +1230,201 @@ OgdcBool OgdcRecordsetMdb::GetElement( OgdcElement*& pElement )
 		break;
 	}
 
-	if (m_pDataset->GetType() != OgdcDataset::Point)
+	if (m_pDataset->GetType() != OgdcDataset::Point &&
+		m_pDataset->GetType() != OgdcDataset::Point3D)
 	{
 		delete[] pData;
 		pData = NULL;
 	}
 
 	return TRUE;	
+}
+
+OgdcBool OgdcRecordsetMdb::GetElement(UGC::UGGeometry*& pGeometry)
+{
+	if (IsBOF())
+	{
+		return FALSE;
+	}
+	if (m_pDataset->GetType() != OgdcDataset::PointEPS &&
+		m_pDataset->GetType() != OgdcDataset::LineEPS &&
+		m_pDataset->GetType() != OgdcDataset::RegionEPS &&
+		m_pDataset->GetType() != OgdcDataset::TextEPS &&
+		m_pDataset->GetType() != OgdcDataset::Model &&
+		m_pDataset->GetType() != OgdcDataset::Texture)
+	{
+		OgdcElement *pElement = NULL;
+		if (GetElement(pElement) && pElement != NULL)
+		{
+			if (pGeometry != NULL && pGeometry->GetType() != pElement->GetType())
+			{
+				delete pGeometry;
+				pGeometry = NULL;
+			}
+			if (pGeometry == NULL)
+			{
+				pGeometry = UGC::UGGeometryManager::CreateGeometry(pElement->GetType());
+			}
+			if (pGeometry->FromElement(pElement))
+			{
+				delete pElement;
+				pElement = NULL;
+				return TRUE;
+			}
+			delete pGeometry;
+			pGeometry = NULL;
+		}
+		delete pElement;
+		pElement = NULL;
+		return FALSE;
+	}
+
+	//得到当前的ID
+	OgdcInt nID = GetID();
+	if (nID == 0) 
+	{
+		return FALSE;
+	}
+
+	//从数据库里取二进制数据
+	COleVariant varArray;
+	m_pDaoRecordset->GetFieldValue(OG_GEOMETRY,varArray);
+	long lLBound,lUBound;
+	BSTR HUGEP *pbstr = NULL;
+	if (FAILED(SafeArrayGetLBound(varArray.parray, 1, &lLBound)))
+	{
+		return FALSE;
+	}
+	if (FAILED(SafeArrayGetUBound(varArray.parray, 1, &lUBound)))
+	{
+		return FALSE;
+	}
+	if (FAILED(SafeArrayAccessData(varArray.parray, (void HUGEP* FAR*)&pbstr)))
+	{
+		return FALSE;
+	}
+	long dataSize = lUBound - lLBound + 1;
+	OgdcByte *pData = new BYTE[dataSize];
+	memcpy(pData, pbstr, dataSize);
+	SafeArrayUnaccessData(varArray.parray);
+
+	UGC::UGMemoryStream dataStream;
+	dataStream.Open(UGC::UGStreamLoad, dataSize, pData);
+
+	switch (m_pDataset->GetType())
+	{
+	case OgdcDataset::PointEPS:
+		{
+			if (NULL == pGeometry || pGeometry->GetType() != UGC::UGGeometry::GeoPointEPS)
+			{
+				delete pGeometry;
+				pGeometry = new UGC::UGGeoPointEPS();
+			}
+		}
+		break;
+	case OgdcDataset::LineEPS:
+		{
+			if (NULL == pGeometry || pGeometry->GetType() != UGC::UGGeometry::GeoLineEPS)
+			{
+				delete pGeometry;
+				pGeometry = new UGC::UGGeoLineEPS();
+			}
+		}
+		break;
+	case OgdcDataset::RegionEPS:
+		{
+			if (NULL == pGeometry || pGeometry->GetType() != UGC::UGGeometry::GeoRegionEPS)
+			{
+				delete pGeometry;
+				pGeometry = new UGC::UGGeoRegionEPS();
+			}
+		}
+		break;
+	case OgdcDataset::TextEPS:
+		{
+			if (NULL == pGeometry || pGeometry->GetType() != UGC::UGGeometry::GeoTextEPS)
+			{
+				delete pGeometry;
+				pGeometry = new UGC::UGGeoTextEPS();
+			}
+		}
+		break;
+	case OgdcDataset::Model:
+	case OgdcDataset::Texture:
+		{
+			OgdcInt nGeoType = 0;
+			dataStream >> nGeoType;
+			if (NULL == pGeometry || pGeometry->GetType() != nGeoType)
+			{
+				delete pGeometry;
+				pGeometry = UGC::UGGeometryManager::CreateGeometry((UGC::UGGeometry::Type)nGeoType);
+			}
+			if (NULL == pGeometry)
+			{
+				delete[] pData;
+				pData = NULL;
+				dataStream.Close();
+				return FALSE;
+			}
+		}
+		break;
+	default:
+		{
+			delete[] pData;
+			pData = NULL;
+			dataStream.Close();
+		}
+		return FALSE;
+	}
+
+	OgdcBool bResult = FALSE;
+	switch (m_pDataset->GetType())
+	{
+	case OgdcDataset::Texture:
+		{
+			bResult = pGeometry->Load(dataStream);
+		}
+		break;
+	default:
+		{
+			if (m_pDataset->GetType() == OgdcDataset::Model)
+			{
+				bResult = pGeometry->Load(dataStream);
+			}
+			else
+			{
+				bResult = pGeometry->LoadGeoData(dataStream,UGC::UGDataCodec::encNONE);
+			}
+			if (bResult)
+			{
+				UGC::UGRect2D boundRect2D;
+				COleVariant var;
+				m_pDaoRecordset->GetFieldValue(OG_SDRI_W, var);
+				boundRect2D.left = var.dblVal;
+				m_pDaoRecordset->GetFieldValue(OG_SDRI_N, var);
+				boundRect2D.top = var.dblVal;
+				m_pDaoRecordset->GetFieldValue(OG_SDRI_E, var);
+				boundRect2D.right = var.dblVal;
+				m_pDaoRecordset->GetFieldValue(OG_SDRI_S, var);
+				boundRect2D.bottom = var.dblVal;
+				pGeometry->SetBounds(boundRect2D);
+			}
+		}
+		break;
+	}
+
+	delete[] pData;
+	pData = NULL;
+	dataStream.Close();
+
+	if (!bResult)
+	{
+		delete pGeometry;
+		pGeometry = NULL;
+		return FALSE;
+	}
+	pGeometry->SetID(nID);
+	return TRUE;
 }
 
 OgdcBool OgdcRecordsetMdb::SetElement( OgdcElement* pElement )
@@ -1134,6 +1446,21 @@ OgdcBool OgdcRecordsetMdb::SetElement( OgdcElement* pElement )
 			e->Delete();
 			return FALSE;
 		}		
+	}
+	else if (m_pDataset->GetType() == OgdcDataset::Point3D)
+	{
+		try
+		{
+			m_pDaoRecordset->SetFieldValue (OG_X, ((OgdcElemPoint3D *)pElement)->m_point.x);
+			m_pDaoRecordset->SetFieldValue (OG_Y, ((OgdcElemPoint3D *)pElement)->m_point.y);
+			m_pDaoRecordset->SetFieldValue (OG_Z, ((OgdcElemPoint3D *)pElement)->m_point.z);
+			m_pDaoRecordset->Update();
+		}
+		catch (CDaoException* e)
+		{
+			e->Delete();
+			return FALSE;
+		}
 	}
 	else
 	{
@@ -1342,6 +1669,55 @@ OgdcBool OgdcRecordsetMdb::SetElement( OgdcElement* pElement )
 			pData = NULL;
 						
 		}
+		else if(m_pDataset->GetType() == OgdcDataset::Line3D)
+		{
+			//ogdc中没有getdata函数，以下是自己计算几何对象在内存中的大小，并且拷贝数据进pdata
+			OgdcInt nPointCount = ((OgdcElemLine3D*)pElement)->m_points.GetSize();
+			OgdcInt nSubCount = ((OgdcElemLine3D*)pElement)->m_polyCounts.GetSize();
+			OgdcInt lSize = sizeof(OgdcInt) * 2;
+			lSize += nSubCount * sizeof(OgdcInt);
+			lSize += 3 * nPointCount * sizeof(OgdcDouble);
+
+			int i = 0;
+			BYTE *pData = new BYTE[lSize];
+			BYTE *pDataMirror = pData;
+			//用一个int型数存点的个数
+			memcpy(pDataMirror,&nPointCount, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			//用一个int型数存子对象的个数
+			memcpy(pDataMirror,&nSubCount, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			for(i = 0; i < nSubCount; i++)
+			{
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_polyCounts[i]), 
+					sizeof(OgdcInt));
+				pDataMirror += sizeof(OgdcInt);
+			}
+			for (i = 0; i < nPointCount; i++)
+			{
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_points[i].x), 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_points[i].y), 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_points[i].z), 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+			}
+
+			//将pdata一个字节一个字节的装进CBYteArray数组中，再用ole来构造它
+
+			arr.SetSize(lSize);
+			for (i = 0; i < lSize; i++)
+			{
+				arr.SetAt(i, pData[i]);
+			}
+
+			delete pData;
+			pData = NULL;
+
+		}
 		else if (m_pDataset->GetType() == OgdcDataset::Region)
 		{
 			//ogdc中没有getdata函数，以下是自己计算几何对象在内存中的大小，并且拷贝数据进pdata
@@ -1387,6 +1763,54 @@ OgdcBool OgdcRecordsetMdb::SetElement( OgdcElement* pElement )
 			pData = NULL;
 			
 		}
+		else if (m_pDataset->GetType() == OgdcDataset::Region3D)
+		{
+			//ogdc中没有getdata函数，以下是自己计算几何对象在内存中的大小，并且拷贝数据进pdata
+			OgdcInt nPointCount = ((OgdcElemRegion3D*)pElement)->m_points.GetSize();
+			OgdcInt nSubCount = ((OgdcElemRegion3D*)pElement)->m_polyCounts.GetSize();
+			OgdcInt lSize = sizeof(OgdcInt) * 2;
+			lSize += nSubCount * sizeof(OgdcInt);
+			lSize += 3 * nPointCount * sizeof(OgdcDouble);
+
+			OgdcInt i = 0;
+			BYTE *pData = new BYTE[lSize];
+			BYTE *pDataMirror = pData;
+			//用一个int型数存点的个数
+			memcpy(pDataMirror, &nPointCount, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			//用一个int型数存子对象的个数
+			memcpy(pDataMirror,&nSubCount,sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			for (i = 0; i < nSubCount; i++)
+			{
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_polyCounts[i], 
+					sizeof(OgdcInt));
+				pDataMirror += sizeof(OgdcInt);
+			}
+			for (i = 0; i < nPointCount; i++)
+			{
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_points[i].x, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_points[i].y, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_points[i].z, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+			}
+			//将pdata一个字节一个字节的装进CBYteArray数组中，再用ole来构造它
+
+			arr.SetSize(lSize);
+			for (i = 0; i < lSize; i++)
+			{
+				arr.SetAt(i, pData[i]);
+			}
+
+			delete pData;
+			pData = NULL;
+
+		}
 		COleVariant varOle(arr);
 
 		//以上是获取element数据的部分，需要写在一个函数中，等待改进
@@ -1420,6 +1844,116 @@ OgdcBool OgdcRecordsetMdb::SetElement( OgdcElement* pElement )
 	return Update();	
 }
 
+OgdcBool OgdcRecordsetMdb::SetElement(UGC::UGGeometry* pGeometry)
+{
+	if (NULL == pGeometry)
+	{
+		return FALSE;
+	}
+	if (!Edit())
+	{
+		return FALSE;
+	}
+	if (m_pDataset->GetType() != OgdcDataset::PointEPS &&
+		m_pDataset->GetType() != OgdcDataset::LineEPS &&
+		m_pDataset->GetType() != OgdcDataset::RegionEPS &&
+		m_pDataset->GetType() != OgdcDataset::TextEPS &&
+		m_pDataset->GetType() != OgdcDataset::Model &&
+		m_pDataset->GetType() != OgdcDataset::Texture)
+	{
+		OgdcElement *pElement = NULL;
+		if (!pGeometry->ToElement(pElement))
+		{
+			delete pElement;
+			pElement = NULL;
+			return FALSE;
+		}
+		return SetElement(pElement);
+	}
+
+	OgdcBool bResult = FALSE;
+	UGC::UGMemoryStream dataStream;
+	dataStream.Open(UGC::UGStreamSave, 256, NULL);
+	OgdcInt nHashCode = 0;
+	UGC::UGRect2D bound;
+	switch (m_pDataset->GetType())
+	{
+	case OgdcDataset::Texture:
+		{
+			OgdcInt nGeoType = pGeometry->GetType();
+			dataStream << nGeoType;
+			bResult = pGeometry->Save(dataStream, UGC::UGDataCodec::encNONE, FALSE);
+			if (bResult)
+			{
+				nHashCode = ((UGC::UGGeoModelEntity*)pGeometry)->GeoHashCode();
+			}
+		}
+		break;
+	default:
+		{
+			if (m_pDataset->GetType() == OgdcDataset::Model)
+			{
+				OgdcInt nGeoType = pGeometry->GetType();
+				dataStream << nGeoType;
+				bResult = pGeometry->Save(dataStream, UGC::UGDataCodec::encNONE, FALSE);
+			}
+			else
+			{
+				bResult = pGeometry->SaveGeoData(dataStream,UGC::UGDataCodec::encNONE);
+			}
+			if (bResult)
+			{
+				bound = pGeometry->GetBounds();
+			}
+		}
+		break;
+	}
+
+	if (!bResult)
+	{
+		dataStream.Close();
+		return FALSE;
+	}
+
+	CByteArray arr;
+	UGC::UGulong dataLength = dataStream.GetLength();
+	arr.SetSize(dataLength);
+	UGC::UGuchar* pData = dataStream.GetData();
+	BYTE *pDataMirror = arr.GetData();
+	memcpy(pDataMirror,pData,dataLength);
+	dataStream.Close();
+	COleVariant varOle(arr);
+
+	try
+	{
+		m_pDaoRecordset->SetFieldValue (OG_GEOMETRY, varOle);
+		if (m_pDataset->GetType() == OgdcDataset::Texture)
+		{
+			m_pDaoRecordset->SetFieldValue (OG_HASHCODE, long(nHashCode));
+		}
+		else
+		{
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_W, bound.left);
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_N, bound.top);
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_E, bound.right);
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_S, bound.bottom);
+		}
+		m_pDaoRecordset->Update();
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		m_pDaoRecordset->CancelUpdate();
+		return FALSE;
+	}
+
+	m_pGeometry = pGeometry;
+	m_bEdited = TRUE;
+	m_nEditMode = EditSetGeometry;
+	m_pDataset->SetModifiedFlag(TRUE);
+	return Update();
+}
+
 OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FALSE*/ )
 {
 	if(pElement == NULL)
@@ -1428,8 +1962,7 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 	}
 
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT MAX(%s) FROM [%s]"),OG_OBJ_ID, 
-		OGDCPCTSTR(m_strTableName));
+	strSQL.Format(_U("SELECT MAX(%s) FROM [%s]"),OG_OBJ_ID, m_strTableName.Cstr());
 
 	CDaoRecordset recordset1(&(m_pDataset->m_pDataSource->m_daoDatabase));
 	recordset1.Open (dbOpenDynaset,strSQL);
@@ -1500,6 +2033,23 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 		}
 
 	}
+	else if (m_pDataset->GetType() == OgdcDataset::Point3D)
+	{
+		try
+		{
+			m_pDaoRecordset->SetFieldValue (OG_OBJ_ID,long(nID));
+			m_pDaoRecordset->SetFieldValue (OG_X,((OgdcElemPoint3D *)pElement)->m_point.x);
+			m_pDaoRecordset->SetFieldValue (OG_Y,((OgdcElemPoint3D *)pElement)->m_point.y);
+			m_pDaoRecordset->SetFieldValue (OG_Z,((OgdcElemPoint3D *)pElement)->m_point.z);
+			m_pDaoRecordset->Update();
+		}
+		catch (CDaoException* e)
+		{
+			e->Delete();
+			m_pDaoRecordset->CancelUpdate();
+			return -1;
+		}
+	}
 	else
 	{
 		
@@ -1532,12 +2082,12 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 			//所有子文本的长度
 			for (i = 0; i < nStrCount; i++)
 			{
-				lSize += nStrLength[i];
+				lSize += nStrLength[i] * sizeof(OgdcChar);
 			}
 			//所有angele的字节数
 			lSize += nPointCount*8;
 			//文本风格中，字体名字的字节数
-			lSize += nStrFaceNameLength;
+			lSize += nStrFaceNameLength * sizeof(OgdcChar);
 			//文本风格中，其他参数的字节数
 			lSize += 57;
 			
@@ -1550,12 +2100,9 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 			pDataMirror += 4;
 			for (i = 0; i < nStrCount; i++)
 			{
-				OgdcInt *pOgdcInt = new OgdcInt;
-				*pOgdcInt = nStrLength.GetAt(i);
-				memcpy(pDataMirror, pOgdcInt, 4);
+				OgdcInt nLenTemp = nStrLength.GetAt(i);
+				memcpy(pDataMirror, &nLenTemp, 4);
 				pDataMirror += 4;
-				delete pOgdcInt;
-				pOgdcInt = NULL;
 			}
 			memcpy(pDataMirror, &nStrFaceNameLength, 4);
 			pDataMirror += 4;
@@ -1576,8 +2123,8 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 				for (OgdcInt j = 0; j < nStrLength.GetAt(i); j++)
 				{
 					OgdcChar ch = ((OgdcElemText*)pElement)->m_strTexts[i].GetAt(j);
-					memcpy(pDataMirror, &ch, 1);
-					pDataMirror += 1;
+					memcpy(pDataMirror, &ch, sizeof(OgdcChar));
+					pDataMirror += sizeof(OgdcChar);
 				}
 			}
 			for (i = 0; i < nStrCount; i++)
@@ -1645,8 +2192,8 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 			for (i = 0; i < nStrFaceNameLength; i++)
 			{
 				OgdcChar ch = ((OgdcElemText*)pElement)->m_textStyle.m_strFaceName.GetAt(i);
-				memcpy(pDataMirror, &ch, 1);
-				pDataMirror += 1;
+				memcpy(pDataMirror, &ch, sizeof(OgdcChar));
+				pDataMirror +=  sizeof(OgdcChar);
 			}
 			///////////////////////
 
@@ -1682,6 +2229,43 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 					sizeof(OgdcDouble));
 				pDataMirror += sizeof(OgdcDouble);
 				memcpy(pDataMirror, &(((OgdcElemLine*)pElement)->m_points[i].y), 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+			}
+		}
+		else if (m_pDataset->GetType() == OgdcDataset::Line3D)
+		{
+			//ogdc中没有getdata函数，以下是自己计算几何对象在内存中的大小，并且拷贝数据进pdata
+			OgdcInt nPointCount = ((OgdcElemLine3D*)pElement)->m_points.GetSize();
+			OgdcInt nSubCount = ((OgdcElemLine3D*)pElement)->m_polyCounts.GetSize();
+			OgdcInt lSize = sizeof(OgdcInt)*2; 
+			lSize += nSubCount * sizeof(OgdcInt);
+			lSize += 3 * nPointCount * sizeof(OgdcDouble);
+
+			OgdcInt i=0;
+			arr.SetSize(lSize);
+			BYTE *pDataMirror = arr.GetData();
+			//用一个int型数存点的个数
+			memcpy(pDataMirror,&nPointCount,sizeof(OgdcInt));
+			pDataMirror+=sizeof(OgdcInt);
+			//用一个int型数存子对象的个数
+			memcpy(pDataMirror,&nSubCount,sizeof(OgdcInt));
+			pDataMirror+=sizeof(OgdcInt);
+			for (i = 0; i < nSubCount; i++)
+			{
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_polyCounts[i]), 
+					sizeof(OgdcInt));
+				pDataMirror += sizeof(OgdcInt);
+			}
+			for (i = 0; i < nPointCount; i++)
+			{
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_points[i].x), 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_points[i].y), 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &(((OgdcElemLine3D*)pElement)->m_points[i].z), 
 					sizeof(OgdcDouble));
 				pDataMirror += sizeof(OgdcDouble);
 			}
@@ -1725,6 +2309,43 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 				pDataMirror += sizeof(OgdcDouble);
 			}	
 		}
+		else if (m_pDataset->GetType() == OgdcDataset::Region3D)
+		{
+			//ogdc中没有getdata函数，以下是自己计算几何对象在内存中的大小，并且拷贝数据进pdata
+			OgdcInt nPointCount = ((OgdcElemRegion3D*)pElement)->m_points.GetSize();
+			OgdcInt nSubCount = ((OgdcElemRegion3D*)pElement)->m_polyCounts.GetSize();
+			OgdcInt lSize = sizeof(OgdcInt) * 2;
+			lSize += nSubCount * sizeof(OgdcInt);
+			lSize += 3 * nPointCount * sizeof(OgdcDouble);
+
+			OgdcInt i = 0;
+			arr.SetSize(lSize);
+			BYTE *pDataMirror = arr.GetData();
+			//用一个int型数存点的个数
+			memcpy(pDataMirror, &nPointCount, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			//用一个int型数存子对象的个数
+			memcpy(pDataMirror, &nSubCount, sizeof(OgdcInt));
+			pDataMirror += sizeof(OgdcInt);
+			for(i=0; i<nSubCount; i++)
+			{
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_polyCounts[i], 
+					sizeof(OgdcInt));
+				pDataMirror += sizeof(OgdcInt);
+			}
+			for(i = 0; i<nPointCount; i++)
+			{
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_points[i].x,
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_points[i].y, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+				memcpy(pDataMirror, &((OgdcElemRegion3D*)pElement)->m_points[i].z, 
+					sizeof(OgdcDouble));
+				pDataMirror += sizeof(OgdcDouble);
+			}	
+		}
 		COleVariant varValue = arr;
 		try
 		{
@@ -1758,10 +2379,147 @@ OgdcInt OgdcRecordsetMdb::AddNew( OgdcElement *pElement, OgdcBool bReturnID/*=FA
 
 	// 直接Seek就行了
 	SeekID(nID);
-// 	m_pDaoRecordset->Close();
-// 	strSQL.Format(OGDCPCTSTR("SELECT * FROM [%s] WHERE OGID = %d"),
-// 		OGDCPCTSTR(m_strTableName), nID);
-// 	m_pDaoRecordset->Open(AFX_DAO_USE_DEFAULT_TYPE, strSQL);
+	return OgdcInt(nID);
+}
+
+OgdcInt OgdcRecordsetMdb::AddNew(UGC::UGGeometry* pGeometry, OgdcBool bReturnID)
+{
+	if (pGeometry == NULL)
+	{
+		return -1;
+	}
+
+	if (m_pDataset->GetType() != OgdcDataset::PointEPS &&
+		m_pDataset->GetType() != OgdcDataset::LineEPS &&
+		m_pDataset->GetType() != OgdcDataset::RegionEPS &&
+		m_pDataset->GetType() != OgdcDataset::TextEPS &&
+		m_pDataset->GetType() != OgdcDataset::Model &&
+		m_pDataset->GetType() != OgdcDataset::Texture)
+	{
+		OgdcElement *pElement = NULL;
+		if (!pGeometry->ToElement(pElement))
+		{
+			delete pElement;
+			pElement = NULL;
+			return -1;
+		}
+		return AddNew(pElement, bReturnID);
+	}
+
+	OgdcString strSQL;
+	strSQL.Format(_U("SELECT MAX(%s) FROM [%s]"),OG_OBJ_ID, m_strTableName.Cstr());
+
+	CDaoRecordset recordset1(&(m_pDataset->m_pDataSource->m_daoDatabase));
+	recordset1.Open (dbOpenDynaset,strSQL);
+	COleVariant varlue;
+	recordset1.GetFieldValue ((short)0,varlue);
+	OgdcLong nID = varlue.lVal + 1;
+	pGeometry->SetID(nID);
+	if (nID == 1)
+	{
+		m_bFirstAddNew = TRUE;
+	}
+	recordset1.Close();
+	try
+	{	
+		m_pDaoRecordset->AddNew();
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		m_pDaoRecordset->Close();
+		return -1;
+	}
+
+	OgdcBool bResult = FALSE;
+	UGC::UGMemoryStream dataStream;
+	dataStream.Open(UGC::UGStreamSave, 256, NULL);
+	OgdcInt nHashCode = 0;
+	UGC::UGRect2D bound;
+	switch (m_pDataset->GetType())
+	{
+	case OgdcDataset::Texture:
+		{
+			OgdcInt nGeoType = pGeometry->GetType();
+			dataStream << nGeoType;
+			bResult = pGeometry->Save(dataStream, UGC::UGDataCodec::encNONE, FALSE);
+			if (bResult)
+			{
+				nHashCode = ((UGC::UGGeoModelEntity*)pGeometry)->GeoHashCode();
+			}
+		}
+		break;
+	default:
+		{
+			if (m_pDataset->GetType() == OgdcDataset::Model)
+			{
+				OgdcInt nGeoType = pGeometry->GetType();
+				dataStream << nGeoType;
+				bResult = pGeometry->Save(dataStream, UGC::UGDataCodec::encNONE, FALSE);
+			}
+			else
+			{
+				bResult = pGeometry->SaveGeoData(dataStream,UGC::UGDataCodec::encNONE);
+			}
+			if (bResult)
+			{
+				bound = pGeometry->GetBounds();
+			}
+		}
+		break;
+	}
+
+	if (!bResult)
+	{
+		m_pDaoRecordset->CancelUpdate();
+		dataStream.Close();
+		return -1;
+	}
+
+	CByteArray arr;
+	UGC::UGulong dataLength = dataStream.GetLength();
+	arr.SetSize(dataLength);
+	UGC::UGuchar* pData = dataStream.GetData();
+	BYTE *pDataMirror = arr.GetData();
+	memcpy(pDataMirror,pData,dataLength);
+	dataStream.Close();
+	COleVariant varOle(arr);
+
+	try
+	{
+		m_pDaoRecordset->SetFieldValue (OG_OBJ_ID, long(nID));
+		m_pDaoRecordset->SetFieldValue (OG_GEOMETRY, varOle);
+		if (m_pDataset->GetType() == OgdcDataset::Texture)
+		{
+			m_pDaoRecordset->SetFieldValue (OG_HASHCODE, long(nHashCode));
+		}
+		else
+		{
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_W, bound.left);
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_N, bound.top);
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_E, bound.right);
+			m_pDaoRecordset->SetFieldValue (OG_SDRI_S, bound.bottom);
+		}
+		m_pDaoRecordset->Update();
+		pDataMirror = NULL;
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		m_pDaoRecordset->CancelUpdate();
+		pDataMirror = NULL;
+		return -1;
+	}
+
+	m_bEdited = TRUE;
+	m_nEditMode = dbEditAdd;
+	m_pDataset->SetModifiedFlag(TRUE);
+	m_pGeometry = pGeometry;
+	Update();
+	m_nID = OgdcInt(nID);
+
+	// 直接Seek就行了
+	SeekID(nID);
 	return OgdcInt(nID);
 }
 
@@ -1814,8 +2572,76 @@ OgdcFeature* OgdcRecordsetMdb::GetFeature()
 		OgdcHelperMdb::COleVariant2OgdcVariant(var, varValue);
 		pFeature->SetValue(i, varValue);
 	}
-	//上面for循环里都已经赋值了，不用再调OgdcFeature的函数了
-//	pFeature->SetFieldInfos(filedInfos);
+	
+	return pFeature;
+}
+
+UGC::UGFeature* OgdcRecordsetMdb::GetFeatureEx()
+{
+	if (!((OgdcDatasetVectorMdb*)m_pDataset)->IsOpen())
+	{
+		return NULL;
+	}
+
+	if (m_pDataset->GetType() != OgdcDataset::PointEPS &&
+		m_pDataset->GetType() != OgdcDataset::LineEPS &&
+		m_pDataset->GetType() != OgdcDataset::RegionEPS &&
+		m_pDataset->GetType() != OgdcDataset::TextEPS &&
+		m_pDataset->GetType() != OgdcDataset::Model &&
+		m_pDataset->GetType() != OgdcDataset::Texture)
+	{
+		OgdcFeature *pOFeature = GetFeature();
+		if (pOFeature == NULL)
+		{
+			return NULL;
+		}
+
+		UGC::UGFeature *pFeature = new UGC::UGFeature();
+		pFeature->SetOgdcFeature(pOFeature);
+		return pFeature;
+	}
+
+	//当前记录集为空，直接返回NULL
+	if (IsEmpty())
+	{
+		return NULL;
+	}
+	if (IsBOF() || IsEOF())
+	{
+		return NULL;
+	}
+
+	UGC::UGGeometry *pGeometry = NULL;
+	if (!GetElement(pGeometry))
+	{
+		delete pGeometry;
+		pGeometry = NULL;
+		return NULL;
+	}
+
+	UGC::UGFeature *pFeature = new UGC::UGFeature();
+	pFeature->SetGeometry(pGeometry);
+	pFeature->SetID(GetID());
+	pFeature->SetCharset(m_pDataset->GetCharset());
+
+	CDaoFieldInfo daoFieldInfo;
+	OgdcFieldInfo info;
+	OgdcFieldInfos filedInfos;
+	for (OgdcInt i=0; i<m_pDaoRecordset->GetFieldCount(); i++)
+	{
+		m_pDaoRecordset->GetFieldInfo(i, daoFieldInfo);
+		OgdcHelperMdb::CDaoFieldInfo2OgdcFieldInfo(daoFieldInfo, info);
+		filedInfos.Add(info);
+	}
+	pFeature->SetFieldInfos(filedInfos);
+	COleVariant var;
+	OgdcVariant varValue;
+	for (OgdcInt i=0; i<m_pDaoRecordset->GetFieldCount(); i++)
+	{
+		m_pDaoRecordset->GetFieldValue(i, var);
+		OgdcHelperMdb::COleVariant2OgdcVariant(var, varValue);
+		pFeature->SetValue(i, varValue);
+	}
 
 	return pFeature;
 }
@@ -1863,6 +2689,70 @@ OgdcBool OgdcRecordsetMdb::UpdateFeature( const OgdcFeature* pFeature )
 	return Update();
 }
 
+OgdcBool OgdcRecordsetMdb::UpdateFeature(const UGC::UGFeature* pFeature)
+{
+	if (pFeature == NULL || m_nEditMode != EditNone)
+	{
+		return FALSE;
+	}
+
+	if (m_pDataset->GetType() != OgdcDataset::PointEPS &&
+		m_pDataset->GetType() != OgdcDataset::LineEPS &&
+		m_pDataset->GetType() != OgdcDataset::RegionEPS &&
+		m_pDataset->GetType() != OgdcDataset::TextEPS &&
+		m_pDataset->GetType() != OgdcDataset::Model &&
+		m_pDataset->GetType() != OgdcDataset::Texture)
+	{
+		return UpdateFeature(pFeature->GetOgdcFeature());
+	}
+
+	if (!Edit())
+	{
+		return FALSE;
+	}
+
+	UGC::UGFeature *pFeatureTemp = (UGC::UGFeature*)pFeature;
+	UGC::UGGeometry* pGeometry = pFeatureTemp->GetGeometry();
+	if (pGeometry == NULL || (pGeometry->GetType() != UGC::UGGeometry::GeoPointEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoLineEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoRegionEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoTextEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelPro &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelEntitySkeleton &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelEntityTexture &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelEntityMaterial3D))
+	{
+		return FALSE;
+	}
+
+	//设置几何对象
+	SetElement(pGeometry);
+
+	OgdcString strField;
+	OgdcVariant val;
+	UGArray<OgdcFeature::OgdcFieldDefine>* fieldDefine = pFeatureTemp->GetFieldDefines();
+	for (OgdcInt i=0; i<fieldDefine->GetSize(); i++)
+	{
+		//更新属性
+		strField = fieldDefine->GetAt(i).m_strName;
+		if (OgdcHelperMdb::IsSystemField(strField))
+		{
+			continue;
+		}
+
+		if (!pFeatureTemp->GetValue(strField, val))
+		{
+			continue;
+		}
+
+		SetFieldValue(strField, val);
+		val.Clear();
+	}
+
+	m_pGeometry = pGeometry;
+	return Update();
+}
+
 OgdcBool OgdcRecordsetMdb::AddFeature( const OgdcFeature* pFeature )
 {
 	if (pFeature == NULL || m_nEditMode != EditNone)
@@ -1890,7 +2780,7 @@ OgdcBool OgdcRecordsetMdb::AddFeature( const OgdcFeature* pFeature )
 			continue;
 		}
 
-		if (strField.Left(2).CompareNoCase(OGDCPCTSTR("Sm")) == 0) 
+		if (strField.Left(2).CompareNoCase(_U("Sm")) == 0) 
 		{
 			continue;
 		}
@@ -1907,6 +2797,68 @@ OgdcBool OgdcRecordsetMdb::AddFeature( const OgdcFeature* pFeature )
 	return TRUE;
 }
 
+OgdcBool OgdcRecordsetMdb::AddFeature(const UGC::UGFeature* pFeature)
+{
+	if (pFeature == NULL || m_nEditMode != EditNone)
+	{
+		return FALSE;
+	}
+
+	if (m_pDataset->GetType() != OgdcDataset::PointEPS &&
+		m_pDataset->GetType() != OgdcDataset::LineEPS &&
+		m_pDataset->GetType() != OgdcDataset::RegionEPS &&
+		m_pDataset->GetType() != OgdcDataset::TextEPS &&
+		m_pDataset->GetType() != OgdcDataset::Model &&
+		m_pDataset->GetType() != OgdcDataset::Texture)
+	{
+		return AddFeature(pFeature->GetOgdcFeature());
+	}
+
+	UGC::UGFeature *pFeatureTemp = (UGC::UGFeature*)pFeature;
+	UGC::UGGeometry* pGeometry = pFeatureTemp->GetGeometry();
+	if (pGeometry == NULL || (pGeometry->GetType() != UGC::UGGeometry::GeoPointEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoLineEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoRegionEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoTextEPS &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelPro &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelEntitySkeleton &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelEntityTexture &&
+		pGeometry->GetType() != UGC::UGGeometry::GeoModelEntityMaterial3D))
+	{
+		return FALSE;
+	}
+
+	m_nID = AddNew(pGeometry);
+
+	OgdcString strField;
+	OgdcVariant val;
+	UGArray<OgdcFeature::OgdcFieldDefine>* fieldDefine = pFeatureTemp->GetFieldDefines();
+	for (OgdcInt i=0; i<fieldDefine->GetSize(); i++)
+	{
+		//更新属性
+		strField = fieldDefine->GetAt(i).m_strName;
+		if (OgdcHelperMdb::IsSystemField(strField))
+		{
+			continue;
+		}
+
+		if (strField.Left(2).CompareNoCase(_U("Sm")) == 0)
+		{
+			continue;
+		}
+
+		if (!pFeatureTemp->GetValue(strField, val))
+		{
+			continue;
+		}
+
+		SetFieldValue(strField, val);
+		val.Clear();
+	}
+
+	return TRUE;
+}
+
 OgdcBool OgdcRecordsetMdb::SeekID( OgdcInt nID )
 {
 	if( !m_pDaoRecordset->IsOpen())
@@ -1919,7 +2871,7 @@ OgdcBool OgdcRecordsetMdb::SeekID( OgdcInt nID )
 	CancelUpdate();
 
 	OgdcString strFilter;
-	strFilter.Format("OGID = %d", nID);
+	strFilter.Format(_U("OGID = %d"), nID);
 	OgdcBool bFind;
 	try			
 	{
@@ -1949,7 +2901,7 @@ OgdcInt OgdcRecordsetMdb::Update()
 		if (m_nEditMode == dbEditAdd)
 		{	
 			m_nRecordCount ++;		
-			m_pDataset->m_nObjectCount += 1;	
+			m_pDataset->m_nObjectCount += 1;
 		}
 		OgdcRect2D rcBounds;
 		rcBounds.SetEmpty();
@@ -1959,27 +2911,29 @@ OgdcInt OgdcRecordsetMdb::Update()
 			rcBounds = m_pDataset->GetBounds();
 			if(rcBounds.IsNull() || m_bFirstAddNew)
 			{
-				if (m_pDataset->GetType() != OgdcDataset::Point)
-				{
-					rcBounds = m_pElement->GetBounds();
-					//m_bFirstAddNew = FALSE;
-				}
-				else
+				if (m_pDataset->GetType() == OgdcDataset::Point)
 				{
 					rcBounds.left = ((OgdcElemPoint*)m_pElement)->m_point.x;
 					rcBounds.right = ((OgdcElemPoint*)m_pElement)->m_point.x;
 					rcBounds.top = ((OgdcElemPoint*)m_pElement)->m_point.y;
 					rcBounds.bottom = ((OgdcElemPoint*)m_pElement)->m_point.y;
 				}
+				else if (m_pDataset->GetType() == OgdcDataset::Point3D)
+				{
+					rcBounds.left = ((OgdcElemPoint3D*)m_pElement)->m_point.x;
+					rcBounds.right = ((OgdcElemPoint3D*)m_pElement)->m_point.x;
+					rcBounds.top = ((OgdcElemPoint3D*)m_pElement)->m_point.y;
+					rcBounds.bottom = ((OgdcElemPoint3D*)m_pElement)->m_point.y;
+				}
+				else
+				{
+					rcBounds = m_pElement->GetBounds();
+				}
 				m_bFirstAddNew = FALSE;
 			}
 			else
 			{
-				if (m_pDataset->GetType() != OgdcDataset::Point)
-				{
-					rcBounds.Union(m_pElement->GetBounds());
-				}
-				else
+				if (m_pDataset->GetType() == OgdcDataset::Point)
 				{
 					rcBounds.left = rcBounds.left < ((OgdcElemPoint*)m_pElement)->m_point.x
 						? rcBounds.left : ((OgdcElemPoint*)m_pElement)->m_point.x;
@@ -1990,26 +2944,55 @@ OgdcInt OgdcRecordsetMdb::Update()
 					rcBounds.bottom = rcBounds.bottom < ((OgdcElemPoint*)m_pElement)->m_point.y
 						? rcBounds.bottom : ((OgdcElemPoint*)m_pElement)->m_point.y;
 				}
+				else if (m_pDataset->GetType() == OgdcDataset::Point3D)
+				{
+					rcBounds.left = rcBounds.left < ((OgdcElemPoint3D*)m_pElement)->m_point.x
+						? rcBounds.left : ((OgdcElemPoint3D*)m_pElement)->m_point.x;
+					rcBounds.right = rcBounds.right > ((OgdcElemPoint3D*)m_pElement)->m_point.x
+						? rcBounds.right : ((OgdcElemPoint3D*)m_pElement)->m_point.x;
+					rcBounds.top = rcBounds.top > ((OgdcElemPoint3D*)m_pElement)->m_point.y
+						? rcBounds.top : ((OgdcElemPoint3D*)m_pElement)->m_point.y;
+					rcBounds.bottom = rcBounds.bottom < ((OgdcElemPoint3D*)m_pElement)->m_point.y
+						? rcBounds.bottom : ((OgdcElemPoint3D*)m_pElement)->m_point.y;
+				}
+				else
+				{
+					rcBounds.Union(m_pElement->GetBounds());
+				}
 			}
 			m_pDataset->SetBounds(rcBounds);
 			m_pElement = NULL;
 		}
+		else if (m_pGeometry != NULL)
+		{
+			if (m_pDataset->GetType() != OgdcDataset::Texture)
+			{
+				rcBounds = m_pDataset->GetBounds();
+				if(rcBounds.IsNull() || m_bFirstAddNew)
+				{
+					rcBounds = m_pGeometry->GetBounds();
+					m_bFirstAddNew = FALSE;
+				}
+				else
+				{
+					rcBounds.Union(m_pGeometry->GetBounds());
+				}
+				m_pDataset->SetBounds(rcBounds);
+			}
+			m_pGeometry = NULL;
+		}
 		//添加四至到注册表
 
 		OgdcString strSQL;
-		strSQL.Format (OGDCPCTSTR("UPDATE OGRegister "
-			"SET OGLeft = %f, OGRight = %f, OGTop = %f, OGBottom = %f "
-			"WHERE OGDatasetName = '%s'"), rcBounds.left, 
-			rcBounds.right, rcBounds.top, rcBounds.bottom, OGDCPCTSTR(m_strTableName)); 
+		strSQL.Format (_U("UPDATE OGRegister SET OGLeft = %.16f, OGRight = %.16f, OGTop = %.16f, OGBottom = %.16f WHERE OGDatasetName = '%s'"), 
+			rcBounds.left, rcBounds.right, rcBounds.top, rcBounds.bottom, m_strTableName.Cstr()); 
 		try
 		{
 			m_pDataset->m_pDataSource->m_daoDatabase.Execute(strSQL);
 			if (m_nEditMode == dbEditAdd)
 			{
 			
-				strSQL.Format(OGDCPCTSTR("UPDATE OGRegister "
-					"SET OGRecordCount = OGRecordCount + 1 "
-				"WHERE OGDatasetName = '%s'"), OGDCPCTSTR(m_strTableName));
+				strSQL.Format(_U("UPDATE OGRegister SET OGRecordCount = OGRecordCount + 1 WHERE OGDatasetName = '%s'"), m_strTableName.Cstr());
 
 				m_pDataset->m_pDataSource->m_daoDatabase.Execute(strSQL);
 
@@ -2019,9 +3002,8 @@ OgdcInt OgdcRecordsetMdb::Update()
 			OgdcVariant var = OgdcTime(dt.GetYear(), dt.GetMonth(), 
 				dt.GetDay(), dt.GetHour(),dt.GetMinute(),dt.GetSecond());
 
-			strSQL.Format(OGDCPCTSTR("UPDATE OGRegister "
-				"SET OGLastUpdate = '%s' WHERE OGDatasetName = '%s'"),
-				OGDCPCTSTR(var.ToString()), OGDCPCTSTR(m_strTableName));
+			strSQL.Format(_U("UPDATE OGRegister SET OGLastUpdate = '%s' WHERE OGDatasetName = '%s'"),
+				var.ToString().Cstr(), m_strTableName.Cstr());
 
 			m_pDataset->m_pDataSource->m_daoDatabase.Execute(strSQL);	
 		}
@@ -2132,13 +3114,12 @@ OgdcBool OgdcRecordsetMdb::Delete()
 		m_nRecordCount -= 1;
 		m_pDataset->m_nObjectCount -= 1;
 		OgdcString strSQL;
-		strSQL.Format(OGDCPCTSTR("UPDATE OGRegister "
-			"SET OGRecordCount = OGRecordCount-1 WHERE OGDatasetName = '%s'"),
-			OGDCPCTSTR(m_strTableName));
+		strSQL.Format(_U("UPDATE OGRegister SET OGRecordCount = OGRecordCount-1 WHERE OGDatasetName = '%s'"),
+			m_strTableName.Cstr());
 		m_pDataset->m_pDataSource->m_daoDatabase.Execute(strSQL);
 
-		strSQL.Format(OGDCPCTSTR("DELETE FROM [%s] WHERE OGID = %d"),
-			OGDCPCTSTR(m_strTableName), GetID());
+		strSQL.Format(_U("DELETE FROM [%s] WHERE OGID = %d"),
+			m_strTableName.Cstr(), GetID());
 		//记录指针指向下一条记录
 		m_pDaoRecordset->MoveNext();
 		m_pDataset->m_pDataSource->m_daoDatabase.Execute(strSQL);
@@ -2167,12 +3148,12 @@ OgdcBool OgdcRecordsetMdb::DeleteAll()
 	OgdcString strSQL;
 	if (m_strFilter.IsEmpty())
 	{
-		strSQL.Format(OGDCPCTSTR("DELETE * FROM [%s] "), OGDCPCTSTR(m_strTableName));
+		strSQL.Format(_U("DELETE * FROM [%s] "), m_strTableName.Cstr());
 	}
 	else
 	{
-		strSQL.Format(OGDCPCTSTR("DELETE * FROM [%s] WHERE %s"), 
-			OGDCPCTSTR(m_strTableName), OGDCPCTSTR(m_strFilter));
+		strSQL.Format(_U("DELETE * FROM [%s] WHERE %s"), 
+			m_strTableName.Cstr(), m_strFilter.Cstr());
 	}
 	try
 	{
@@ -2180,9 +3161,8 @@ OgdcBool OgdcRecordsetMdb::DeleteAll()
 
 		m_nRecordCount = 0;
 		m_pDataset->m_nObjectCount -= nCount;
-		strSQL.Format(OGDCPCTSTR("UPDATE OGRegister "
-			"SET OGRecordCount = OGRecordCount - %d "
-			"WHERE OGDatasetName = '%s'"), nCount, OGDCPCTSTR(m_strTableName));
+		strSQL.Format(_U("UPDATE OGRegister SET OGRecordCount = OGRecordCount - %d WHERE OGDatasetName = '%s'"), 
+			nCount, m_strTableName.Cstr());
 
 		m_pDataset->m_pDataSource->m_daoDatabase.Execute(strSQL);
 	}

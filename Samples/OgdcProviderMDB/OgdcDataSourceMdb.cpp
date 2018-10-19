@@ -36,10 +36,10 @@ OgdcDataSourceMdb::OgdcDataSourceMdb()
 	m_bModified = FALSE;
 	m_bTransStarted = FALSE;
 	m_bOpened = FALSE;
- 	m_strDescription = "" ;
+ 	m_strDescription = _U("") ;
 	m_connection.m_nType = 1001;	
 	m_nEngineClass = 2;
-	m_strPostfix = "*.mdb";
+	m_strPostfix = _U("*.mdb");
 }
 
 OgdcDataSourceMdb::~OgdcDataSourceMdb()
@@ -70,7 +70,7 @@ OgdcBool OgdcDataSourceMdb::Create()
 	// 判断数据库文件是否存在
  	CFileStatus status;
 	status.m_size = 0;
- 	CFile::GetStatus(OGDCPCTSTR(m_connection.m_strServer), status);
+ 	CFile::GetStatus(m_connection.m_strServer, status);
  	if (status.m_size > 0)
  	{
 		//如果目标数据库已经存在,先删除数据库
@@ -83,12 +83,11 @@ OgdcBool OgdcDataSourceMdb::Create()
  	//建立Access的工作空间
  	OgdcLong dwName = GetTickCount();
  	OgdcString strName;
- 	strName.Format("%u",dwName);
+ 	strName.Format(_U("%u"),dwName);
  	m_pDaoWorkspace = new CDaoWorkspace;
   	try
   	{
-  		m_pDaoWorkspace->Create(strName, OGDCPCTSTR("admin"),
-			OGDCPCTSTR(m_connection.m_strPassword));
+  		m_pDaoWorkspace->Create(strName, _U("admin"),m_connection.m_strPassword);
  		m_pDaoWorkspace->Append();
   	}
   	catch (CDaoException* e)
@@ -105,16 +104,14 @@ OgdcBool OgdcDataSourceMdb::Create()
  		//如果将要创建的数据库设了密码，则进行加密
   		if (m_connection.m_bEncrypt)
   		{
-  			m_daoDatabase.Create(OGDCPCTSTR(m_connection.m_strServer),
-				dbLangGeneral, dbEncrypt);
-  			COleVariant varOld(OGDCPCTSTR(""), VT_BSTRT);
-  			COleVariant varNew(OGDCPCTSTR(m_connection.m_strPassword), VT_BSTRT);
-  			DAO_CHECK(m_daoDatabase.m_pDAODatabase->NewPassword(
-				varOld.bstrVal, varNew.bstrVal));
+  			m_daoDatabase.Create(m_connection.m_strServer,dbLangGeneral, dbEncrypt);
+  			COleVariant varOld(_U(""), VT_BSTRT);
+  			COleVariant varNew(m_connection.m_strPassword, VT_BSTRT);
+  			DAO_CHECK(m_daoDatabase.m_pDAODatabase->NewPassword(varOld.bstrVal, varNew.bstrVal));
   		}
   		else
   		{		
-			m_daoDatabase.Create(OGDCPCTSTR(m_connection.m_strServer));	
+			m_daoDatabase.Create(m_connection.m_strServer);	
   		}
 	}
 	catch (CDaoException* e)
@@ -130,20 +127,22 @@ OgdcBool OgdcDataSourceMdb::Create()
 	fieldInfos.RemoveAll ();
 	//将要创建的字段加入OgdcFieldInfos的一个集合
  	fieldInfos.AddField (OGRF_ID, OgdcFieldInfo::INT32,
-		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_DATASET_NAME, OgdcFieldInfo::Text, 64, 0, TRUE, FALSE);
+	fieldInfos.AddField (OGRF_PARENTDT_ID, OgdcFieldInfo::INT32,
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("-1"));
  	fieldInfos.AddField (OGRF_DATASET_TYPE, OgdcFieldInfo::INT32,
-		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_LEFT, OgdcFieldInfo::Double,
-		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_RIGHT, OgdcFieldInfo::Double,
-		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_TOP, OgdcFieldInfo::Double, 
-		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_BOTTOM, OgdcFieldInfo::Double, 
-		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_RECORDCOUNT, OgdcFieldInfo::INT32,
-		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("0"));
   	fieldInfos.AddField (OGRF_LASTUPDATE, OgdcFieldInfo::Date, 
 		sizeof(OgdcFieldInfo::Date), 0, FALSE, FALSE);
 
@@ -177,12 +176,12 @@ OgdcBool OgdcDataSourceMdb::Create()
 
  	fieldInfos.RemoveAll ();
 	fieldInfos.AddField (OGRF_ID, OgdcFieldInfo::INT32,
-		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGRF_DATASET_NAME, OgdcFieldInfo::Text, 64, 0, TRUE, FALSE);
  	fieldInfos.AddField (OGRF_DATASET_TYPE, OgdcFieldInfo::INT32,
 		sizeof(OgdcFieldInfo::INT32),0,FALSE, FALSE);
  	fieldInfos.AddField (OGIRF_PIXELFORMAT, OgdcFieldInfo::INT32,
-		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGIRF_WIDTH, OgdcFieldInfo::INT32, 
 		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE);
  	fieldInfos.AddField (OGIRF_HEIGHT, OgdcFieldInfo::INT32,
@@ -191,13 +190,13 @@ OgdcBool OgdcDataSourceMdb::Create()
 		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE);
  	fieldInfos.AddField (OGIRF_PYRAMID, OgdcFieldInfo::Text, 64, 0, FALSE, FALSE);
  	fieldInfos.AddField (OGIRF_PYRAMIDLEVEL, OgdcFieldInfo::INT32,
-		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGIRF_BLOCKSIZES, OgdcFieldInfo::INT32,
 		sizeof(OgdcFieldInfo::INT32), 0, FALSE, FALSE);
 	fieldInfos.AddField (OGIRF_MINZ, OgdcFieldInfo::Double,
-		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, _U("0"));
 	fieldInfos.AddField (OGIRF_MAXZ, OgdcFieldInfo::Double, 
-		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE, _U("0"));
  	fieldInfos.AddField (OGIRF_PALETTE, OgdcFieldInfo::Binary, 0, 0, FALSE, FALSE);
 	fieldInfos.AddField (OGIRF_LEFT, OgdcFieldInfo::Double,
 		sizeof(OgdcFieldInfo::Double), 0, FALSE, FALSE);
@@ -285,7 +284,7 @@ OgdcBool OgdcDataSourceMdb::Open()
 			//如果密码不为为空
 			if (!OgdcString(m_connection.m_strPassword).IsEmpty())
 			{
-				OgdcString pwd = OGDCPCTSTR(";PWD=") + m_connection.m_strPassword;
+				OgdcString pwd = _U(";PWD=") + m_connection.m_strPassword;
 				m_daoDatabase.Open(m_connection.m_strServer, TRUE, FALSE, pwd);
 			}
 			else
@@ -312,7 +311,7 @@ OgdcBool OgdcDataSourceMdb::Open()
 	CDaoTableDef tableDef(&m_daoDatabase);
 	try
 	{
-		tableDef.Open("OGRegister");
+		tableDef.Open(_U("OGRegister"));
  		COleVariant varValue;
 		CDaoRecordset recordset;
 		recordset.Open(&tableDef);
@@ -336,17 +335,44 @@ OgdcBool OgdcDataSourceMdb::Open()
 			pVecter->m_info.m_rcBounds.bottom = varValue.dblVal;
 			recordset.GetFieldValue(OGRF_RECORDCOUNT, varValue);
 			pVecter->m_nObjectCount = varValue.lVal;
+
+			recordset.GetFieldValue(OGRF_PARENTDT_ID, varValue);
+			OgdcInt nParentID = varValue.lVal;
+			if (nParentID != -1)
+			{
+				OgdcInt nDatasetCount = m_datasets.GetSize();
+				OgdcBool bIsFind = FALSE;
+				for (OgdcInt nIndex=0; nIndex<nDatasetCount; nIndex++)
+				{
+					if (((OgdcDatasetVectorMdb*)m_datasets[nIndex])->m_nID == nParentID)
+					{
+						((OgdcDatasetVectorMdb*)m_datasets[nIndex])->m_arrSubDataset.Add(pVecter);
+						bIsFind = TRUE;
+						break;
+					}
+				}
+				if (!bIsFind)
+				{
+					delete pVecter;
+					pVecter = NULL;
+				}
+				recordset.MoveNext();
+				continue;
+			}
+
  			m_datasets.Add(pVecter);
 			recordset.MoveNext();
 		}
 		recordset.Close();
 		tableDef.Close();
 
-		tableDef.Open("OGImgRegister");
+		tableDef.Open(_U("OGImgRegister"));
 		recordset.Open(&tableDef);
 		for (i = 0; i < recordset.GetRecordCount(); i++ )
 		{
 			pRaster = new OgdcDatasetRasterMdb(this);
+			OgdcBandInfo bandInfo;
+
 			recordset.GetFieldValue(OGRF_ID,varValue);
 			pRaster->m_nID = varValue.lVal;
 			recordset.GetFieldValue(OGRF_DATASET_NAME, varValue);
@@ -367,20 +393,22 @@ OgdcBool OgdcDataSourceMdb::Open()
 			recordset.GetFieldValue(OGIRF_HEIGHT, varValue);
 			pRaster->m_info.m_nHeight = varValue.lVal;
 			recordset.GetFieldValue(OGIRF_PIXELFORMAT, varValue);
-			pRaster->m_info.m_nWidthBytes = (pRaster->m_info.m_nWidth 
-				* OgdcInt(varValue.lVal) + 31) / 32 * 4;
-			pRaster->m_info.m_nPixelFormat = (PixelFormat)varValue.lVal;
+			bandInfo.m_nWidthBytes = (pRaster->m_info.m_nWidth * OgdcInt(varValue.lVal) + 31) / 32 * 4;
+			bandInfo.m_nPixelFormat = (PixelFormat)varValue.lVal;
 			recordset.GetFieldValue(OGIRF_EBLOCKSIZE, varValue);
 			pRaster->m_info.m_nColBlocks = (OgdcInt)ceil(double(
 				pRaster->m_info.m_nWidth) / double(varValue.lVal));
 			pRaster->m_info.m_nRowBlocks = (OgdcInt)ceil(double(
 				pRaster->m_info.m_nHeight) / double(varValue.lVal));
 			pRaster->m_info.m_nBlockSize = (OgdcDatasetRasterInfo::IBSizeOption)varValue.lVal;
+
 			recordset.GetFieldValue(OGIRF_MINZ, varValue);
-			pRaster->m_info.m_dMinZ = varValue.dblVal;
+			bandInfo.m_dMinZ = varValue.dblVal;
 			recordset.GetFieldValue(OGIRF_MAXZ, varValue);
-			pRaster->m_info.m_dMaxZ = varValue.dblVal;
+			bandInfo.m_dMaxZ = varValue.dblVal;
 			
+			pRaster->m_info.m_arrBandInfo.Add(bandInfo);
+
 			recordset.GetFieldValue(OGIRF_PYRAMIDLEVEL, varValue);	
 			if (OgdcInt(varValue.lVal) != 0)
 			{
@@ -493,8 +521,8 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 	}
 
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT OGDatasetName FROM OGRegister "
-		"WHERE OGDatasetName = '%s'"), strDatasetName.Cstr());
+	strSQL.Format(_U("SELECT OGDatasetName FROM OGRegister WHERE OGDatasetName = '%s'"), 
+		strDatasetName.Cstr());
 	CDaoRecordset vectorRecord(&m_daoDatabase);
 
 	try
@@ -504,19 +532,20 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 	catch (CDaoException* e)
 	{
 		e->Delete();
-		vectorRecord.Close();
 		return FALSE;
 	}
 	OgdcInt nDatasetCount = m_datasets.GetSize();
 	if (!vectorRecord.IsEOF())  //数据集不允许重名
 	{
 		try
-	  	{	
+	  	{
+			OgdcInt nParentID = 0;
 			//先关闭数据集
 			for (OgdcInt i = 0; i < nDatasetCount; i++)
 			{
 				if (strDatasetName == m_datasets.ElementAt(i)->GetName())
 				{
+					nParentID = ((OgdcDatasetVectorMdb*)m_datasets[i])->m_nID;
 					if (m_datasets.ElementAt(i)->IsOpen())
 					{
 						m_datasets.ElementAt(i)->Close();
@@ -528,8 +557,46 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 				}
 			}
 
-	  		strSQL.Format (OGDCPCTSTR("DELETE FROM OGRegister "
-				"WHERE OGDatasetName = '%s'"), strDatasetName.Cstr());
+			// 先删除子数据集
+			strSQL.Format(_U("SELECT OGDatasetName FROM OGRegister WHERE OGParentDTID=%d"), nParentID);
+			CDaoRecordset subVectorRecord(&m_daoDatabase);
+			try
+			{
+				subVectorRecord.Open(AFX_DAO_USE_DEFAULT_TYPE, strSQL);
+			}
+			catch (CDaoException* e1)
+			{
+				e1->Delete();
+				vectorRecord.Close();
+				return FALSE;
+			}
+
+			COleVariant varValue;
+			OgdcString strSubDatasetName;
+			while (!subVectorRecord.IsEOF())
+			{
+				try
+				{
+					subVectorRecord.GetFieldValue((short)0, varValue);
+					strSubDatasetName = OgdcString((LPCTSTR)varValue.bstrVal);
+					m_daoDatabase.DeleteTableDef(strSubDatasetName);
+					strSQL.Format(_U("DELETE FROM OGRegister WHERE OGDatasetName='%s'"), strSubDatasetName.Cstr());
+					m_daoDatabase.Execute(strSQL);
+					subVectorRecord.MoveNext();
+				}
+				catch (CDaoException* e1)
+				{
+					e1->Delete();
+					subVectorRecord.Close();
+					vectorRecord.Close();
+					return FALSE;
+				}
+			}
+			subVectorRecord.Close();
+
+			// 再删除主数据集
+	  		strSQL.Format (_U("DELETE FROM OGRegister WHERE OGDatasetName = '%s'"), 
+				strDatasetName.Cstr());
 	  		m_daoDatabase.Execute(strSQL);
 			m_daoDatabase.DeleteTableDef(strDatasetName);
 	  	}
@@ -537,7 +604,6 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 	  	{
 	  		e->Delete();
 			vectorRecord.Close();
-			m_daoDatabase.Close();
 			return FALSE;
 	  	}
 
@@ -563,8 +629,8 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 				}
 			}
 
-		 	strSQL.Format(OGDCPCTSTR("DELETE FROM OGImgRegister "
-				"WHERE OGDatasetName LIKE '%s'"), strDatasetName.Cstr());
+		 	strSQL.Format(_U("DELETE FROM OGImgRegister WHERE OGDatasetName LIKE '%s'"), 
+				strDatasetName.Cstr());
 		 	m_daoDatabase.Execute(strSQL);
 			m_daoDatabase.DeleteTableDef(strDatasetName);
 		}
@@ -575,8 +641,8 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 		}
 
 		//删除金字塔  
-		strSQL.Format(OGDCPCTSTR("SELECT OGDatasetName FROM OGImgRegister "
-			"WHERE OGPyramid LIKE '%s'"), strDatasetName.Cstr());
+		strSQL.Format(_U("SELECT OGDatasetName FROM OGImgRegister WHERE OGPyramid LIKE '%s'"), 
+			strDatasetName.Cstr());
 		CDaoRecordset rasterRecord(&m_daoDatabase);
 		try
 		{
@@ -599,8 +665,8 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 				rasterRecord.GetFieldValue((short)0, varValue);
 				strPyramidName = OgdcString((LPCTSTR)varValue.bstrVal);
 				m_daoDatabase.DeleteTableDef(strPyramidName);
-				strSQL.Format (OGDCPCTSTR("DELETE FROM OGImgRegister "
-					"WHERE OGDatasetName LIKE '%s'"), strPyramidName.Cstr());
+				strSQL.Format (_U("DELETE FROM OGImgRegister WHERE OGDatasetName LIKE '%s'"), 
+					strPyramidName.Cstr());
 				m_daoDatabase.Execute (strSQL);
 				rasterRecord.MoveNext();
 			}
@@ -619,120 +685,105 @@ OgdcBool OgdcDataSourceMdb::DeleteDataset( const OgdcString& strDatasetName )
 
 OgdcDatasetVector* OgdcDataSourceMdb::CreateDatasetVector( const OgdcDatasetVectorInfo& vInfo )
 {
-	//检查数据集是否合法
-	if (!IsAvailableDatasetName(vInfo.m_strName))
-	{
-		return NULL;
-	}
 	if (!IsOpen())
 	{
 		return NULL;
 	}
 
-	OgdcDatasetVectorMdb* pDatasetVector = new OgdcDatasetVectorMdb(this);
-
-	//是否重名
-	CDaoRecordset recordset(&m_daoDatabase);
-	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT COUNT(*) FROM OGRegister "
-		"WHERE OGDatasetName = '%s'"),
-	OGDCPCTSTR(vInfo.m_strName));		
-	try
+	OgdcDatasetVectorInfo vInfoTmp;
+	vInfoTmp = vInfo;
+	vInfoTmp.m_strName = GetUnoccupiedDatasetName(vInfo.m_strName);
+	if (vInfoTmp.m_strName.IsEmpty())
 	{
-		recordset.Open(dbOpenSnapshot, strSQL);
-		COleVariant varCount;
-		recordset.MoveFirst();
-		recordset.GetFieldValue(0, varCount);
-		recordset.Close();
-		if ( varCount.lVal != 0 )
-		{	
-			delete pDatasetVector;
-			pDatasetVector = NULL;
-			return NULL;
-		}
-	}
-	catch (CDaoException* e)
-	{
-		delete pDatasetVector;
-		pDatasetVector = NULL;
-		e->Delete();
-		recordset.Close();
 		return NULL;
 	}
 
 	OgdcFieldInfos fieldInfos;
 	fieldInfos.AddField (OG_OBJ_ID,OgdcFieldInfo::INT32, 
 		sizeof(dbLong), 0, FALSE, FALSE);
-	if (vInfo.m_nType == OgdcDataset::Point)
+	if (vInfoTmp.m_nType == OgdcDataset::Point)
 	{
 		fieldInfos.AddField (OG_X,OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
 		fieldInfos.AddField (OG_Y,OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
 	}
-	else if (vInfo.m_nType != OgdcDataset::Tabular)   
+	else if (vInfoTmp.m_nType == OgdcDataset::Point3D)
+	{
+		fieldInfos.AddField (OG_X,OgdcFieldInfo::Double,
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
+		fieldInfos.AddField (OG_Y,OgdcFieldInfo::Double,
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
+		fieldInfos.AddField (OG_Z,OgdcFieldInfo::Double,
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
+	}
+	else if (vInfoTmp.m_nType != OgdcDataset::Tabular)   
 	{
 		fieldInfos.AddField (OG_GEOMETRY, 
 			OgdcFieldInfo::LongBinary, 0, 0, FALSE, FALSE);
 		fieldInfos.AddField (OG_SDRI_W, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
 		fieldInfos.AddField (OG_SDRI_N, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
 		fieldInfos.AddField (OG_SDRI_E, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
 		fieldInfos.AddField (OG_SDRI_S, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));	
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));	
 	}
 	//根据图层类型增加相应系统字段
-	switch (vInfo.m_nType)
+	switch (vInfoTmp.m_nType)
 	{
 	case OgdcDataset::Tabular:
 	case OgdcDataset::Point:
-		fieldInfos.AddField(OG_USER_ID, OgdcFieldInfo::INT32,
-			sizeof(dbLong),0, FALSE, FALSE, OGDCPCTSTR("0"));
-		break;
-
-	case OgdcDataset::Line:
-		fieldInfos.AddField(OG_USER_ID, OgdcFieldInfo::INT32,
-			sizeof(dbLong), 0, FALSE, FALSE, OGDCPCTSTR("0"));
-		fieldInfos.AddField(OG_LENGTH, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
-		break;
-
-	case OgdcDataset::Region:
-		fieldInfos.AddField(OG_USER_ID, OgdcFieldInfo::INT32,
-			sizeof(dbLong), 0, FALSE, FALSE, OGDCPCTSTR("0"));
-		fieldInfos.AddField(OG_AREA, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
-		fieldInfos.AddField(OG_PERIMETER, OgdcFieldInfo::Double,
-			sizeof(dbDouble), 0, FALSE, FALSE, OGDCPCTSTR("0"));
-		break;
-
+	case OgdcDataset::Point3D:
+	case OgdcDataset::PointEPS:
 	case OgdcDataset::Text:
+	case OgdcDataset::TextEPS:
+	case OgdcDataset::Model:
 		fieldInfos.AddField(OG_USER_ID, OgdcFieldInfo::INT32,
-			sizeof(dbLong), 0, FALSE, FALSE, OGDCPCTSTR("0"));
+			sizeof(dbLong),0, FALSE, FALSE, _U("0"));
 		break;
-
+	case OgdcDataset::Line:
+	case OgdcDataset::Line3D:
+	case OgdcDataset::LineEPS:
+		fieldInfos.AddField(OG_USER_ID, OgdcFieldInfo::INT32,
+			sizeof(dbLong), 0, FALSE, FALSE, _U("0"));
+		fieldInfos.AddField(OG_LENGTH, OgdcFieldInfo::Double,
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
+		break;
+	case OgdcDataset::Region:
+	case OgdcDataset::Region3D:
+	case OgdcDataset::RegionEPS:
+		fieldInfos.AddField(OG_USER_ID, OgdcFieldInfo::INT32,
+			sizeof(dbLong), 0, FALSE, FALSE, _U("0"));
+		fieldInfos.AddField(OG_AREA, OgdcFieldInfo::Double,
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
+		fieldInfos.AddField(OG_PERIMETER, OgdcFieldInfo::Double,
+			sizeof(dbDouble), 0, FALSE, FALSE, _U("0"));
+		break;
 	default:
 		break;
 	}
-	//创建字段
-	//创建数据集
 
+	//创建数据集
 	CDaoTableDef daoTableDef(&m_daoDatabase);
-	if (!IsAvailableDatasetName(vInfo.m_strName))
-	{
-		return	FALSE;
-	}
-	
-	OgdcLong nFields = fieldInfos.GetSize();
-	CDaoFieldInfo info;
 	try
 	{
-		daoTableDef.Create(OGDCPCTSTR(vInfo.m_strName));
-		for (OgdcLong i = 0; i < nFields; i++)
-		{ 
-			OgdcHelperMdb::OgdcFieldInfo2CDaoFieldInfo(fieldInfos.GetAt(OgdcInt(i)),info);
+		daoTableDef.Create(vInfoTmp.m_strName);
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		return NULL;
+	}
+	//创建字段
+	try
+	{
+		OgdcInt nFields = fieldInfos.GetSize();
+		CDaoFieldInfo info;
+		for (OgdcInt i = 0; i < nFields; i++)
+		{
+			OgdcHelperMdb::OgdcFieldInfo2CDaoFieldInfo(fieldInfos.GetAt(i),info);
 			daoTableDef.CreateField(info);	
 		}
 		//建立一个OGId字段的索引
@@ -740,13 +791,15 @@ OgdcDatasetVector* OgdcDataSourceMdb::CreateDatasetVector( const OgdcDatasetVect
 		CDaoIndexFieldInfo indexFieldInfo;
 		indexFieldInfo.m_strName = OG_OBJ_ID;
 		indexFieldInfo.m_bDescending = FALSE;
-		indexInfo.m_strName = OGDCPCTSTR("OGID_Index");
+		indexInfo.m_strName = _U("OGID_idx_") + vInfoTmp.m_strName;
 		indexInfo.m_pFieldInfos = &indexFieldInfo;
 		indexInfo.m_nFields = 1;
 		indexInfo.m_bPrimary = TRUE;
 		daoTableDef.CreateIndex(indexInfo);
-		
-		if (vInfo.m_nType != OgdcDataset::Point && vInfo.m_nType != OgdcDataset::Tabular)
+
+		if (vInfoTmp.m_nType != OgdcDataset::Point &&
+			vInfoTmp.m_nType != OgdcDataset::Tabular &&
+			vInfoTmp.m_nType != OgdcDataset::Point3D)
 		{
 			//根据四至建立索引
 			CDaoIndexInfo indexInfo1;
@@ -759,7 +812,7 @@ OgdcDatasetVector* OgdcDataSourceMdb::CreateDatasetVector( const OgdcDatasetVect
 			indexFieldInfo1[2].m_bDescending = FALSE;
 			indexFieldInfo1[3].m_strName = OG_SDRI_S;
 			indexFieldInfo1[3].m_bDescending = FALSE;
-			indexInfo1.m_strName = OGDCPCTSTR("idx_") + indexInfo1.m_strName;
+			indexInfo1.m_strName = _U("WNES_idx_") + vInfoTmp.m_strName;
 			indexInfo1.m_pFieldInfos = indexFieldInfo1;
 			indexInfo1.m_bClustered = TRUE;
 			indexInfo1.m_nFields = 4;
@@ -775,12 +828,14 @@ OgdcDatasetVector* OgdcDataSourceMdb::CreateDatasetVector( const OgdcDatasetVect
 	{
 		e->Delete();
 		daoTableDef.Close();
-		return FALSE;
-	} 
-	
+		return NULL;
+	}
+
 	//得到数据集的最大ID
+	CDaoRecordset recordset(&m_daoDatabase);
+	OgdcString strSQL;
 	COleVariant lRecordMaxId;
-	strSQL.Format(OGDCPCTSTR("SELECT MAX(OGDatasetID) FROM OGRegister"));
+	strSQL.Format(_U("SELECT MAX(OGDatasetID) FROM OGRegister"));
 	try
 	{
 		recordset.Open(dbOpenSnapshot,strSQL);
@@ -795,31 +850,68 @@ OgdcDatasetVector* OgdcDataSourceMdb::CreateDatasetVector( const OgdcDatasetVect
 	lRecordMaxId.intVal++;
 	OgdcInt nID = lRecordMaxId.intVal;
 	
+	OgdcDatasetVectorMdb* pDatasetVector = new OgdcDatasetVectorMdb(this);
 	pDatasetVector->m_nID = nID;
-	pDatasetVector->m_info = vInfo;
+	pDatasetVector->m_info = vInfoTmp;
 	//若rcBounds为空，则默认设为(0,0,2000,2000)
-	pDatasetVector->SetBounds(vInfo.m_rcBounds);
- 	if (vInfo.m_rcBounds.IsEmpty())
- 	{
- 		pDatasetVector->m_info.m_rcBounds.left = 0.0;
+	if (vInfoTmp.m_rcBounds.IsEmpty())
+	{
+		pDatasetVector->m_info.m_rcBounds.left = 0.0;
 		pDatasetVector->m_info.m_rcBounds.top = 2000.0;
 		pDatasetVector->m_info.m_rcBounds.right = 0.0;
 		pDatasetVector->m_info.m_rcBounds.bottom = 2000.0;
- 	}
-	
+	}
+
 	//加入注册表
-	CDaoRecordset record;
 	CDaoTableDef tableDef(&m_daoDatabase);
 	try
 	{
 		tableDef.Open(OG_REGISTER_TABLE);
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		delete pDatasetVector;
+		pDatasetVector = NULL;
+		try
+		{
+			m_daoDatabase.DeleteTableDef(vInfoTmp.m_strName);
+		}
+		catch (CDaoException* e1)
+		{
+			e1->Delete();
+		}
+		return NULL;
+	}
+	CDaoRecordset record;
+	try
+	{
 		record.Open(&tableDef);
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		tableDef.Close();
+		delete pDatasetVector;
+		pDatasetVector = NULL;
+		try
+		{
+			m_daoDatabase.DeleteTableDef(vInfoTmp.m_strName);
+		}
+		catch (CDaoException* e1)
+		{
+			e1->Delete();
+		}
+		return NULL;
+	}
+	try
+	{
 		record.AddNew ();
 		//如果setFieldValue后的数为OgdcInt或OgdcLong，需要用long强制转换
 		record.SetFieldValue (OGRF_ID, long(nID));
 		record.SetFieldValue (OGRF_DATASET_NAME, 
-			COleVariant(vInfo.m_strName, VT_BSTRT));
-		record.SetFieldValue (OGRF_DATASET_TYPE, long(vInfo.m_nType));
+			COleVariant(vInfoTmp.m_strName, VT_BSTRT));
+		record.SetFieldValue (OGRF_DATASET_TYPE, long(vInfoTmp.m_nType));
 		record.SetFieldValue (OGRF_LEFT, pDatasetVector->m_info.m_rcBounds.left);
 		record.SetFieldValue (OGRF_RIGHT, pDatasetVector->m_info.m_rcBounds.right);
 		record.SetFieldValue (OGRF_TOP, pDatasetVector->m_info.m_rcBounds.top);
@@ -834,14 +926,46 @@ OgdcDatasetVector* OgdcDataSourceMdb::CreateDatasetVector( const OgdcDatasetVect
 		e->Delete();
 		record.Close (); 
 		tableDef.Close();
-		return FALSE;
+		delete pDatasetVector;
+		pDatasetVector = NULL;
+		try
+		{
+			m_daoDatabase.DeleteTableDef(vInfoTmp.m_strName);
+		}
+		catch (CDaoException* e1)
+		{
+			e1->Delete();
+		}
+		return NULL;
 	}
-	
-	pDatasetVector->m_info.m_strName = vInfo.m_strName;
-	m_bOpened = TRUE;
-	m_datasets.Add(pDatasetVector);
 
-	return pDatasetVector;	
+	// 模型数据集创建子数据集
+	if (vInfoTmp.m_nType == OgdcDataset::Model)
+	{
+		OgdcDatasetVectorInfo vSubInfo = vInfoTmp;
+		vSubInfo.m_nType = OgdcDataset::Texture;
+		vSubInfo.m_strName = vInfoTmp.m_strName + _U("_Texture");
+		if (!pDatasetVector->CreateSubDatasetVector(vSubInfo))
+		{
+			strSQL.Format(_U("DELETE FROM OGRegister WHERE OGDatasetID=%d"), pDatasetVector->m_nID);
+			try
+			{
+				m_daoDatabase.DeleteTableDef(vInfoTmp.m_strName);
+				m_daoDatabase.Execute(strSQL);
+			}
+			catch (CDaoException* e)
+			{
+				e->Delete();
+			}
+			delete pDatasetVector;
+			pDatasetVector = NULL;
+			return NULL;
+		}
+	}
+
+	pDatasetVector->Open();
+	m_datasets.Add(pDatasetVector);
+	return pDatasetVector;
 }
 
 OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster( 
@@ -858,9 +982,8 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 
 	CDaoRecordset recordsetCheck(&m_daoDatabase);
 	OgdcString strSqlCheck;
-	strSqlCheck.Format(OGDCPCTSTR("SELECT COUNT(*) FROM OGImgRegister "
-		"WHERE OGDatasetName = '%s'"),
-		OGDCPCTSTR(rInfo.m_strName));		
+	strSqlCheck.Format(_U("SELECT COUNT(*) FROM OGImgRegister WHERE OGDatasetName = '%s'"),
+		rInfo.m_strName.Cstr());		
 	try
 	{
 		recordsetCheck.Open(dbOpenSnapshot, strSqlCheck);
@@ -884,7 +1007,7 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 	OgdcDatasetRasterMdb* pDatasetRaster = new OgdcDatasetRasterMdb(this);
 
 	//调色板,如果是黑白，默认加上调色板
-	if (rInfo.m_nPixelFormat == IPF_MONO)
+	if (rInfo.m_arrBandInfo[0].m_nPixelFormat == IPF_MONO)
 	{
 		PALETTEENTRY paletteentry;
 		paletteentry.peRed = 0;
@@ -904,13 +1027,13 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 	CDaoTableDef rasterTable(&m_daoDatabase);
 	OgdcFieldInfos fieldInfos;
 
-	fieldInfos.AddField (OGDCPCTSTR("OGRow"), OgdcFieldInfo::INT32,
+	fieldInfos.AddField (_U("OGRow"), OgdcFieldInfo::INT32,
 		sizeof(OgdcLong), 0, FALSE, FALSE);
-	fieldInfos.AddField (OGDCPCTSTR("OGColumn"), OgdcFieldInfo::INT32,
+	fieldInfos.AddField (_U("OGColumn"), OgdcFieldInfo::INT32,
 		sizeof(OgdcLong), 0, FALSE, FALSE);
-	fieldInfos.AddField (OGDCPCTSTR("OGSize"), OgdcFieldInfo::INT32,
+	fieldInfos.AddField (_U("OGSize"), OgdcFieldInfo::INT32,
 		sizeof(OgdcLong), 0, FALSE, FALSE);
-	fieldInfos.AddField (OGDCPCTSTR("OGRaster"),
+	fieldInfos.AddField (_U("OGRaster"),
 		OgdcFieldInfo::LongBinary, 0, 0, FALSE, FALSE);
 
 	OgdcLong nFields = fieldInfos.GetSize();
@@ -931,7 +1054,7 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 		indexFieldInfo[0].m_bDescending = FALSE;
 		indexFieldInfo[1].m_strName = OG_DIRF_COLUMN;
 		indexFieldInfo[1].m_bDescending = FALSE;
-		indexInfo.m_strName = OGDCPCTSTR("idx_") + rInfo.m_strName;
+		indexInfo.m_strName = _U("idx_") + rInfo.m_strName;
 		indexInfo.m_pFieldInfos = indexFieldInfo;
 		indexInfo.m_bClustered = TRUE;
  		indexInfo.m_nFields = 2;
@@ -950,7 +1073,7 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 	
 	//向注册表中写入信息
 	OgdcInt m_blockSizes;
- 	switch (rInfo.m_nPixelFormat)
+ 	switch (rInfo.m_arrBandInfo[0].m_nPixelFormat)
  	{
  	case IPF_MONO ://1位,单色z
  		m_blockSizes = rInfo.m_nBlockSize * rInfo.m_nBlockSize / 8;
@@ -989,7 +1112,7 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 	CDaoRecordset recordset(&m_daoDatabase);
 	COleVariant lRecordMaxId;
 	CString strSQL;
-	strSQL.Format (OGDCPCTSTR("SELECT MAX(OGDatasetID) FROM OGImgRegister"));
+	strSQL.Format (_U("SELECT MAX(OGDatasetID) FROM OGImgRegister"));
 	try
 	{
 		recordset.Open(dbOpenSnapshot,strSQL);
@@ -1018,14 +1141,14 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 	CDaoTableDef table(&m_daoDatabase);
 	try
 	{		
-		table.Open(OGDCPCTSTR(OG_IMGREGISTER_TABLE));
+		table.Open(OG_IMGREGISTER_TABLE);
 		recordset.Open(&table);
  		recordset.AddNew ();
 
  		recordset.SetFieldValue (OGRF_ID, long(lMaxID));
  		recordset.SetFieldValue (OGRF_DATASET_NAME, COleVariant(rInfo.m_strName, VT_BSTRT));
  		recordset.SetFieldValue (OGRF_DATASET_TYPE, long(rInfo.m_nType));
- 		recordset.SetFieldValue (OGIRF_PIXELFORMAT, (long)(rInfo.m_nPixelFormat));
+ 		recordset.SetFieldValue (OGIRF_PIXELFORMAT, (long)(rInfo.m_arrBandInfo[0].m_nPixelFormat));
  		recordset.SetFieldValue (OGIRF_WIDTH, long(rInfo.m_nWidth));	
  		recordset.SetFieldValue (OGIRF_HEIGHT, long(rInfo.m_nHeight));
  		recordset.SetFieldValue (OGIRF_EBLOCKSIZE, (long)(rInfo.m_nBlockSize));
@@ -1068,7 +1191,7 @@ OgdcDatasetRaster* OgdcDataSourceMdb::CreateDatasetRaster(
 		/ rInfo.m_nBlockSize;
     OgdcInt m_nRowBlocks = (rInfo.m_nHeight + rInfo.m_nBlockSize - 1) 
 		/ rInfo.m_nBlockSize;
- 	strSQL.Format(OGDCPCTSTR("SELECT *  from [%s]"), rInfo.m_strName.Cstr());//难道白盒测试不包括这个工程？
+	strSQL.Format(_U("SELECT *  from [%s]"), rInfo.m_strName.Cstr());//难道白盒测试不包括这个工程？
 	
 	CDaoRecordset RsNew(&m_daoDatabase);
 	try
@@ -1134,11 +1257,11 @@ OgdcDataset* OgdcDataSourceMdb::CreateDatasetFrom( const OgdcString &strNewName,
 	{
 		OgdcDatasetVectorInfo vInfo;
 		vInfo = ((OgdcDatasetVector*)pReferenceDataset)->m_info;
-		vInfo.m_strName = GetUnoccupiedDatasetName(strNewName);
+		vInfo.m_strName = strNewName;
 		pDataset = CreateDatasetVector(vInfo);
 		if(pDataset == NULL)
 		{
-			return FALSE;
+			return NULL;
 		}
 
 		//创建非系统字段，即自定义字段
@@ -1189,8 +1312,8 @@ OgdcDataset* OgdcDataSourceMdb::CopyDataset( OgdcDataset* pSrcDataset,
 		
 		((OgdcDatasetRasterMdb*)pDataset)->m_colorTable = pRaster->m_colorTable;
 		//给高程字段赋值
-		((OgdcDatasetRasterMdb*)pDataset)->m_info.m_dMinZ = pRaster->m_info.m_dMinZ;
-		((OgdcDatasetRasterMdb*)pDataset)->m_info.m_dMaxZ = pRaster->m_info.m_dMaxZ;
+		((OgdcDatasetRasterMdb*)pDataset)->m_info.m_arrBandInfo[0].m_dMinZ = pRaster->m_info.m_arrBandInfo[0].m_dMinZ;
+		((OgdcDatasetRasterMdb*)pDataset)->m_info.m_arrBandInfo[0].m_dMaxZ = pRaster->m_info.m_arrBandInfo[0].m_dMaxZ;
 		((OgdcDatasetRasterMdb*)pDataset)->SaveInfo();
 		if (bBuildIndexOrPyramid)
 		{
@@ -1209,13 +1332,14 @@ OgdcDataset* OgdcDataSourceMdb::CopyDataset( OgdcDataset* pSrcDataset,
 		OgdcRecordset* pOGRecord = ((OgdcDatasetVector*)pSrcDataset)->Query(queryOgdc);
 		if(pOGRecord == NULL)
 		{
-			return FALSE;
+			return NULL;
 		}
 
 		pDataset = (OgdcDatasetVectorMdb*)CreateDatasetFrom(strDestDatasetName, pSrcDataset);
 		if(pDataset == NULL)
 		{
-			return FALSE;
+			((OgdcDatasetVector*)pSrcDataset)->ReleaseRecordset(pOGRecord);
+			return NULL;
 		}
 
 		OgdcQueryDef queryMdb;
@@ -1226,38 +1350,59 @@ OgdcDataset* OgdcDataSourceMdb::CopyDataset( OgdcDataset* pSrcDataset,
 		if(pMdbRecord == NULL)
 		{
 			((OgdcDatasetVector*)pSrcDataset)->ReleaseRecordset(pOGRecord);
-			((OgdcDatasetVectorMdb*)pDataset)->ReleaseRecordset(pMdbRecord);
-			return FALSE;
+			return NULL;
 		}
 
 		OgdcFieldInfos fInfos;
 		pMdbRecord->GetFieldInfos(fInfos);
 
 		OgdcElement* pElement = NULL;
+		UGC::UGGeometry* pGeometry = NULL;
 		OgdcVariant valValue;
 		while (!pOGRecord->IsEOF())
 		{
-			if(pDataset->GetType() != OgdcDataset::Tabular && !pOGRecord->GetElement(pElement))
+			if (pDataset->GetType() == OgdcDataset::PointEPS ||
+				pDataset->GetType() == OgdcDataset::LineEPS ||
+				pDataset->GetType() == OgdcDataset::RegionEPS ||
+				pDataset->GetType() == OgdcDataset::TextEPS ||
+				pDataset->GetType() == OgdcDataset::Model)
 			{
-				((OgdcDatasetVector*)pSrcDataset)->ReleaseRecordset(pOGRecord);
-				((OgdcDatasetVectorMdb*)pDataset)->ReleaseRecordset(pMdbRecord);
-				return FALSE;
+				if (pOGRecord->GetElement(pGeometry))
+				{
+					pMdbRecord->AddNew(pGeometry);
+				}
+				else
+				{
+					((OgdcDatasetVector*)pSrcDataset)->ReleaseRecordset(pOGRecord);
+					((OgdcDatasetVectorMdb*)pDataset)->ReleaseRecordset(pMdbRecord);
+					return NULL;
+				}
 			}
-			pMdbRecord->AddNew(pElement);
+			else
+			{
+				if(pDataset->GetType() != OgdcDataset::Tabular && !pOGRecord->GetElement(pElement))
+				{
+					((OgdcDatasetVector*)pSrcDataset)->ReleaseRecordset(pOGRecord);
+					((OgdcDatasetVectorMdb*)pDataset)->ReleaseRecordset(pMdbRecord);
+					return NULL;
+				}
+				pMdbRecord->AddNew(pElement);
+			}
+
 			for(OgdcInt i=0; i<fInfos.GetSize(); i++)
 			{
-				if (fInfos.GetAt(i).m_strName.Left(2).CompareNoCase(OGDCPCTSTR("Sm")) == 0
+				if (fInfos.GetAt(i).m_strName.Left(2).CompareNoCase(_U("Sm")) == 0
 					|| OgdcHelperMdb::IsSystemField(fInfos.GetAt(i).m_strName)) 
 				{
 					continue;
 				}
 				
-				if (!pOGRecord->GetFieldValue(OGDCPCTSTR(fInfos.GetAt(i).m_strName), valValue))
+				if (!pOGRecord->GetFieldValue(fInfos.GetAt(i).m_strName, valValue))
 				{
 					continue;
 				}
 				
-				pMdbRecord->SetFieldValue(OGDCPCTSTR(fInfos.GetAt(i).m_strName), valValue);
+				pMdbRecord->SetFieldValue(fInfos.GetAt(i).m_strName, valValue);
 				
 			}
 			pMdbRecord->Update();
@@ -1266,8 +1411,98 @@ OgdcDataset* OgdcDataSourceMdb::CopyDataset( OgdcDataset* pSrcDataset,
 		}
 		delete pElement;
 		pElement = NULL;
+		delete pGeometry;
+		pGeometry = NULL;
 		((OgdcDatasetVector*)pSrcDataset)->ReleaseRecordset(pOGRecord);
 		((OgdcDatasetVectorMdb*)pDataset)->ReleaseRecordset(pMdbRecord);
+
+		// 有子数据集的复制子数据集
+		OgdcInt nSubDatasetCount = ((OgdcDatasetVector*)pSrcDataset)->m_arrSubDataset.GetSize();
+		if (nSubDatasetCount > 0 &&
+			((OgdcDatasetVector*)pDataset)->m_arrSubDataset.GetSize() == nSubDatasetCount)
+		{
+			for (OgdcInt nSubIndex=0; nSubIndex<nSubDatasetCount; nSubIndex++)
+			{
+				OgdcQueryDef srcQueryDefSub;
+				srcQueryDefSub.m_nCursorType = OgdcQueryDef::OpenStatic;
+				srcQueryDefSub.m_nOptions = OgdcQueryDef::Both;
+				OgdcRecordset* pSrcRecordSub = ((OgdcDatasetVector*)pSrcDataset)->m_arrSubDataset[nSubIndex]->Query(srcQueryDefSub);
+				if (pSrcRecordSub == NULL)
+				{
+					return NULL;
+				}
+
+				OgdcQueryDef desQueryDefSub;
+				desQueryDefSub.m_nCursorType = OgdcQueryDef::OpenDynamic;
+				desQueryDefSub.m_nOptions = OgdcQueryDef::Both;
+				OgdcRecordset* pDesRecordSub = ((OgdcDatasetVectorMdb*)pDataset)->m_arrSubDataset[nSubIndex]->Query(desQueryDefSub);
+				if (pDesRecordSub == NULL)
+				{
+					((OgdcDatasetVector*)pSrcDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pSrcRecordSub);
+					return NULL;
+				}
+
+				OgdcFieldInfos subFieldInfos;
+				pDesRecordSub->GetFieldInfos(subFieldInfos);
+				OgdcElement* pSubElement = NULL;
+				UGC::UGGeometry* pSubGeometry = NULL;
+				while (!pSrcRecordSub->IsEOF())
+				{
+					OgdcInt nSubDatasetType = ((OgdcDatasetVectorMdb*)pDataset)->m_arrSubDataset[nSubIndex]->GetType();
+					if (nSubDatasetType == OgdcDataset::PointEPS ||
+						nSubDatasetType == OgdcDataset::LineEPS ||
+						nSubDatasetType == OgdcDataset::RegionEPS ||
+						nSubDatasetType == OgdcDataset::TextEPS ||
+						nSubDatasetType == OgdcDataset::Model ||
+						nSubDatasetType == OgdcDataset::Texture)
+					{
+						if (pSrcRecordSub->GetElement(pSubGeometry))
+						{
+							pDesRecordSub->AddNew(pSubGeometry);
+						}
+						else
+						{
+							((OgdcDatasetVector*)pSrcDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pSrcRecordSub);
+							((OgdcDatasetVectorMdb*)pDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pDesRecordSub);
+							return NULL;
+						}
+					}
+					else
+					{
+						if (nSubDatasetType != OgdcDataset::Tabular && !pSrcRecordSub->GetElement(pSubElement))
+						{
+							((OgdcDatasetVector*)pSrcDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pSrcRecordSub);
+							((OgdcDatasetVectorMdb*)pDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pDesRecordSub);
+							return NULL;
+						}
+						pDesRecordSub->AddNew(pSubElement);
+					}
+
+					for (OgdcInt i=0; i<subFieldInfos.GetSize(); i++)
+					{
+						if (subFieldInfos.GetAt(i).m_strName.Left(2).CompareNoCase(_U("Sm")) == 0 ||
+							OgdcHelperMdb::IsSystemField(subFieldInfos.GetAt(i).m_strName))
+						{
+							continue;
+						}
+						if (!pSrcRecordSub->GetFieldValue(subFieldInfos.GetAt(i).m_strName, valValue))
+						{
+							continue;
+						}
+						pDesRecordSub->SetFieldValue(subFieldInfos.GetAt(i).m_strName, valValue);
+					}
+
+					pDesRecordSub->Update();
+					pSrcRecordSub->Move();
+				}
+				delete pSubElement;
+				pSubElement = NULL;
+				delete pSubGeometry;
+				pSubGeometry = NULL;
+				((OgdcDatasetVector*)pSrcDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pSrcRecordSub);
+				((OgdcDatasetVectorMdb*)pDataset)->m_arrSubDataset[nSubIndex]->ReleaseRecordset(pDesRecordSub);
+			}
+		}
 	}
 
 	return pDataset;	
@@ -1386,7 +1621,7 @@ OgdcBool OgdcDataSourceMdb::Connect()
 		//如果密码不为为空
 		if (!OgdcString(m_connection.m_strPassword).IsEmpty())
 		{
-			OgdcString pwd = OGDCPCTSTR(";PWD=") + m_connection.m_strPassword;
+			OgdcString pwd = _U(";PWD=") + m_connection.m_strPassword;
 			m_daoDatabase.Open(m_connection.m_strServer, TRUE, FALSE, pwd);
 		}
 		else
@@ -1488,7 +1723,7 @@ OgdcBool OgdcDataSourceMdb::ChangePassword( const OgdcString& strNewPassword )
 
 OgdcString OgdcDataSourceMdb::GetEngineName() const 
 {	
-	return "Microsoft Access Database";
+	return _U("Microsoft Access Database");
 }
 
 //生成一个数据源中目前没有的数据集名字。
@@ -1500,11 +1735,11 @@ OgdcString OgdcDataSourceMdb::GetUnoccupiedDatasetName( const OgdcString& strDat
 	//如果没有传进字符串，则用默认的"T_"命名
 	if (strName.IsEmpty())
 	{
-		strName = "T";
+		strName = _U("T");
 	}
 	OgdcString	strVSQL,strRSQL;
-	OgdcString subStr = "";
-	OgdcString strNull = "";
+	OgdcString subStr;
+	OgdcString strNull;
 	OgdcInt i = 1;	
 	if (!IsAvailableDatasetName(strDatasetName))
 	{
@@ -1519,10 +1754,8 @@ OgdcString OgdcDataSourceMdb::GetUnoccupiedDatasetName( const OgdcString& strDat
 	{	
 		CDaoRecordset vectorRecord(&m_daoDatabase);
 		CDaoRecordset rasterRecord(&m_daoDatabase);		
-		strVSQL.Format(OGDCPCTSTR("SELECT OGDatasetName FROM OGRegister "
-			"WHERE OGDatasetName = '%s'"), strName.Cstr());
-		strRSQL.Format(OGDCPCTSTR("SELECT OGDatasetName FROM OGImgRegister "
-			"WHERE OGDatasetName = '%s'"), strName.Cstr());
+		strVSQL.Format(_U("SELECT OGDatasetName FROM OGRegister WHERE OGDatasetName = '%s'"), strName.Cstr());
+		strRSQL.Format(_U("SELECT OGDatasetName FROM OGImgRegister WHERE OGDatasetName = '%s'"), strName.Cstr());
 		try
 		{	
 			vectorRecord.Open(AFX_DAO_USE_DEFAULT_TYPE, strVSQL);
@@ -1540,7 +1773,7 @@ OgdcString OgdcDataSourceMdb::GetUnoccupiedDatasetName( const OgdcString& strDat
 		{
 			return strName;
 		}
-		subStr.Format("_%d", i++);
+		subStr.Format(_U("_%d"), i++);
 		strName = strDsName + subStr;			
 	}			
 }
@@ -1577,34 +1810,42 @@ OgdcBool OgdcDataSourceMdb::IsAvailableDatasetName( const OgdcString& strDataset
 	{
 		OgdcWchar charW = strTemp.GetAt(i);
 		pChar = (OgdcChar *) &charW;
-		if ( pChar[0] == 0 || pChar[1] == 0 )
+
+		OgdcBool bIsAscii = TRUE;
+#ifdef _UGUNICODE
+		bIsAscii = ((charW & 0x007F) == charW);
+#endif
+		if (bIsAscii)
 		{
-			OgdcInt n = 0;
-			if( pChar[0] == 0 )	// UGC_ISBIGENDIAN
+			if ( pChar[0] == 0 || pChar[1] == 0 )
 			{
-			  if(sizeof(OgdcWchar) ==2)
-			  {
-				  n = 1;
-			  }
-			  else if(sizeof(OgdcWchar) == 4)
-			  {
-				  n = 3;
-			  }
-			}
-			bNumber = (pChar[n] >= 48 && pChar[n] <= 57);//数字0-9的ASCII码:48-57
-			bLetter = (pChar[n] >= 65 && pChar[n] <= 90)||(pChar[n] >= 97 && pChar[n] <= 122);//A-z,a-z的ASCII码
-			bUnderline = (pChar[n] == 95);//'_'的ASCII码是95
-			if( (bNumber||bLetter||bUnderline)  == FALSE )
-			{//有非法字符
-				bResult = FALSE;
-				break;
-			}
-			else if(i == 0)
-			{
-				if(bNumber||bUnderline)
-				{//第一个字符不能是数字或下划线
+				OgdcInt n = 0;
+				if( pChar[0] == 0 )	// UGC_ISBIGENDIAN
+				{
+					if(sizeof(OgdcWchar) ==2)
+					{
+						n = 1;
+					}
+					else if(sizeof(OgdcWchar) == 4)
+					{
+						n = 3;
+					}
+				}
+				bNumber = (pChar[n] >= 48 && pChar[n] <= 57);//数字0-9的ASCII码:48-57
+				bLetter = (pChar[n] >= 65 && pChar[n] <= 90)||(pChar[n] >= 97 && pChar[n] <= 122);//A-z,a-z的ASCII码
+				bUnderline = (pChar[n] == 95);//'_'的ASCII码是95
+				if( (bNumber||bLetter||bUnderline)  == FALSE )
+				{//有非法字符
 					bResult = FALSE;
 					break;
+				}
+				else if(i == 0)
+				{
+					if(bNumber||bUnderline)
+					{//第一个字符不能是数字或下划线
+						bResult = FALSE;
+						break;
+					}
 				}
 			}
 		}
@@ -1827,7 +2068,7 @@ OgdcBool OgdcDataSourceMdb::ReadInfo()
 	COleVariant varValue;
 	OgdcString strDSInfo;
 	CDaoRecordset recordset(&m_daoDatabase);
-	strSQL.Format(OGDCPCTSTR("SELECT * FROM OGDataSourceInfo"));
+	strSQL.Format(_U("SELECT * FROM OGDataSourceInfo"));
 	try
 	{
 		recordset.Open(AFX_DAO_USE_DEFAULT_TYPE, strSQL);

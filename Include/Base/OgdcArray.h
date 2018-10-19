@@ -59,6 +59,7 @@ public:
 	OgdcArray(OgdcSizeT nSize, const T& elem)
 	{
 		OGDCASSERT(nSize>=0);
+		m_nGrowSize=0;  
 		m_array.resize(nSize,elem);
 	}
 
@@ -182,6 +183,13 @@ public:
 	OgdcSizeT GetSize() const
 	{
 		return (OgdcSizeT)m_array.size();
+	}
+
+	//! \brief 判断是否为空
+	//! \return 为空返回true;不为空返回false
+	OgdcBool IsEmpty() const
+	{
+		return m_array.empty();	
 	}
 
 	//! \brief 释放多余的内存空间

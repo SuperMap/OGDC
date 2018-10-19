@@ -29,6 +29,11 @@
 #include "Element/OgdcElemLine3D.h"
 #include "Element/OgdcElemRegion3D.h"
 
+#include "GeometryCAD/UGGeoPointEPS.h"
+#include "GeometryCAD/UGGeoLineEPS.h"
+#include "GeometryCAD/UGGeoRegionEPS.h"
+#include "GeometryCAD/UGGeoTextEPS.h"
+
 class CDrawing  
 {
 public:
@@ -41,6 +46,7 @@ public:
 
 	//! 显示几何对象。
 	BOOL DrawElement(CDC* pDC, OgdcElement* pElement, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, UGC::UGGeometry* pGeometry, BOOL bSelected=FALSE);
 	
 	//! 全幅。
 	void ViewEntire();
@@ -81,9 +87,26 @@ protected:
 	BOOL DrawElement(CDC* pDC, OgdcElemLine3D* pElemLine3D, BOOL bSelected=FALSE);
 	BOOL DrawElement(CDC* pDC, OgdcElemRegion3D* pElemRegion3D, BOOL bSelected=FALSE);
 
+	BOOL DrawElement(CDC* pDC, UGC::UGGeoPointEPS* pGeoPointEPS, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, UGC::UGGeoLineEPS* pGeoLineEPS, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, UGC::UGGeoRegionEPS* pGeoRegionEPS, BOOL bSelected=FALSE);
+	BOOL DrawElement(CDC* pDC, UGC::UGGeoTextEPS* pGeoTextEPS, BOOL bSelected=FALSE);
+
 	unsigned short BitCount(PixelFormat pixelFormat);
 	BOOL DrawRasterBlock(CDC* pDC, OgdcRasterBlock* pIBlock, OgdcDatasetRaster* pDatasetR, BITMAPINFO* pBitmapInfo);
 
+
+	//! \brief 地理坐标换成像素坐标。
+	//! \param rectXY [in]。
+	//! \param rectImg [out]。
+	void XYToImg(OgdcDatasetRaster*pDatasetRaster, const OgdcRect2D& rectXY,OgdcRect& rectImg);
+
+	//! \brief 像素坐标换成地理坐标
+	//! \param rectImg [in]。
+	//! \param rectXY [out]。
+	void ImgToXY(OgdcDatasetRaster*pDatasetRaster, const OgdcRect& rectImg,OgdcRect2D& rectXY);
+
+	OgdcRasterBlock* GetViewBlock(OgdcDatasetRaster*pDatasetRaster, OgdcRect2D rcDraw, int nDeviceWidth, int nDeviceHeight);
 public:
 	OgdcRect2D m_rcBounds;			// 全幅范围，地理坐标。
 	OgdcRect2D m_rcViewBounds;		// 显示范围，地理坐标。

@@ -87,6 +87,10 @@ public:
 	static OgdcString GetAppPath();
 	//! \brief 获取模块路径
 	static OgdcString GetModulePath(const OgdcString& strModultTitle);
+
+	//! \brief 获取模块路径（带后缀名）
+	static OgdcString GetModulePathWithExt(const OgdcString& strModultTitle);
+
 	//! \brief 获取目录
 	static OgdcString GetDir(const OgdcString& strFile);
 	//! \brief 获取文件后缀名

@@ -13,7 +13,7 @@
 //!  \version 1.0(2012)
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "Stdafx.h"
 #include "ViewerWnd.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -513,32 +513,68 @@ void CViewerWnd::OnDraw(CDC* pDC, const CRect& rcClient)
 		OgdcRecordset* pRecordset = pDatasetV->Query(queryDef);
 		if(pRecordset != NULL)
 		{
-			OgdcElement* pElement = NULL;		
 			pRecordset->Move(OgdcRecordset::End, 0);
-			while(!pRecordset->IsBOF())
+			if (pDatasetV->GetType() == OgdcDataset::PointEPS ||
+				pDatasetV->GetType() == OgdcDataset::LineEPS ||
+				pDatasetV->GetType() == OgdcDataset::RegionEPS ||
+				pDatasetV->GetType() == OgdcDataset::TextEPS)
 			{
-				if(pRecordset->GetElement(pElement) && pElement != NULL)
+				UGC::UGGeometry* pGeometry = NULL;
+				while(!pRecordset->IsBOF())
 				{
-					CPen pen(PS_SOLID, 2, RGB(0,0,255));
-					CPen* pOldPen = pDC->SelectObject(&pen);
-					
-					CBrush brush(RGB(255,255,115));
-					CBrush *pOldBrush = pDC->SelectObject(&brush);
+					if(pRecordset->GetElement(pGeometry) && pGeometry != NULL)
+					{
+						CPen pen(PS_SOLID, 2, RGB(0,0,255));
+						CPen* pOldPen = pDC->SelectObject(&pen);
 
-					m_drawing.DrawElement(pDC, pElement, true);
+						CBrush brush(RGB(255,255,115));
+						CBrush *pOldBrush = pDC->SelectObject(&brush);
 
-					pDC->SelectObject(pOldPen);
-					pDC->SelectObject(pOldBrush);
-					delete pElement;
-					pElement = NULL;
-					break;
+						m_drawing.DrawElement(pDC, pGeometry, true);
+
+						pDC->SelectObject(pOldPen);
+						pDC->SelectObject(pOldBrush);
+						delete pGeometry;
+						pGeometry = NULL;
+						break;
+					}
+					pRecordset->Move(OgdcRecordset::Current, -1);
+
+					if(pGeometry != NULL)
+					{
+						delete pGeometry;
+						pGeometry = NULL;
+					}
 				}
-				pRecordset->Move(OgdcRecordset::Current, -1);
-
-				if(pElement != NULL)
+			}
+			else
+			{
+				OgdcElement* pElement = NULL;
+				while(!pRecordset->IsBOF())
 				{
-					delete pElement;
-					pElement = NULL;
+					if(pRecordset->GetElement(pElement) && pElement != NULL)
+					{
+						CPen pen(PS_SOLID, 2, RGB(0,0,255));
+						CPen* pOldPen = pDC->SelectObject(&pen);
+
+						CBrush brush(RGB(255,255,115));
+						CBrush *pOldBrush = pDC->SelectObject(&brush);
+
+						m_drawing.DrawElement(pDC, pElement, true);
+
+						pDC->SelectObject(pOldPen);
+						pDC->SelectObject(pOldBrush);
+						delete pElement;
+						pElement = NULL;
+						break;
+					}
+					pRecordset->Move(OgdcRecordset::Current, -1);
+
+					if(pElement != NULL)
+					{
+						delete pElement;
+						pElement = NULL;
+					}
 				}
 			}
 
@@ -601,44 +637,92 @@ LONG CViewerWnd::HitTest(const OgdcPoint2D& pntHitTest, OgdcDatasetVector* pData
 	OgdcRecordset* pRecordset = pDatasetV->Query(queryDef);
 	if(pRecordset != NULL)
 	{
-		OgdcElement* pElement = NULL;		
 		pRecordset->Move(OgdcRecordset::End, 0);
-		while(!pRecordset->IsBOF())
+		if (pDatasetV->GetType() == OgdcDataset::PointEPS ||
+			pDatasetV->GetType() == OgdcDataset::LineEPS ||
+			pDatasetV->GetType() == OgdcDataset::RegionEPS ||
+			pDatasetV->GetType() == OgdcDataset::TextEPS)
 		{
-			if(pRecordset->GetElement(pElement) && pElement != NULL)
+			UGC::UGGeometry* pGeometry = NULL;
+			while(!pRecordset->IsBOF())
 			{
-				if(pElement->GetType() == OgdcElement::ElemLine)
+				if(pRecordset->GetElement(pGeometry) && pGeometry != NULL)
 				{
-					if(HitTest(pntHitTest, (OgdcElemLine*)pElement, dTolerance))
+					if (pGeometry->HitTest(pntHitTest, dTolerance))
 					{
-						nSelectID = pElement->m_nID;
+						nSelectID = pGeometry->GetID();
 					}
-				}
-				else if(pElement->GetType() == OgdcElement::ElemRegion)
-				{
-					if(HitTest(pntHitTest, (OgdcElemRegion*)pElement, dTolerance))
-					{
-						nSelectID = pElement->m_nID;
-					}
-				}
-				else
-				{
-					nSelectID = pElement->m_nID;
-				}
 
-				if(nSelectID >= 0)
+					if(nSelectID >= 0)
+					{
+						delete pGeometry;
+						pGeometry = NULL;
+						break;
+					}
+				}
+				pRecordset->Move(OgdcRecordset::Current, -1);
+
+				if(pGeometry != NULL)
+				{
+					delete pGeometry;
+					pGeometry = NULL;
+				}
+			}
+		}
+		else
+		{
+			OgdcElement* pElement = NULL;
+			while(!pRecordset->IsBOF())
+			{
+				if(pRecordset->GetElement(pElement) && pElement != NULL)
+				{
+					if(pElement->GetType() == OgdcElement::ElemLine)
+					{
+						if(HitTest(pntHitTest, (OgdcElemLine*)pElement, dTolerance))
+						{
+							nSelectID = pElement->m_nID;
+						}
+					}
+					else if(pElement->GetType() == OgdcElement::ElemRegion)
+					{
+						if(HitTest(pntHitTest, (OgdcElemRegion*)pElement, dTolerance))
+						{
+							nSelectID = pElement->m_nID;
+						}
+					}
+					else if (pElement->GetType() == OgdcElement::ElemLine3D)
+					{
+						if(HitTest(pntHitTest, (OgdcElemLine3D*)pElement, dTolerance))
+						{
+							nSelectID = pElement->m_nID;
+						}
+					}
+					else if (pElement->GetType() == OgdcElement::ElemRegion3D)
+					{
+						if(HitTest(pntHitTest, (OgdcElemRegion3D*)pElement, dTolerance))
+						{
+							nSelectID = pElement->m_nID;
+						}
+					}
+					else
+					{
+						nSelectID = pElement->m_nID;
+					}
+
+					if(nSelectID >= 0)
+					{
+						delete pElement;
+						pElement = NULL;
+						break;
+					}
+				}
+				pRecordset->Move(OgdcRecordset::Current, -1);
+
+				if(pElement != NULL)
 				{
 					delete pElement;
 					pElement = NULL;
-					break;
 				}
-			}
-			pRecordset->Move(OgdcRecordset::Current, -1);
-
-			if(pElement != NULL)
-			{
-				delete pElement;
-				pElement = NULL;
 			}
 		}
 
@@ -885,6 +969,203 @@ BOOL CViewerWnd::HitTest(const OgdcPoint2D& pntHitTest, OgdcElemLine* pElemLine,
 			pPoints += *plPolyCounts;
 			plPolyCounts++;
 		}
+	}
+	return FALSE;
+}
+
+BOOL CViewerWnd::HitTest(const OgdcPoint2D& pntHitTest, OgdcElemLine3D* pElemLine3D, double dTolerance)
+{
+	OGDCASSERT(pElemLine3D != NULL);
+	OgdcRect2D rcBounds = pElemLine3D->GetBounds();
+	rcBounds.Inflate(dTolerance, dTolerance);
+	if (rcBounds.PtInRect(pntHitTest))
+	{
+		OgdcInt *plPolyCounts = pElemLine3D->m_polyCounts.GetData();
+		OgdcPoint3D *pPoints = pElemLine3D->m_points.GetData();
+		OgdcInt nSubCount = pElemLine3D->m_polyCounts.GetSize();
+
+		if(plPolyCounts == NULL || pPoints == NULL || nSubCount == 0)
+		{
+			return FALSE;
+		}
+
+		for(OgdcInt k=0; k<nSubCount; k++)
+		{
+			OgdcInt lCount = plPolyCounts[k];
+			if(pPoints==NULL || lCount<=1)
+			{
+				continue;
+			}
+
+			OgdcInt i = 0,j = 0;
+			OgdcDouble dDist = 0.0;	// 给定点到折线上的点或线段的距离
+			OgdcDouble dA = 0.0,dB = 0.0;
+			OgdcDouble dC = 0.0;	// 直线方程Ax+By+C=0的3参数
+			OgdcDouble dToleranceSquare = dTolerance*dTolerance;
+			OgdcDouble  dpntx = 0.0;
+			OgdcDouble  dpnty = 0.0;
+
+			dpntx=pntHitTest.x;
+			dpnty=pntHitTest.y;
+
+			dDist=(pPoints[lCount-1].x - dpntx) * (pPoints[lCount-1].x - dpntx)
+				+(pPoints[lCount-1].y - dpnty) * (pPoints[lCount-1].y - dpnty);
+			if(dDist<dToleranceSquare)
+			{
+				return TRUE;
+			}
+
+			for(j=0;j<5;j++)
+			{
+				i=j;
+				while(i<lCount-1)
+				{
+					if((pPoints[i].x>dpntx-dTolerance)&&(pPoints[i].x<dpntx+dTolerance))
+						// 利用x坐标排除一部分点;
+					{
+						dDist=(pPoints[i].x - dpntx) * (pPoints[i].x - dpntx)
+							+(pPoints[i].y - dpnty) * (pPoints[i].y - dpnty);
+						if(dDist<dToleranceSquare)
+						{
+							return TRUE;
+						}// 如果有一个点满足条件,则返回真;
+					}
+
+					// 判断点到直线的垂线是否在线段上,跳过垂线不在线段上的点
+					OgdcPoint2D startPoint;
+					OgdcPoint2D endPoint;
+					startPoint.x = pPoints[i].x;
+					startPoint.y = pPoints[i].y;
+					endPoint.x = pPoints[i+1].x;
+					endPoint.y = pPoints[i+1].y;
+					if(IsProjectOnLineSegment(pntHitTest,startPoint,endPoint))
+					{
+						dA=pPoints[i].y - pPoints[i+1].y;
+						dB=pPoints[i+1].x - pPoints[i].x;
+						if(OGDCIS0(dA) && OGDCIS0(dB))
+						{
+							dDist = (pntHitTest.x-pPoints[i].x) * (pntHitTest.x-pPoints[i].x)
+								+ (pntHitTest.y-pPoints[i].y) * (pntHitTest.y-pPoints[i].y);
+						}
+						else 
+						{
+							dC=-((dA * pPoints[i].x) + (dB * pPoints[i].y));
+							dDist=(dA * pntHitTest.x) + (dB * pntHitTest.y )+ dC;
+							dDist=dDist * dDist;
+							dDist=dDist/((dA*dA) +(dB*dB));	
+						}
+						if(dDist<dToleranceSquare)
+						{
+							return TRUE;
+						}
+					}
+					i=i+5;
+				}// endwhile;
+			}
+
+			pPoints += *plPolyCounts;
+			plPolyCounts++;
+		}
+	}
+	return FALSE;
+}
+
+BOOL CViewerWnd::HitTest(const OgdcPoint2D& pntHitTest, OgdcElemRegion3D* pElemRegion3D, double dTolerance)
+{
+	OGDCASSERT(pElemRegion3D != NULL);
+	OgdcRect2D rcBounds = pElemRegion3D->GetBounds();
+	rcBounds.Inflate(dTolerance, dTolerance);
+	if (rcBounds.PtInRect(pntHitTest))
+	{
+		OgdcInt *plPolyCounts = pElemRegion3D->m_polyCounts.GetData();
+		OgdcPoint3D *pPoints = pElemRegion3D->m_points.GetData();
+		OgdcInt lCount = pElemRegion3D->m_polyCounts.GetSize();
+		if(plPolyCounts == NULL || pPoints == NULL || lCount == 0)
+		{
+			return FALSE;
+		}
+
+		OgdcDouble dInter=0;
+		OgdcInt nCount=0,counter = 0;		
+		OgdcPoint3D* p1 = NULL;
+		OgdcPoint3D* p2 = NULL;
+		OgdcPoint2D startPoint;
+		OgdcPoint2D endPoint;
+		for (OgdcInt k=0; k < lCount; k++)
+		{
+			nCount = plPolyCounts[k];
+			///////////////////////////////////////////////////
+			p1 = pPoints;
+			for (OgdcInt i=1;i <= nCount; i++) 
+			{
+				p2 = pPoints+(i%nCount);
+				if (OGDCIS0(pntHitTest.y - OGDCMIN(p1->y,p2->y)))
+				{
+					if (OGDCIS0(p1->y - p2->y))
+					{
+						if (( (pntHitTest.x < OGDCMAX(p1->x,p2->x) ) || OGDCEQUAL(pntHitTest.x,OGDCMAX(p1->x,p2->x))) 
+							&& ( (pntHitTest.x > OGDCMIN(p1->x,p2->x) ) || OGDCEQUAL(pntHitTest.x,OGDCMIN(p1->x,p2->x))))
+						{
+							return TRUE;
+						}
+					}
+					else
+					{
+						startPoint.x = p1->x;
+						startPoint.y = p1->y;
+						endPoint.x = p2->x;
+						endPoint.y = p2->y;
+						if ((pntHitTest == startPoint) || (pntHitTest == endPoint))
+						{
+							return TRUE;
+						}
+					}
+				}			
+				else if (pntHitTest.y > OGDCMIN(p1->y,p2->y)) 
+				{
+					//if (pntHitTest.y <= OGDCMAX(p1->y,p2->y)) 
+					if ( (pntHitTest.y < OGDCMAX(p1->y,p2->y)) || OGDCEQUAL(pntHitTest.y , OGDCMAX(p1->y,p2->y))  )
+					{        
+						//if (pntHitTest.x <= OGDCMAX(p1->x,p2->x)) 
+						if (  (pntHitTest.x < OGDCMAX(p1->x,p2->x)) || OGDCEQUAL(pntHitTest.x , OGDCMAX(p1->x,p2->x)) ) 
+						{
+							if (!OGDCIS0(p1->y - p2->y))
+							{
+								if (OGDCIS0(p1->x - p2->x))
+								{
+									if (OGDCIS0(pntHitTest.x - p1->x))
+									{
+										return TRUE;
+									}
+									counter++;
+								}
+								else
+								{
+									dInter = (pntHitTest.y-p1->y)*(p2->x-p1->x)/(p2->y-p1->y)+(p1->x-pntHitTest.x);
+									dInter /= fabs((p2->x-p1->x));
+									if (fabs(dInter) < 1.0e-8)
+									{
+										return TRUE;
+									}
+									if (dInter >  EP)
+									{
+										counter++;
+									}
+								}
+							}
+						}      
+					}    
+				}				
+				p1 = p2;  
+			}  
+			///////////////////////////////////////////////////
+			pPoints += nCount;
+		}
+		if (counter % 2 == 0)
+		{
+			return FALSE;  
+		}
+		return TRUE;
 	}
 	return FALSE;
 }

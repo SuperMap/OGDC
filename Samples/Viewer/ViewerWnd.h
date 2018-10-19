@@ -72,6 +72,8 @@ protected:
 	LONG HitTest(const OgdcPoint2D& pntHitTest, OgdcDatasetVector* pDtV);
 	BOOL HitTest(const OgdcPoint2D& pntHitTest, OgdcElemRegion* pElemRegion, double dTolerance);
 	BOOL HitTest(const OgdcPoint2D& pntHitTest, OgdcElemLine* pElemLine, double dTolerance);
+	BOOL HitTest(const OgdcPoint2D& pntHitTest, OgdcElemLine3D* pElemLine3D, double dTolerance);
+	BOOL HitTest(const OgdcPoint2D& pntHitTest, OgdcElemRegion3D* pElemRegion3D, double dTolerance);
 	BOOL IsProjectOnLineSegment(const OgdcPoint2D& pntHitTest, const OgdcPoint2D& pntLinsectStart, 
 		const OgdcPoint2D& pntLinsectEnd);
 	

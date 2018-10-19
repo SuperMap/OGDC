@@ -44,11 +44,6 @@ OgdcFeatureMdb::~OgdcFeatureMdb()
 		}
 		m_fieldValues.RemoveAll();
 	}
-	if (m_pElement != NULL)
-	{
-		delete m_pElement;
-		m_pElement = NULL;
-	}
 }
 
 OgdcInt OgdcFeatureMdb::GetID() const
@@ -238,10 +233,11 @@ OgdcBool OgdcFeatureMdb::SetValue( OgdcInt nIndex, const OgdcVariant& varValue )
 		{
 			OgdcString strTemp = varValue.ToString();
 			strTemp.SetCharset(m_nCharset);
-			OgdcInt nLength = strTemp.GetLength() + 1;			
-			OgdcByte* pByte1 = new OgdcByte[nLength];
-			memset(pByte1, 0, nLength);
-			strcpy((OgdcChar*)pByte1, (OgdcChar*)OGDCPCTSTR(strTemp));
+			OgdcInt nLength = strTemp.GetLength() + 1;
+			OgdcInt nByteSize = nLength * sizeof(OgdcChar);
+			OgdcByte* pByte1 = new OgdcByte[nByteSize];
+			memset(pByte1, 0, nByteSize);
+			strcpy((char*)pByte1, (char*)strTemp.Cstr());
 			m_fieldValues.SetAt(nIndex, pByte1);
 			delete pData;
 			pData = NULL;

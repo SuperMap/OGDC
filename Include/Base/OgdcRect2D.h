@@ -41,6 +41,10 @@ public:
 	//! \brief 构造函数一个二维矩形对象
 	OgdcRect2D();
 
+	// fansc 加一个拷贝构造，发现在GCC编译器下，使用OpenMP时拷贝UGRect2D时会导致编译器内部出错
+	//! \brief 拷贝构造函数
+	OgdcRect2D(const OgdcRect2D& rc);
+
 	//! \brief 		缺省析造函数
 	~OgdcRect2D();
 	
@@ -164,7 +168,7 @@ public:
 	//! \returen	相交返回true，否则，返回false。
 	OgdcBool IsIntersect(const OgdcRect2D& rc) const;
 	
-	//! \brief 		规范矩形，确保left<=right,top<=bottom	
+	//! \brief 		规范矩形，确保left<=right,bottom<=top	
 	void Normalize();
 	
 	//! \brief 		对矩形进行偏移
@@ -222,6 +226,11 @@ public:
 	//! \param 		rc 用来与原矩形合并的矩形rc
 	//! \image html union2.png
 	void Union(const OgdcRect2D& rc);	
+
+	//! \brief 矩形合并
+	//! \remark 检查参数和自身合法性
+	//! \return 是否成功
+	OgdcBool UnionRect(const OgdcRect2D& rc);
 	
 	//! \brief 		矩形求交
 	//! \param 		rc 用来与原矩形求交的矩形rc
@@ -241,6 +250,8 @@ public:
 	//! \param 		dbAngle 旋转角度
 	//! \image html union3.png
 	void UnionRotate(const OgdcPoint2D &pntOrg, OgdcDouble dbAngle);
+
+	void Rotate(const OgdcPoint2D &pntOrg, OgdcDouble dbAngle);
 	
 	//! \brief 判断OgdcRect2D对象是否有效
 	OgdcBool IsValid() const;

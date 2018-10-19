@@ -103,6 +103,9 @@ public:
 	//! \remarks 	
 	OgdcPoint operator-() const;		
 
+	//! \brief жиди <
+	bool operator<(const OgdcPoint& pt) const;
+
 	//! \brief 		жиди +
 	friend BASE_API OgdcPoint operator+(const OgdcPoint& pntStart,const OgdcPoint& pntEnd);
 

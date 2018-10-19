@@ -65,19 +65,19 @@ BOOL CObjectAttDlg::OnInitDialog()
 		lvColumn.mask = LVCF_TEXT|LVCF_WIDTH|LVCF_FMT;
 		lvColumn.fmt = LVCFMT_LEFT;
 		
-		CString strText = _T("");
+		CString strText;
 		lvColumn.cx = 100;
 		
 		strText.LoadString(IDS_FIELD_NAME);
 		OgdcString strTmp = (OgdcString)strText;
-		lvColumn.pszText = (char*)strTmp.Cstr();
+		lvColumn.pszText = (OgdcChar*)strTmp.Cstr();
 		
 		m_lstObject.InsertColumn(0, &lvColumn);
 
 		lvColumn.cx = 100;
 		strText.LoadString(IDS_FIELD_VALUE);
 		OgdcString strTmp2 = (OgdcString)strText;
-		lvColumn.pszText = (char*)strTmp2.Cstr();
+		lvColumn.pszText = (OgdcChar*)strTmp2.Cstr();
 		m_lstObject.InsertColumn(1, &lvColumn);
 
 		OgdcFieldInfos fieldInfos;

@@ -30,16 +30,26 @@
 #define WhiteBox_Ignore
 
 #ifdef _UGUNICODE
+#if !defined OS_ANDROID && !defined IOS
 namespace icu_3_8
 {
 	class UnicodeString;
 	class NumberFormat;
 }
 using namespace icu_3_8;
+#else
+namespace icu_50
+{
+	class UnicodeString;
+	class NumberFormat;
+}
+using namespace icu_50;
+#define UG_US_STACKBUF_SIZE (sizeof(void *)==4 ? 13 : 15)
+#endif
 #endif
 
 namespace OGDC {
-
+#pragma warning(disable:4267)
 class OgdcMBString;
 class OgdcUnicodeString;
 
@@ -157,7 +167,12 @@ public:
 	
 	//! \brief 默认构造函数。
 	OgdcMBString();
-	
+    
+#ifdef IOS
+    //! \release function
+    ~OgdcMBString();
+#endif
+    
 	//! \brief 拷贝构造函数。
 	//! \param str 用来拷贝的字符串(OgdcMBString类型)
 	OgdcMBString(const OgdcMBString& str);	
@@ -196,6 +211,9 @@ public:
 
 	//! \brief 获取C字符串
 	const OgdcAchar * Cstr() const;
+
+	//! \brief 获取C++字符串
+	const std::string& Str() const;
 
 	//! \brief 获取指定索引的字符。
 	//! \param nIndex 指定的索引
@@ -865,7 +883,6 @@ public:
 	//!	\param fmt 用来表达格式的字符串[in]。
 	//!	\param ... 可选参数[in]。
 	//!	\remarks 不能将OgdcUnicodeString作为参数传进该函数，而必须调用OgdcUnicodeString的Cstr函数得到C字符串。
-	//!			 不能将OgdcLong、OgdcUlong等64位整数作为参数传入该函数,而应该先强制转化为32位整数
 	void Format(const OgdcWchar* pStr,...);
 	/*
 	//! \brief 格式化函数，类似于sprintf。
@@ -1035,11 +1052,27 @@ public:
 	{
 		void		*pString;
 		void		*pVftable;
+#if !defined OS_ANDROID && !defined IOS
 		OgdcInt		fLength;
 		OgdcInt		fCapacity;     
 		OgdcWchar	*fArray; 
 		OgdcShort	fFlags;
 		OgdcWchar	fStackBuffer[7];
+ #else       
+        union StackBufferOrFields {
+            // fStackBuffer is used iff (fFlags&kUsingStackBuffer)
+            // else fFields is used
+            OgdcWchar fStackBuffer[8];  // buffer for short strings, together with fRestOfStackBuffer
+            struct {
+                OgdcWchar   *fArray;    // the Unicode data
+                OgdcInt fCapacity;  // capacity of fArray (in UChars)
+                OgdcInt fLength;    // number of characters in fArray if >127; else undefined
+            } fFields;
+        } fUnion;
+		OgdcWchar	fRestOfStackBuffer[UG_US_STACKBUF_SIZE-8];
+		OgdcAchar	fShortLength;
+		OgdcByte	fFags;
+#endif
 	};
 	
 private:

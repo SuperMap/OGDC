@@ -35,7 +35,6 @@ OgdcDatasetVectorMdb::OgdcDatasetVectorMdb()
 	m_pDataSource = NULL;
 	m_pDaoTableDef = NULL;
 	m_bOpened = FALSE;
-	m_nRecordCount = 0;
 }
 
 OgdcDatasetVectorMdb::OgdcDatasetVectorMdb( OgdcDataSourceMdb *pDataSource )
@@ -46,7 +45,6 @@ OgdcDatasetVectorMdb::OgdcDatasetVectorMdb( OgdcDataSourceMdb *pDataSource )
 	m_pDataSource = pDataSource;
 	m_pDaoTableDef = NULL;
 	m_bOpened = FALSE;
-	m_nRecordCount = 0;
 }
 
 OgdcDatasetVectorMdb::~OgdcDatasetVectorMdb()
@@ -63,8 +61,8 @@ OgdcInt OgdcDatasetVectorMdb::GetObjectCount()
 	OgdcString strSQL;
 	COleVariant varValue;
 	CDaoRecordset recordset(&(m_pDataSource->m_daoDatabase));
-	strSQL.Format( OGDCPCTSTR("SELECT OGRecordCount FROM OGRegister "
-		"WHERE OGDatasetName = '%s'"), OGDCPCTSTR(m_info.m_strName));
+	strSQL.Format( _U("SELECT OGRecordCount FROM OGRegister WHERE OGDatasetName = '%s'"), 
+		m_info.m_strName.Cstr());
 	try
 	{
 		recordset.Open(dbOpenSnapshot, strSQL);
@@ -84,6 +82,8 @@ OgdcInt OgdcDatasetVectorMdb::GetObjectCount()
 
 OgdcInt OgdcDatasetVectorMdb::GetRecordsetCount()
 {
+	return m_recordsets.GetSize();
+	/*
 	if (m_nRecordCount)
 	{
 		return OgdcInt(m_nRecordCount);
@@ -91,7 +91,7 @@ OgdcInt OgdcDatasetVectorMdb::GetRecordsetCount()
 	OgdcString strSQL;
 	COleVariant varValue;
 	CDaoRecordset recordset(&(m_pDataSource->m_daoDatabase));
-	strSQL.Format( OGDCPCTSTR("SELECT COUNT(*) FROM OGRegister "));
+	strSQL.Format( _U("SELECT COUNT(*) FROM OGRegister "));
 	try
 	{
 		recordset.Open(dbOpenSnapshot, strSQL);
@@ -105,7 +105,8 @@ OgdcInt OgdcDatasetVectorMdb::GetRecordsetCount()
 		return -1;
 	}
 	m_nRecordCount = varValue.lVal;
-	return OgdcInt(m_nRecordCount);			
+	return OgdcInt(m_nRecordCount);
+	*/
 }
 
 OgdcBool OgdcDatasetVectorMdb::ReleaseRecordset( OgdcRecordset *pRecordset )
@@ -164,12 +165,53 @@ OgdcFeature* OgdcDatasetVectorMdb::GetFeature( OgdcInt nID )
 	OgdcRecordsetMdb *pRecordset = (OgdcRecordsetMdb*)Query(queryDef);
 	if (pRecordset == NULL)
 	{
-		return FALSE;
+		return NULL;
 	}
 
 	if(pRecordset->SeekID(nID))
 	{
 		pFeature = (OgdcFeatureMdb*)pRecordset->GetFeature();
+	}
+
+	ReleaseRecordset(pRecordset);
+	pRecordset = NULL;
+	return pFeature;
+}
+
+UGC::UGFeature* OgdcDatasetVectorMdb::GetFeatureEx(OgdcInt nID)
+{
+	if (GetType() != OgdcDataset::PointEPS &&
+		GetType() != OgdcDataset::LineEPS &&
+		GetType() != OgdcDataset::RegionEPS &&
+		GetType() != OgdcDataset::TextEPS &&
+		GetType() != OgdcDataset::Model &&
+		GetType() != OgdcDataset::Texture)
+	{
+		OgdcFeature *pOFeature = GetFeature(nID);
+		if (pOFeature == NULL)
+		{
+			return NULL;
+		}
+
+		UGC::UGFeature *pFeature = new UGC::UGFeature();
+		pFeature->SetOgdcFeature(pOFeature);
+		return pFeature;
+	}
+
+	UGC::UGFeature* pFeature = NULL;
+	OgdcQueryDef queryDef;
+	queryDef.m_nType = OgdcQueryDef::IDs;
+	queryDef.m_IDs.Add(nID);
+	queryDef.m_nOptions = OgdcQueryDef::Both;
+	OgdcRecordsetMdb *pRecordset = (OgdcRecordsetMdb*)Query(queryDef);
+	if (pRecordset == NULL)
+	{
+		return NULL;
+	}
+
+	if(pRecordset->SeekID(nID))
+	{
+		pFeature = pRecordset->GetFeatureEx();
 	}
 
 	ReleaseRecordset(pRecordset);
@@ -218,6 +260,47 @@ OgdcBool OgdcDatasetVectorMdb::UpdateFeature( const OgdcFeature* pFeature )
 	return bResult;
 }
 
+OgdcBool OgdcDatasetVectorMdb::UpdateFeature(const UGC::UGFeature* pFeature)
+{
+	if (pFeature == NULL)
+	{
+		return FALSE;
+	}
+
+	if (GetType() != OgdcDataset::PointEPS &&
+		GetType() != OgdcDataset::LineEPS &&
+		GetType() != OgdcDataset::RegionEPS &&
+		GetType() != OgdcDataset::TextEPS &&
+		GetType() != OgdcDataset::Model &&
+		GetType() != OgdcDataset::Texture)
+	{
+		return UpdateFeature(pFeature->GetOgdcFeature());
+	}
+
+	OgdcBool bResult = FALSE;
+	OgdcInt nID = pFeature->GetID();
+	OgdcQueryDef queryDef;
+	queryDef.m_nCursorType = OgdcQueryDef::OpenDynamic;
+	queryDef.m_IDs.Add(nID);
+	queryDef.m_nType = OgdcQueryDef::IDs;
+	queryDef.m_nOptions = OgdcQueryDef::Both;
+
+	OgdcRecordsetMdb *pRecordset = (OgdcRecordsetMdb*)Query(queryDef);
+	if (pRecordset == NULL)
+	{
+		return bResult;
+	}
+
+	if(pRecordset->SeekID(nID))
+	{
+		bResult = pRecordset->UpdateFeature(pFeature);
+	}
+
+	ReleaseRecordset(pRecordset);
+	pRecordset = NULL;
+	return bResult;
+}
+
 OgdcBool OgdcDatasetVectorMdb::AddFeature( const OgdcFeature* pFeature )
 {
 	if(pFeature == NULL)
@@ -235,7 +318,7 @@ OgdcBool OgdcDatasetVectorMdb::AddFeature( const OgdcFeature* pFeature )
 
 	OgdcQueryDef queryDef;
 	queryDef.m_nType = OgdcQueryDef::General;
-	queryDef.m_strFilter = "";
+	queryDef.m_strFilter = _U("");
 	queryDef.m_nOptions = OgdcQueryDef::Both;
 
 	OgdcRecordsetMdb *pRecordset = (OgdcRecordsetMdb*)Query(queryDef);
@@ -246,6 +329,41 @@ OgdcBool OgdcDatasetVectorMdb::AddFeature( const OgdcFeature* pFeature )
 	ReleaseRecordset(pRecordset);
 	pRecordset = NULL;
 
+	return bResult;
+}
+
+OgdcBool OgdcDatasetVectorMdb::AddFeature(const UGC::UGFeature* pFeature)
+{
+	if(pFeature == NULL)
+	{
+		return FALSE;
+	}
+
+	if (GetType() != OgdcDataset::PointEPS &&
+		GetType() != OgdcDataset::LineEPS &&
+		GetType() != OgdcDataset::RegionEPS &&
+		GetType() != OgdcDataset::TextEPS &&
+		GetType() != OgdcDataset::Model &&
+		GetType() != OgdcDataset::Texture)
+	{
+		return AddFeature(pFeature->GetOgdcFeature());
+	}
+
+	if (!IsOpen())
+	{
+		Open();
+	}
+
+	OgdcBool bResult = FALSE;
+	OgdcQueryDef queryDef;
+	queryDef.m_nType = OgdcQueryDef::General;
+	queryDef.m_strFilter = _U("");
+	queryDef.m_nOptions = OgdcQueryDef::Both;
+
+	OgdcRecordsetMdb *pRecordset = (OgdcRecordsetMdb*)Query(queryDef);
+	bResult = pRecordset->AddFeature(pFeature);
+	ReleaseRecordset(pRecordset);
+	pRecordset = NULL;
 	return bResult;
 }
 
@@ -302,13 +420,12 @@ OgdcBool OgdcDatasetVectorMdb::Truncate()
 	}
 	//删除数据
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("DELETE * FROM [%s]"), OGDCPCTSTR(m_info.m_strName));
+	strSQL.Format(_U("DELETE * FROM [%s]"), m_info.m_strName.Cstr());
 	try
 	{
 		m_pDataSource->m_daoDatabase.Execute(strSQL);
-		strSQL.Format(OGDCPCTSTR("UPDATE OGRegister SET OGRecordCount = 0 "
-			"WHERE OGDatasetName = '%s'"), OGDCPCTSTR(m_info.m_strName),
-			GetName());
+		strSQL.Format(_U("UPDATE OGRegister SET OGRecordCount = 0 WHERE OGDatasetName = '%s'"), 
+			m_info.m_strName.Cstr());
 		m_pDataSource->m_daoDatabase.Execute(strSQL);
 	}
 	catch (CDaoException* e)
@@ -352,8 +469,8 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 	// {{ 构建查询字段
 	OgdcString strField = _U("");
 	OgdcBool bStat = FALSE;
-	OgdcString subStr = "";
-	OgdcString strFieldName = "";
+	OgdcString subStr = _U("");
+	OgdcString strFieldName = _U("");
 	OgdcInt i = 0;
 	if (querydef.m_Fields.GetSize() > 0)
 	{
@@ -367,25 +484,25 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 			strFieldName = querydef.m_Fields[i];
 			strFieldName.MakeUpper();
 
-			if(	strFieldName.Find("MIN(")>-1 || 
-				strFieldName.Find("MAX(")>-1 || 
-				strFieldName.Find("SUM(")>-1 || 
-				strFieldName.Find("AVG(")>-1 ||
-				strFieldName.Find("COUNT(")> -1 ||
-				strFieldName.Find("STDDEV(")>-1 ||
-				strFieldName.Find("VARIANCE(")>-1 ||
-				strFieldName.Find("DISTINCT ")>-1)
+			if(	strFieldName.Find(_U("MIN("))>-1 || 
+				strFieldName.Find(_U("MAX("))>-1 || 
+				strFieldName.Find(_U("SUM("))>-1 || 
+				strFieldName.Find(_U("AVG("))>-1 ||
+				strFieldName.Find(_U("COUNT("))> -1 ||
+				strFieldName.Find(_U("STDDEV("))>-1 ||
+				strFieldName.Find(_U("VARIANCE("))>-1 ||
+				strFieldName.Find(_U("DISTINCT "))>-1)
 			{
 				bStat = TRUE;
 				break;
 			}
 		}
 
-		if (bStat || strSort.Find("GROUP BY")>-1 || !strGroup.IsEmpty())
+		if (bStat || strSort.Find(_U("GROUP BY"))>-1 || !strGroup.IsEmpty())
 		{
 			for(i=0;i<querydef.m_Fields.GetSize();i++)
 			{
-				subStr.Format(OGDCPCTSTR("%s,"), querydef.m_Fields.GetAt(i).Cstr());
+				subStr.Format(_U("%s,"), querydef.m_Fields.GetAt(i).Cstr());
 				strField = strField + subStr;					
 			}
 		}
@@ -393,22 +510,22 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 		{
 			for (i = 0; i < m_fieldInfos.GetSize(); i ++)
 			{
-				subStr.Format(OGDCPCTSTR("%s.%s,"), m_info.m_strName.Cstr(), 
+				subStr.Format(_U("%s.%s,"), m_info.m_strName.Cstr(), 
 					m_fieldInfos.GetAt(i).m_strName.Cstr());
 				strField = strField + subStr;					
 			}
 
-			OgdcString strFieldName = "";
+			OgdcString strFieldName;
 			for (i = 0; i < querydef.m_Fields.GetSize(); i++)
 			{
 				strFieldName = querydef.m_Fields.GetAt(i);
 				if (strField.Find(strFieldName) > -1)
 					continue;
-				subStr.Format(OGDCPCTSTR("%s,"), strFieldName.Cstr());
+				subStr.Format(_U("%s,"), strFieldName.Cstr());
 				strField = strField + subStr;
 			}
 		}
-		strField.SetAt(strField.GetLength() - 1, '\0');
+		strField.SetAt(strField.GetLength() - 1, _U('\0'));
 	}
 	// }}
 
@@ -431,29 +548,24 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 			}
 			else
 			{
-				strField = "*";
+				strField = _U("*");
 			}
 			
 			if (querydef.m_strFilter.IsEmpty())
 			{
-				strSQL.Format(OGDCPCTSTR("SELECT %s FROM [%s] %s %s"),
-					OGDCPCTSTR(strField),
-					OGDCPCTSTR(m_info.m_strName), 
-					OGDCPCTSTR(querydef.m_strGroup),
-					OGDCPCTSTR(querydef.m_strSort));
+				strSQL.Format(_U("SELECT %s FROM [%s] %s %s"),
+					strField.Cstr(),m_info.m_strName.Cstr(),
+					querydef.m_strGroup.Cstr(),querydef.m_strSort.Cstr());
 			}
 			else
 			{
-				strSQL.Format(OGDCPCTSTR("SELECT %s FROM [%s] WHERE %s %s %s"),
-					OGDCPCTSTR(strField),
-					OGDCPCTSTR(m_info.m_strName), 
-					OGDCPCTSTR(querydef.m_strFilter),
-					OGDCPCTSTR(querydef.m_strGroup),
-					OGDCPCTSTR(querydef.m_strSort));
+				strSQL.Format(_U("SELECT %s FROM [%s] WHERE %s %s %s"),
+					strField.Cstr(),m_info.m_strName.Cstr(), 
+					querydef.m_strFilter.Cstr(),querydef.m_strGroup.Cstr(),
+					querydef.m_strSort.Cstr());
 
 				
-				pRecordset->m_strFilter.Format(OGDCPCTSTR(" %s"), 
-				OGDCPCTSTR(querydef.m_strFilter));
+				pRecordset->m_strFilter.Format(_U(" %s"), querydef.m_strFilter.Cstr());
 			}
 			
 			
@@ -486,7 +598,11 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 		{
 			OgdcRect2D rcBounds = querydef.m_rc2Bounds;
 			rcBounds.Normalize();
-			
+
+			OgdcDouble dScale = rcBounds.Width() > rcBounds.Height() ? rcBounds.Width() : rcBounds.Height();
+			dScale = dScale * EP + EP*10;
+			rcBounds.Inflate(dScale);
+
 			if (querydef.m_Fields.GetSize())
 			{
 // 				strField.Format("*,");
@@ -500,32 +616,31 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 			}
 			else
 			{
-				strField.Format("*");
+				strField.Format(_U("*"));
 			}
 
-			if (GetType() == OgdcDataset::Point)
+			if (GetType() == OgdcDataset::Point || GetType() == OgdcDataset::Point3D)
 			{
-				pRecordset->m_strFilter.Format(OGDCPCTSTR(
-					"OGX >= %lf AND OGY <= %lf AND OGX <= %lf AND OGY >= %lf"),
+				pRecordset->m_strFilter.Format(_U("OGX >= %.16f AND OGY <= %.16f AND OGX <= %.16f AND OGY >= %.16f"),
 					rcBounds.left, rcBounds.top, rcBounds.right, rcBounds.bottom);
 			}
 			else
 			{
-				pRecordset->m_strFilter.Format("OGID NOT IN "
-					"( SELECT OGID FROM [%s] "
-					"where OGSdriW > %lf or OGSdriN < %lf "
-					"or OGSdriE < %lf or OGSdriS > %lf ) ",
-					OGDCPCTSTR(m_info.m_strName),rcBounds.right, 
+				pRecordset->m_strFilter.Format(_U("OGID NOT IN ")
+					_U("( SELECT OGID FROM [%s] ")
+					_U("where OGSdriW > %.16f or OGSdriN < %.16f ")
+					_U("or OGSdriE < %.16f or OGSdriS > %.16f ) "),
+					m_info.m_strName.Cstr(),rcBounds.right, 
 					rcBounds.bottom, rcBounds.left, rcBounds.top);
 			}
 
 			if(!querydef.m_strFilter.IsEmpty())
 			{
-				pRecordset->m_strFilter += " AND " + querydef.m_strFilter;
+				pRecordset->m_strFilter += _U(" AND ") + querydef.m_strFilter;
 			}
 
-			strSQL.Format("SELECT %s FROM [%s] WHERE %s",OGDCPCTSTR(strField),
-				OGDCPCTSTR(m_info.m_strName),OGDCPCTSTR(pRecordset->m_strFilter));
+			strSQL.Format(_U("SELECT %s FROM [%s] WHERE %s"),strField.Cstr(),
+				m_info.m_strName.Cstr(),pRecordset->m_strFilter.Cstr());
 
 			try
 			{
@@ -551,18 +666,25 @@ OgdcRecordset *OgdcDatasetVectorMdb::Query( const OgdcQueryDef& querydef )
 		}
 	case OgdcQueryDef::IDs:	
 		{
-			strSQL.Format(OGDCPCTSTR("SELECT * FROM [%s] WHERE "),
-				OGDCPCTSTR(m_info.m_strName));
+			strSQL.Format(_U("SELECT * FROM [%s] WHERE "),m_info.m_strName.Cstr());
 
 			OgdcString strFilter;
-			strFilter.Format(OGDCPCTSTR(" OGID IN ("));
+			if (querydef.m_strIDFieldName.CompareNoCase(_U("SmHashCode")) == 0 ||
+				querydef.m_strIDFieldName.CompareNoCase(_U("OGHashCode")) == 0)
+			{
+				strFilter.Format(_U(" OGHashCode IN ("));
+			}
+			else
+			{
+				strFilter.Format(_U(" OGID IN ("));
+			}
 			OgdcString strSQL1;
 			for (OgdcInt i = 0; i < querydef.m_IDs.GetSize(); i++)
 			{
-				strSQL1.Format("%d,", querydef.m_IDs.GetAt(i));
+				strSQL1.Format(_U("%d,"), querydef.m_IDs.GetAt(i));
 				strFilter = strFilter + strSQL1;
 			}
-			OgdcChar ch = ')';
+			OgdcChar ch = _U(')');
 			strFilter.SetAt(strFilter.GetLength() - 1, ch);
 			strSQL = strSQL + strFilter;
 			pRecordset->m_strFilter = strFilter;
@@ -605,15 +727,13 @@ OgdcBool OgdcDatasetVectorMdb::UpdateField( const OgdcString& strFieldName,
 	OgdcString strSQL;
 	if (strFilter.IsEmpty())
 	{
-		strSQL.Format("UPDATE [%s] SET %s = %s ",
-			OGDCPCTSTR(m_info.m_strName), OGDCPCTSTR(strFieldName),
-		OGDCPCTSTR(strExpress));
+		strSQL.Format(_U("UPDATE [%s] SET %s = %s "),
+			m_info.m_strName.Cstr(), strFieldName.Cstr(),strExpress.Cstr());
 	}
 	else
 	{
-		strSQL.Format("UPDATE [%s] SET %s = %s WHERE %s",
-			OGDCPCTSTR(m_info.m_strName), OGDCPCTSTR(strFieldName),
-		OGDCPCTSTR(strExpress), OGDCPCTSTR(strFilter));
+		strSQL.Format(_U("UPDATE [%s] SET %s = %s WHERE %s"),
+			m_info.m_strName.Cstr(), strFieldName.Cstr(),strExpress.Cstr(), strFilter.Cstr());
 	}
 
 	try
@@ -657,9 +777,8 @@ OgdcBool OgdcDatasetVectorMdb::CopyField( const OgdcString& strSrcFieldName, con
 	}
 
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("UPDATE %s SET %s = %s"),
-		OGDCPCTSTR(m_info.m_strName), OGDCPCTSTR(strDestFieldName),
-		OGDCPCTSTR(strSrcFieldName));
+	strSQL.Format(_U("UPDATE %s SET %s = %s"),
+		m_info.m_strName.Cstr(), strDestFieldName.Cstr(),strSrcFieldName.Cstr());
 	try
 	{
 		m_pDataSource->m_daoDatabase.Execute(strSQL);
@@ -705,7 +824,7 @@ OgdcBool OgdcDatasetVectorMdb::CreateFields( const OgdcFieldInfos& fieldInfos )
 			continue;
 		}
 
-		if (fieldInfos[i].m_strName.Left(2).CompareNoCase(OGDCPCTSTR("Sm")) == 0) 
+		if (fieldInfos[i].m_strName.Left(2).CompareNoCase(_U("Sm")) == 0) 
 		{
 			continue;
 		}
@@ -744,6 +863,15 @@ OgdcBool OgdcDatasetVectorMdb::CreateFields( const OgdcFieldInfos& fieldInfos )
 
 OgdcBool OgdcDatasetVectorMdb::DeleteField( const OgdcString& strFieldName )
 {
+	if (!Open())
+	{
+		return FALSE;
+	}
+	if (!CanUpdate())
+	{
+		return FALSE;
+	}
+
 	for (OgdcInt i =0; i < m_fieldInfos.GetSize(); i++)
 	{
 		if (strFieldName.CompareNoCase(m_fieldInfos[i].m_strName) == 0)
@@ -752,15 +880,7 @@ OgdcBool OgdcDatasetVectorMdb::DeleteField( const OgdcString& strFieldName )
 			{
 				return FALSE;
 			}
-			if (!Open())
-			{
-				return FALSE;
-			}
-			if (!CanUpdate())
-			{
-				return FALSE;
-			}
-			
+
 			CDaoFieldInfo daoFieldinfo;
 			
 			//删除字段
@@ -769,7 +889,8 @@ OgdcBool OgdcDatasetVectorMdb::DeleteField( const OgdcString& strFieldName )
 				m_pDaoTableDef->GetFieldInfo(i, daoFieldinfo);
 				
 				//系统字段不能删除,系统字段以"OG"开头
-				if (OgdcHelperMdb::IsSystemField(OGDCPCTSTR(daoFieldinfo.m_strName))) 
+				OgdcString strTemp(daoFieldinfo.m_strName);
+				if (OgdcHelperMdb::IsSystemField(strTemp)) 
 				{
 					return FALSE;
 				}
@@ -863,7 +984,7 @@ OgdcBool OgdcDatasetVectorMdb::SetFieldInfo( const OgdcString& strFieldName, con
 	}
 
 	OgdcFieldInfo tempInfo = fieldInfo;
-	tempInfo.m_strName = GetUnoccupiedFieldName("tempField");
+	tempInfo.m_strName = GetUnoccupiedFieldName(_U("tempField"));
 	OgdcFieldInfos tempFieldInfos;
 	tempFieldInfos.Add(tempInfo);
 	
@@ -919,28 +1040,28 @@ OgdcVariant OgdcDatasetVectorMdb::Statistic( const OgdcString& strFieldName, Ogd
 	switch (nMode)
 	{
 	case OgdcRecordset::smMax:
-		strSQL.Format(OGDCPCTSTR("SELECT Max(%s) FROM [%s]"),
-			OGDCPCTSTR(strFieldName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("SELECT Max(%s) FROM [%s]"),
+			strFieldName.Cstr(), m_info.m_strName.Cstr());
 		break;
 	case OgdcRecordset::smMin:
-		strSQL.Format(OGDCPCTSTR("SELECT Min(%s) FROM [%s]"),
-			OGDCPCTSTR(strFieldName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("SELECT Min(%s) FROM [%s]"),
+			strFieldName.Cstr(), m_info.m_strName.Cstr());
 		break;
 	case OgdcRecordset::smAvg:
-		strSQL.Format(OGDCPCTSTR("SELECT Avg(%s) FROM [%s]"),
-			OGDCPCTSTR(strFieldName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("SELECT Avg(%s) FROM [%s]"),
+			strFieldName.Cstr(), m_info.m_strName.Cstr());
 		break;
 	case OgdcRecordset::smSum:
-		strSQL.Format(OGDCPCTSTR("SELECT Sum(%s) FROM [%s]"),
-			OGDCPCTSTR(strFieldName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("SELECT Sum(%s) FROM [%s]"),
+			strFieldName.Cstr(), m_info.m_strName.Cstr());
 		break;
 	case OgdcRecordset::smStdev:
-		strSQL.Format(OGDCPCTSTR("SELECT StDev(%s) FROM [%s]"),
-			OGDCPCTSTR(strFieldName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("SELECT StDev(%s) FROM [%s]"),
+			strFieldName.Cstr(), m_info.m_strName.Cstr());
 		break;
 	case OgdcRecordset::smVar:
-		strSQL.Format(OGDCPCTSTR("SELECT Var(%s) FROM [%s]"),
-			OGDCPCTSTR(strFieldName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("SELECT Var(%s) FROM [%s]"),
+			strFieldName.Cstr(), m_info.m_strName.Cstr());
 		break;
 	default:
 		return ogdcVar;
@@ -1003,9 +1124,8 @@ OgdcRect2D OgdcDatasetVectorMdb::GetBounds()
 	}
 
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT OGLeft,OGRight,OGTop,OGBottom "
-		"FROM OGRegister WHERE OGDatasetName = '%s'"),
-		OGDCPCTSTR(m_info.m_strName));
+	strSQL.Format(_U("SELECT OGLeft,OGRight,OGTop,OGBottom FROM OGRegister WHERE OGDatasetName = '%s'"),
+		m_info.m_strName.Cstr());
 
 	CDaoRecordset tempRecord(&m_pDataSource->m_daoDatabase);
 	COleVariant varValue;
@@ -1038,11 +1158,11 @@ OgdcString OgdcDatasetVectorMdb::GetUnoccupiedFieldName( const OgdcString& strFi
 	//如果没有传进字符串，则用默认的"T_"命名
 	if (strName.IsEmpty())
 	{
-		strName = "T";
+		strName = _U("T");
 	}
 	OgdcString	strVSQL,strRSQL;
-	OgdcString strNull = "";
-	OgdcString subStr = "";
+	OgdcString strNull = _U("");
+	OgdcString subStr = _U("");
 	OgdcInt i = 1;	
 	if (!IsAvailableFieldName(strFieldName))
 	{
@@ -1053,7 +1173,7 @@ OgdcString OgdcDatasetVectorMdb::GetUnoccupiedFieldName( const OgdcString& strFi
 	{
 		if (m_fieldInfos.GetAt(nIndex).m_strName == strName)
 		{
-			subStr.Format("_%d", i++);
+			subStr.Format(_U("_%d"), i++);
 			strName = strDsName + subStr;
 			//重新判断是否有重名字段
 			nIndex = -1;
@@ -1157,7 +1277,6 @@ void OgdcDatasetVectorMdb::Close()
 		m_pDaoTableDef = NULL;
 	}
 	m_bOpened = FALSE;
-	m_bOpened = FALSE;
 }
 
 OgdcBool OgdcDatasetVectorMdb::Rename( const OgdcString& strNewName )
@@ -1171,12 +1290,25 @@ OgdcBool OgdcDatasetVectorMdb::Rename( const OgdcString& strNewName )
 	{
 		return FALSE;
 	}
+
+	if (GetType() == OgdcDataset::Model)
+	{
+		if (m_arrSubDataset.GetSize() > 0)
+		{
+			OgdcString strNewNameSub = strNewName + _U("_Texture");
+			strNewNameSub = m_pDataSource->GetUnoccupiedDatasetName(strNewNameSub);
+			if (!m_arrSubDataset[0]->Rename(strNewNameSub))
+			{
+				return FALSE;
+			}
+		}
+	}
+
 	OgdcString strSQL;
 	try
 	{
-		strSQL.Format(OGDCPCTSTR("UPDATE OGRegister "
-			"SET OGDatasetName = '%s' WHERE OGDatasetName = '%s'"), 
-			OGDCPCTSTR(strNewName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("UPDATE OGRegister SET OGDatasetName = '%s' WHERE OGDatasetName = '%s'"), 
+			strNewName.Cstr(), m_info.m_strName.Cstr());
 		m_pDataSource->m_daoDatabase.Execute(strSQL);
 		m_pDaoTableDef->SetName(strNewName);
 
@@ -1217,8 +1349,7 @@ OgdcBool OgdcDatasetVectorMdb::SaveInfo()
 	}
 	CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT * FROM OGRegister "
-		"WHERE OGDatasetName = '%s'"), OGDCPCTSTR(m_info.m_strName));	
+	strSQL.Format(_U("SELECT * FROM OGRegister WHERE OGDatasetName = '%s'"), m_info.m_strName.Cstr());	
  	CDaoTableDef tableDef(&m_pDataSource->m_daoDatabase);
 	try
 	{
@@ -1254,8 +1385,7 @@ OGDC::OgdcBool OgdcDatasetVectorMdb::RefreshInfo()
 		SaveInfo();
 	}
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT * FROM OGRegister "
-		"WHERE OGDatasetName = '%s'"), OGDCPCTSTR(m_info.m_strName));	
+	strSQL.Format(_U("SELECT * FROM OGRegister WHERE OGDatasetName = '%s'"), m_info.m_strName.Cstr());	
 	//先释放所有查询记录集
 	ReleaseAllRecordsets();
 
@@ -1307,14 +1437,14 @@ OgdcBool OgdcDatasetVectorMdb::Open()
 
 	m_pDaoTableDef = new CDaoTableDef(&(m_pDataSource->m_daoDatabase));	
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT * FROM [%s] "), OGDCPCTSTR(m_info.m_strName));
+	strSQL.Format(_U("SELECT * FROM [%s] "), m_info.m_strName.Cstr());
 	try
 	{
 		m_pDaoTableDef->Open(m_info.m_strName);
 
 		m_fieldInfos.RemoveAll ();
 		long fCount = m_pDaoTableDef->GetFieldCount();
-		
+
 		for (OgdcInt i = 0; i < fCount; i++)
 		{
 			OgdcFieldInfo tempFieldinfo;
@@ -1322,6 +1452,7 @@ OgdcBool OgdcDatasetVectorMdb::Open()
 			m_pDaoTableDef->GetFieldInfo (i, daoFiledInfo, AFX_DAO_PRIMARY_INFO);
 			OgdcHelperMdb::CDaoFieldInfo2OgdcFieldInfo(daoFiledInfo, tempFieldinfo);
 			OgdcHelperMdb::SetFieldSign(tempFieldinfo);
+			tempFieldinfo.m_strForeignName = tempFieldinfo.m_strName;
 			m_fieldInfos.Add(tempFieldinfo);
 		}
 	}
@@ -1382,4 +1513,196 @@ OgdcBool OgdcDatasetVectorMdb::IsSupportQueryType(OgdcQueryDef::QueryType queryT
 	}
 	return FALSE;
 }
+
+OgdcBool OgdcDatasetVectorMdb::CreateSubDatasetVector(OgdcDatasetVectorInfo& vInfo)
+{
+	if (m_pDataSource == NULL)
+	{
+		return FALSE;
+	}
+	if (!m_pDataSource->IsOpen())
+	{
+		return FALSE;
+	}
+
+	vInfo.m_strName = m_pDataSource->GetUnoccupiedDatasetName(vInfo.m_strName);
+	if (vInfo.m_strName.IsEmpty())
+	{
+		return FALSE;
+	}
+
+	OgdcFieldInfos fieldInfos;
+	fieldInfos.AddField(OG_OBJ_ID, OgdcFieldInfo::INT32, sizeof(dbLong), 0, FALSE, FALSE);
+	switch (vInfo.m_nType)
+	{
+	case OgdcDataset::Texture:
+		fieldInfos.AddField(OG_HASHCODE, OgdcFieldInfo::INT32, sizeof(dbLong), 0, FALSE, FALSE);
+		fieldInfos.AddField(OG_GEOMETRY, OgdcFieldInfo::LongBinary, 0, 0, FALSE, FALSE);
+		break;
+	default:
+		break;
+	}
+
+	CDaoTableDef daoTableDef(&m_pDataSource->m_daoDatabase);
+	try
+	{
+		daoTableDef.Create(vInfo.m_strName);
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		return FALSE;
+	}
+	try
+	{
+		OgdcInt nFields = fieldInfos.GetSize();
+		CDaoFieldInfo info;
+		for (OgdcInt i=0; i<nFields; i++)
+		{
+			OgdcHelperMdb::OgdcFieldInfo2CDaoFieldInfo(fieldInfos.GetAt(i),info);
+			daoTableDef.CreateField(info);
+		}
+
+		//建立一个OGId字段的索引
+		CDaoIndexInfo indexInfo;
+		CDaoIndexFieldInfo indexFieldInfo;
+		indexFieldInfo.m_strName = OG_OBJ_ID;
+		indexFieldInfo.m_bDescending = FALSE;
+		indexInfo.m_strName = _U("OGID_idx_") + vInfo.m_strName;
+		indexInfo.m_pFieldInfos = &indexFieldInfo;
+		indexInfo.m_nFields = 1;
+		indexInfo.m_bPrimary = TRUE;
+		daoTableDef.CreateIndex(indexInfo);
+
+		if (vInfo.m_nType == OgdcDataset::Texture)
+		{
+			CDaoIndexInfo indexInfo1;
+			CDaoIndexFieldInfo indexFieldInfo1;
+			indexFieldInfo1.m_strName = OG_HASHCODE;
+			indexFieldInfo1.m_bDescending = FALSE;
+			indexInfo1.m_strName = _U("OGHashCode_idx_") + vInfo.m_strName;
+			indexInfo1.m_pFieldInfos = &indexFieldInfo1;
+			indexInfo1.m_nFields = 1;
+			indexInfo1.m_bUnique = TRUE;
+			daoTableDef.CreateIndex(indexInfo1);
+		}
+
+		daoTableDef.Append();
+		daoTableDef.Close();
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		daoTableDef.Close();
+		return FALSE;
+	}
+
+	//得到数据集的最大ID
+	COleVariant lRecordMaxId;
+	OgdcString strSQL = _U("SELECT MAX(OGDatasetID) FROM OGRegister");
+	CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
+	try
+	{
+		recordset.Open(dbOpenSnapshot, strSQL);
+		lRecordMaxId = recordset.GetFieldValue(0);
+		recordset.Close();
+	}
+	catch (CDaoException* e)
+	{
+		//获取最大ID，当为零条记录时，获取open异常，表示没有记录
+		e->Delete();
+	}
+
+	OgdcDatasetVectorMdb *pDatasetVector = new OgdcDatasetVectorMdb(this->m_pDataSource);
+	lRecordMaxId.intVal++;
+	OgdcInt nID = lRecordMaxId.intVal;
+	pDatasetVector->m_nID = nID;
+	pDatasetVector->m_info = vInfo;
+	pDatasetVector->m_info.m_rcBounds.left = 0.0;
+	pDatasetVector->m_info.m_rcBounds.top = 0.0;
+	pDatasetVector->m_info.m_rcBounds.right = 0.0;
+	pDatasetVector->m_info.m_rcBounds.bottom = 0.0;
+
+	//加入注册表
+	CDaoTableDef tableDef(&m_pDataSource->m_daoDatabase);
+	try
+	{
+		tableDef.Open(OG_REGISTER_TABLE);
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		delete pDatasetVector;
+		pDatasetVector = NULL;
+		try
+		{
+			m_pDataSource->m_daoDatabase.DeleteTableDef(vInfo.m_strName);
+		}
+		catch (CDaoException* e1)
+		{
+			e1->Delete();
+		}
+		return FALSE;
+	}
+	CDaoRecordset record;
+	try
+	{
+		record.Open(&tableDef);
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		tableDef.Close();
+		delete pDatasetVector;
+		pDatasetVector = NULL;
+		try
+		{
+			m_pDataSource->m_daoDatabase.DeleteTableDef(vInfo.m_strName);
+		}
+		catch (CDaoException* e1)
+		{
+			e1->Delete();
+		}
+		return FALSE;
+	}
+	try
+	{
+		record.AddNew();
+		//如果setFieldValue后的数为OgdcInt或OgdcLong，需要用long强制转换
+		record.SetFieldValue(OGRF_ID, long(pDatasetVector->m_nID));
+		record.SetFieldValue(OGRF_DATASET_NAME, COleVariant(pDatasetVector->m_info.m_strName, VT_BSTRT));
+		record.SetFieldValue(OGRF_PARENTDT_ID, long(this->m_nID));
+		record.SetFieldValue(OGRF_DATASET_TYPE, long(pDatasetVector->m_info.m_nType));
+		record.SetFieldValue(OGRF_LEFT, pDatasetVector->m_info.m_rcBounds.left);
+		record.SetFieldValue(OGRF_RIGHT, pDatasetVector->m_info.m_rcBounds.right);
+		record.SetFieldValue(OGRF_TOP, pDatasetVector->m_info.m_rcBounds.top);
+		record.SetFieldValue(OGRF_BOTTOM, pDatasetVector->m_info.m_rcBounds.bottom);
+		record.SetFieldValue(OGRF_LASTUPDATE, COleDateTime::GetCurrentTime());
+		record.Update();
+		record.Close();
+		tableDef.Close();
+	}
+	catch (CDaoException* e)
+	{
+		e->Delete();
+		record.Close();
+		tableDef.Close();
+		delete pDatasetVector;
+		pDatasetVector = NULL;
+		try
+		{
+			m_pDataSource->m_daoDatabase.DeleteTableDef(vInfo.m_strName);
+		}
+		catch (CDaoException* e1)
+		{
+			e1->Delete();
+		}
+		return FALSE;
+	}
+
+	pDatasetVector->Open();
+	m_arrSubDataset.Add(pDatasetVector);
+	return TRUE;
+}
+
 }

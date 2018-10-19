@@ -45,7 +45,11 @@ public:
 	//! 风格:粗体，斜体，透明，黑体,排列等
 	OgdcInt		m_nStyle;
 	//! \brief 对齐方式	0-11，值与对齐方式的关系如下图
-	//! \image html TextStyle_m_nAlign.png                         
+	//BYTE1 文本的对齐方式
+	//	   左  中  右
+	// 上	0	1	2
+	// 中	3	4	5
+	// 下	6	7	8                 
 	OgdcByte m_nAlign;
 	//! \brief 是否粗体
 	OgdcBool m_bBold;

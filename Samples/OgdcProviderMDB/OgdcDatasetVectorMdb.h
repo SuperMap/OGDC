@@ -104,17 +104,20 @@ public:
 	//! \param nID 数据集记录ID号[in]。
 	//! \return 行特征要素指针。
 	virtual OgdcFeature* GetFeature(OgdcInt nID) ;	
+	virtual UGC::UGFeature* GetFeatureEx(OgdcInt nID);
 
 	//! \brief 将特征要素更新到数据集中。
 	//! \param pFeature 特征要素指针[in]。
 	//! \return 是否保存成功，成功返回TRUE，失败返回FALSE。
 	virtual OgdcBool UpdateFeature(const OgdcFeature* pFeature) ;
+	virtual OgdcBool UpdateFeature(const UGC::UGFeature* pFeature);
 	
 	//! \brief 将特征要素追加到数据集未尾。
 	//! \param pFeature 特征要素指针[in]。
 	//! \return 是否追加成功，成功返回TRUE，失败返回FALSE。
 	//! \remarks 追加时特征要素关联的数据集记录ID将不起作用。
 	virtual OgdcBool AddFeature(const OgdcFeature* pFeature) ;	
+	virtual OgdcBool AddFeature(const UGC::UGFeature* pFeature);
 
 	//! \brief 将特征要素从数据集中删除。
 	//! \param nID 数据集记录ID号[in]。
@@ -158,7 +161,7 @@ public:
 	virtual OgdcBool UpdateField(
 		const OgdcString& strFieldName,
 		const OgdcString& strExpress,
-		const OgdcString& strFilter = "") ;	
+		const OgdcString& strFilter = _U("")) ;	
 	
 	//! \brief 复制字段值,strSrcField和。
 	//! \param strSrcFieldName 源字段名称[in]。
@@ -267,6 +270,9 @@ public:
 	//! \brief 矢量数据集能力描述：Provider本身是否支持相关查询
 	virtual OgdcBool IsSupportQueryType(OgdcQueryDef::QueryType queryType) const;
 
+	//! \brief 创建子数据集
+	OgdcBool CreateSubDatasetVector(OgdcDatasetVectorInfo& vInfo);
+
 protected:
 
 	//! \brief 指向数据源的指针
@@ -274,10 +280,6 @@ protected:
 
 	//! \brief 矢量数据集中对象的个数
 	OgdcInt m_nObjectCount;
-
-	//! \brief 矢量数据集的个数
-	//! \remarks 在数据源中，矢量数据集的个数。
-	OgdcInt m_nRecordCount;
 
 	//! \brief CDaoTableDef指针
 	//! \remarks 通过CDaoTableDef通用入口进行数据库操作

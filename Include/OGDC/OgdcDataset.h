@@ -61,7 +61,19 @@ public:
 		//! \brief 三维面
 		Region3D	=105,
 		//! 复合CAD数据集
-		Compound	=149,	
+		Compound	=149,
+		//! \brief EPS 点
+		PointEPS	=157,
+		//! \brief EPS 线
+		LineEPS		=158,
+		//! \brief EPS 面
+		RegionEPS	=159,
+		//! \brief EPS 文本
+		TextEPS		=160,
+		//! \brief 模型数据集
+		Model		=203,
+		//! \brief 纹理数据集，模型数据集的子数据集
+		Texture		=204,
 	};
 	
 public:

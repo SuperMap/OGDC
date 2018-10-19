@@ -135,7 +135,7 @@
 #else
 #define _U(x)	x
 #endif
-#define OGDC_DLL_VERSION		_U("600")		//! \brief  dll版本号6.0.0
+#define OGDC_DLL_VERSION		_U("")		//! \brief  dll版本号
 		      
 //! \brief  极小值定义
 #define EP 1e-10
@@ -161,7 +161,7 @@
 
 #define __STR2__(x) #x
 #define __STR1__(x) __STR2__(x)
-#define __LOC__ __FILE__ "("__STR1__(__LINE__)") : "
+#define __LOC__ __FILE__ "(" __STR1__(__LINE__)") : "
 
 #if (_MSC_VER >= 800)
     #define CALLBACK    __stdcall
@@ -333,7 +333,7 @@ typedef size_t                   OgdcSizeT;
 #define  OGDCIS0(x)	(((x)<EP) && ((x)>NEP))
 
 #ifdef OS_ANDROID
-#include <Android/log.h>
+#include <android/log.h>
 #define LOGD(TAG,...) __android_log_print(ANDROID_LOG_DEBUG, TAG,__VA_ARGS__)
 #define LOGE(TAG,...) __android_log_print(ANDROID_LOG_ERROR, TAG,__VA_ARGS__)
 #define LOGHERE(s) LOGD("Debug","%s In %d line:%s",__FILE__,__LINE__,s);

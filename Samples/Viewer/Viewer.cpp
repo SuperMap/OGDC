@@ -150,7 +150,7 @@ CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 // 	int m_version= ((m_year-2005)*12+m_month)*100+m_day;
 
 	int m_version = OGDCVERSION;
-	m_BuildTime.Format("1.0.0.%d",m_version);
+	m_BuildTime.Format(_U("1.0.0.%d"),m_version);
 
 	//}}AFX_DATA_INIT
 }

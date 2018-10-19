@@ -193,7 +193,7 @@ void CViewerView::OnFileOpen()
 			pDS->m_connection.m_strUser = (OgdcString)dlg.m_strUser;
 			pDS->m_connection.m_strPassword = (OgdcString)dlg.m_strPassWord;
 			if (pDS->m_connection.m_nType==OGDC::oeSQLServer) {
-				pDS->m_connection.m_strDriver =  "SQL Server";
+				pDS->m_connection.m_strDriver =  _U("SQL Server");
 			}
 										
 			CWaitCursor cursor;
@@ -220,7 +220,7 @@ void CViewerView::OnFileOpen()
 						style.m_nFillStyle = 1;
 					}
 
-					OgdcString strName = dlg.m_pDataset->GetName() + "@" + dlg.m_pDataSource->GetAlias();
+					OgdcString strName = dlg.m_pDataset->GetName() + _U("@") + dlg.m_pDataSource->GetAlias();
 					m_viewerWnd.AddDataset(dlg.m_pDataset, style, strName,(dlg.m_nType != 1));					
 					OnRefresh();
 				}
@@ -401,7 +401,7 @@ void CViewerView::OnMapOpen()
 			style.m_nFillStyle = 1;
 		}
 
-		OgdcString strName = dlg.m_pDataset->GetName() + "@" + dlg.m_pDataSource->GetAlias();
+		OgdcString strName = dlg.m_pDataset->GetName() + _U("@") + dlg.m_pDataSource->GetAlias();
 		m_viewerWnd.AddDataset(dlg.m_pDataset, style, strName,(dlg.m_nType != 1));
 		OnRefresh();
 	}
@@ -552,31 +552,23 @@ void CViewerView::OnOpenMapChina()
 
 	//引擎类型为SDBPlus类型
 	OgdcInt m_nEngineType;
-	m_nEngineType = 14;
+	m_nEngineType = 219;
 	//别名
 	OgdcString m_strAlias;
-	m_strAlias = "China400";
+	m_strAlias = _U("China400");
 	//////////////////////////////////////////////////////////////////////////
 	//获取数据所在的绝对路径
 	HMODULE module = GetModuleHandle(0);
-	char path[MAX_PATH];
+	OgdcChar path[MAX_PATH];
 	GetModuleFileName(module,path,MAX_PATH);
 
-	CString strApplicationPath = path;
-	int nPos = strApplicationPath.Find("Builds");
-	char strTmppath[MAX_PATH]="";
-	for(int i=0;i<nPos;i++){
-		strTmppath[i] = path[i];
-	}
-	CString strAbPath = strTmppath;
-	CString strDataPath = "SampleData\\SDB\\China400.sdb";
-	strDataPath = strAbPath+strDataPath;
+	OgdcString strApplicationPath = path;
+	int nPos = strApplicationPath.Find(_U("Builds"));
+	OgdcString strDataPath = strApplicationPath.Left(nPos) + _U("SampleData\\UDB\\China400.udb");
 	//////////////////////////////////////////////////////////////////////////
 			
 	//数据源所在路径
-	OgdcString m_strServer;
-	m_strServer = (OgdcString)strDataPath;
-	
+	OgdcString m_strServer = strDataPath;
 	
 	//创建数据源指针，数据源类型为SDBPlus
 	OgdcDataSource* pDS = NULL;
@@ -592,7 +584,7 @@ void CViewerView::OnOpenMapChina()
 		CWaitCursor cursor;
 		if(!pDS->Open())
 		{
-			MessageBox("China400.sdb打开失败!");
+			MessageBox(_U("China400.udb打开失败!"));
 			delete pDS;
 			pDS = NULL;
 		}
@@ -604,7 +596,7 @@ void CViewerView::OnOpenMapChina()
 			
 			//设置数据集风格，包括面填充颜色、线的颜色、线宽
 			OgdcString strName;
-			OgdcDataset* pDataset = pDS->GetDataset("Provinces_R");
+			OgdcDataset* pDataset = pDS->GetDataset(_U("Provinces_R"));
 			OgdcStyle style;
 			if(pDataset)
 			{
@@ -612,40 +604,40 @@ void CViewerView::OnOpenMapChina()
 				style.m_clrLine = OGDCRGB(63,188,0);
 				style.m_nLineWidth = 1;
 
-				strName = pDataset->GetName() + "@" + pDS->GetAlias();
+				strName = pDataset->GetName() + _U("@") + pDS->GetAlias();
 				m_viewerWnd.AddDataset(pDataset,style, strName,true);
 				OnViewEntire();
 			}
-			pDataset = pDS->GetDataset("MainRiver");
+			pDataset = pDS->GetDataset(_U("MainRiver"));
 			if(pDataset)
 			{
 				style.m_clrLine = OGDCRGB(0,170,231);
 				style.m_nLineWidth = 2;
 
-				strName = pDataset->GetName() + "@" + pDS->GetAlias();
+				strName = pDataset->GetName() + _U("@") + pDS->GetAlias();
 				m_viewerWnd.AddDataset(pDataset,style, strName,false);
 				OnViewEntire();
 			}
 
-			pDataset = pDS->GetDataset("Railway_L");
+			pDataset = pDS->GetDataset(_U("Railway_L"));
 			if(pDataset)
 			{
 				style.m_clrLine = OGDCRGB(173,113,0);
 				style.m_nLineWidth = 2;
 				
-				strName = pDataset->GetName() + "@" + pDS->GetAlias();
+				strName = pDataset->GetName() + _U("@") + pDS->GetAlias();
 				m_viewerWnd.AddDataset(pDataset,style, strName,false);
 				OnViewEntire();
 			}
 
-			pDataset = pDS->GetDataset("Capital_P");
+			pDataset = pDS->GetDataset(_U("Capital_P"));
 			if(pDataset)
 			{
 				style.m_bSymbolScale = true;
 				style.m_nMarkerSize = 5;
 				style.m_clrLine = OGDCRGB(115,0,0);	
 				
-				strName = pDataset->GetName() + "@" + pDS->GetAlias();
+				strName = pDataset->GetName() + _U("@") + pDS->GetAlias();
 				m_viewerWnd.AddDataset(pDataset,style, strName,false);
 				OnViewEntire();
 			}		
@@ -658,31 +650,25 @@ void CViewerView::OnOpenMapGeologic()
 {
 	//引擎类型为SDBPlus类型
 	OgdcInt m_nEngineType;
-	m_nEngineType = 14;
+	m_nEngineType = 219;
 	//别名
 	OgdcString m_strAlias;
-	m_strAlias = "Geologic";
+	m_strAlias = _U("Geologic");
 
 	//////////////////////////////////////////////////////////////////////////
 	//获取数据所在的绝对路径
 	HMODULE module = GetModuleHandle(0);
-	char path[MAX_PATH];
+	OgdcChar path[MAX_PATH];
 	GetModuleFileName(module,path,MAX_PATH);
 
-	CString strApplicationPath = path;
-	int nPos = strApplicationPath.Find("Builds");
-	char strTmppath[MAX_PATH]="";
-	for(int i=0;i<nPos;i++){
-		strTmppath[i] = path[i];
-	}
-	CString strAbPath = strTmppath;
-	CString strDataPath = "SampleData\\SDB\\Geologic.sdb";
-	strDataPath = strAbPath+strDataPath;
+	OgdcString strApplicationPath = path;
+	int nPos = strApplicationPath.Find(_U("Builds"));
+	OgdcString strDataPath = strApplicationPath.Left(nPos) + _U("SampleData\\UDB\\Geologic.udb");
 	//////////////////////////////////////////////////////////////////////////
 	
 	//数据源所在路径
 	OgdcString m_strServer;
-	m_strServer = (OgdcString) strDataPath;
+	m_strServer = strDataPath;
 	
 	//创建数据源指针，数据源类型为SDBPlus
 	OgdcDataSource* pDS = NULL;
@@ -698,7 +684,7 @@ void CViewerView::OnOpenMapGeologic()
 		CWaitCursor cursor;
 		if(!pDS->Open())
 		{
-			MessageBox("Geologic.sdb打开失败!");
+			MessageBox(_U("Geologic.udb打开失败!"));
 			delete pDS;
 			pDS = NULL;
 		}
@@ -724,7 +710,7 @@ void CViewerView::OnOpenMapGeologic()
 					style.m_clrLine = OGDCRGB(115,233,255);					 
 					style.m_nMarkerSize = 5;
 				}
-				strName = pDataset->GetName() + "@" + pDS->GetAlias();
+				strName = pDataset->GetName() + _U("@") + pDS->GetAlias();
 				m_viewerWnd.AddDataset(pDataset,style, strName,bClear);
 				OnViewEntire();
 				bClear = false;
@@ -748,11 +734,11 @@ void CViewerView::OnCopyDataset()
 		OgdcDataset* pDataset =  dlg.m_pObjDataSource->CopyDataset(dlg.m_pDataset,OgdcString(dlg.m_strSrcDTName));
 		if (pDataset == NULL) 
 		{
-			MessageBox("复制数据集失败");
+			MessageBox(_U("复制数据集失败"));
 		}
 		else
 		{
-			MessageBox("复制数据集成功!");
+			MessageBox(_U("复制数据集成功!"));
 		}
 	}
 	
@@ -777,7 +763,7 @@ void CViewerView::OnFileNewDs()
 			pDS->m_connection.m_strPassword = (OgdcString)dlg.m_strPassWord;
 
 			if (dlg.m_nEngineType==OGDC::oeSQLServer) {
-				pDS->m_connection.m_strDriver = "SQL Server";
+				pDS->m_connection.m_strDriver = _U("SQL Server");
 			}
 							
 			pDS->Create();
@@ -795,7 +781,7 @@ void CViewerView::OnFileNewDs()
 		}
 		if(pDS == NULL)
 		{
-			AfxMessageBox("新建数据源失败");
+			AfxMessageBox(_U("新建数据源失败"));
 		}	
 	}
 	

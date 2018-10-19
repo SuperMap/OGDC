@@ -97,6 +97,8 @@ OgdcBool OgdcDatasetRasterMdb::BuildPyramid()
 	OgdcDatasetRasterMdb* pParentDataset = NULL;
 	PixelFormat nPixelFormat = GetPixelFormat();
 
+	OGDCASSERT(m_info.m_arrBandInfo.GetSize() == 1);
+
 	while (nNewWidth > PYRAMID_MIN_WIDTH || nNewHeight > PYRAMID_MIN_HEIGHT)
 	{
 		if (pParentDataset == NULL)
@@ -124,8 +126,7 @@ OgdcBool OgdcDatasetRasterMdb::BuildPyramid()
 		pDataset->m_info.m_nWidth = nNewWidth;
 		pDataset->m_info.m_nHeight = nNewHeight;
 		pDataset->m_info.m_nBlockSize = blocksize;
-		pDataset->m_info.m_dMinZ = this->m_info.m_dMinZ;
-		pDataset->m_info.m_dMaxZ = this->m_info.m_dMaxZ;
+
 		pDest = CreateDatasetPyramid(pDataset->m_info, nLevel++);
 	
 		delete pDataset;
@@ -137,7 +138,7 @@ OgdcBool OgdcDatasetRasterMdb::BuildPyramid()
 		}
 		
 		OgdcInt X, Y;	
-		OgdcColorset pal = m_info.m_colorset;
+		OgdcColorset pal = m_info.m_arrBandInfo[0].m_colorset;
 		OgdcBool bIndexedColor = pal.GetSize() > 0;
 		for (Y = 0; Y < nNewHeight; Y++)
 		{
@@ -154,10 +155,10 @@ OgdcBool OgdcDatasetRasterMdb::BuildPyramid()
 					case IPF_RGBA:
 					case IPF_TBYTE:		//16位同RGB一样处理即可
 						{
-							nPixel[0] = pParentDataset->GetPixel(2*X,2*Y);
-							nPixel[1] = pParentDataset->GetPixel(2*X+1,2*Y);
-							nPixel[2] = pParentDataset->GetPixel(2*X,2*Y+1);
-							nPixel[3] = pParentDataset->GetPixel(2*X+1,2*Y+1);
+							nPixel[0] = pParentDataset->GetValue(2*X,2*Y);
+							nPixel[1] = pParentDataset->GetValue(2*X+1,2*Y);
+							nPixel[2] = pParentDataset->GetValue(2*X,2*Y+1);
+							nPixel[3] = pParentDataset->GetValue(2*X+1,2*Y+1);
 							
 							nPixel[4] = 
 								RGB(
@@ -184,10 +185,10 @@ OgdcBool OgdcDatasetRasterMdb::BuildPyramid()
 						{
 							if ( bIndexedColor )
 							{
-								nPixel[0] = pParentDataset->GetPixel(2*X,2*Y);
-								nPixel[1] = pParentDataset->GetPixel(2*X+1,2*Y);
-								nPixel[2] = pParentDataset->GetPixel(2*X,2*Y+1);
-								nPixel[3] = pParentDataset->GetPixel(2*X+1,2*Y+1);
+								nPixel[0] = pParentDataset->GetValue(2*X,2*Y);
+								nPixel[1] = pParentDataset->GetValue(2*X+1,2*Y);
+								nPixel[2] = pParentDataset->GetValue(2*X,2*Y+1);
+								nPixel[3] = pParentDataset->GetValue(2*X+1,2*Y+1);
 								
 								OgdcDouble f,dltA,dltB,dltC,dltD;
 								f = (nPixel[0]+nPixel[1]+nPixel[2]+nPixel[3])/4.0;
@@ -230,7 +231,7 @@ OgdcBool OgdcDatasetRasterMdb::BuildPyramid()
 						break;
 					}
 					
-					pDest->SetPixel(X,Y,nPixel[4]);
+					pDest->SetValue(X,Y,nPixel[4]);
 				}
 				else if (GetType() == OgdcDataset::Grid)
 				{
@@ -279,8 +280,7 @@ OgdcBool OgdcDatasetRasterMdb::DropPyramid()
 	ReleasePyramidDatasets();
 
 	OgdcString strSQL;
-	strSQL.Format("SELECT OGDatasetName FROM OGImgRegister "
-		"WHERE OGPyramid LIKE '%s'", m_info.m_strName.Cstr());
+	strSQL.Format(_U("SELECT OGDatasetName FROM OGImgRegister WHERE OGPyramid LIKE '%s'"), m_info.m_strName.Cstr());
 	CDaoRecordset rasterRecord(&m_pDataSource->m_daoDatabase);
 	try
 	{
@@ -293,8 +293,7 @@ OgdcBool OgdcDatasetRasterMdb::DropPyramid()
 			rasterRecord.GetFieldValue((short)0, varValue);
 			strPyramidName = OgdcString((LPCTSTR)varValue.bstrVal);
 			m_pDataSource->m_daoDatabase.DeleteTableDef(strPyramidName);
-			strSQL.Format ("DELETE FROM OGImgRegister "
-				"WHERE OGDatasetName LIKE '%s'", strPyramidName.Cstr());
+			strSQL.Format (_U("DELETE FROM OGImgRegister WHERE OGDatasetName LIKE '%s'"), strPyramidName.Cstr());
 			m_pDataSource->m_daoDatabase.Execute (strSQL);
 			rasterRecord.MoveNext();
 		}
@@ -322,7 +321,7 @@ OgdcBool OgdcDatasetRasterMdb::IsBuildPyramid() const
 	}
 }
 
-OgdcBool OgdcDatasetRasterMdb::GetScanline(OgdcInt nRowIndex,OgdcRasterScanline& ScanLine, OgdcInt nStartCol)
+OgdcBool OgdcDatasetRasterMdb::GetScanline(OgdcInt nRowIndex,OgdcRasterScanline& ScanLine,OgdcInt nBandIndex,OgdcInt nStartCol)
 {
 	if(!Open())
 	{
@@ -400,7 +399,7 @@ OgdcBool OgdcDatasetRasterMdb::GetScanline(OgdcInt nRowIndex,OgdcRasterScanline&
 	return TRUE;
 }
 
-OgdcBool OgdcDatasetRasterMdb::SetScanline(OgdcInt nRowIndex,OgdcInt nColIndex, const OgdcRasterScanline& ScanLine)
+OgdcBool OgdcDatasetRasterMdb::SetScanline(OgdcInt nRowIndex,OgdcInt nColIndex, const OgdcRasterScanline& ScanLine, OgdcInt nBandIndex)
 {
 	if(!Open())
 	{
@@ -530,14 +529,21 @@ OgdcBool OgdcDatasetRasterMdb::ComDivAndMod()
 	return m_bInitImg;
 }
 
-OgdcRasterBlock* OgdcDatasetRasterMdb::LoadBlock( OgdcInt nRowBlock, OgdcInt nColBlock )
+OgdcRasterBlock* OgdcDatasetRasterMdb::LoadBlock( OgdcInt nRowBlock, OgdcInt nColBlock, OgdcInt nBandIndex )
 {
-	OgdcRasterBlock* pRasterBlock = new OgdcRasterBlock;
+	OgdcRasterBlock* pRasterBlock = NULL;
+	OgdcInt nIndex = nRowBlock * m_info.m_nColBlocks + nColBlock;
+	if (m_rasterDict.Lookup(nIndex, pRasterBlock) && pRasterBlock != NULL)
+	{
+		return pRasterBlock;
+	}
+
+	pRasterBlock = new OgdcRasterBlock;
 	
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT OGSize, OGRaster FROM [%s] "
-		"WHERE OGRow = %d AND OGColumn = %d"),
-		OGDCPCTSTR(this->m_info.m_strName), nRowBlock, nColBlock);
+	strSQL.Format(_U("SELECT OGSize, OGRaster FROM [%s] ")
+		_U("WHERE OGRow = %d AND OGColumn = %d"),
+		m_info.m_strName.Cstr(), nRowBlock, nColBlock);
 
 	CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
 	try
@@ -580,7 +586,7 @@ OgdcRasterBlock* OgdcDatasetRasterMdb::LoadBlock( OgdcInt nRowBlock, OgdcInt nCo
 		SafeArrayUnaccessData(varArray.parray);
 		
 		//填充ImgBlock中的BlockInfo相关信息
-		pRasterBlock->m_nPixelFormat = m_info.m_nPixelFormat;
+		pRasterBlock->m_nPixelFormat = m_info.m_arrBandInfo[0].m_nPixelFormat;
 		pRasterBlock->m_nBlockRowIndex = nRowBlock;
 		pRasterBlock->m_nBlockColIndex = nColBlock;
 		pRasterBlock->m_nPixelRowIndex = nRowBlock * m_info.m_nBlockSize;
@@ -589,7 +595,7 @@ OgdcRasterBlock* OgdcDatasetRasterMdb::LoadBlock( OgdcInt nRowBlock, OgdcInt nCo
 		pRasterBlock->m_nHeight = m_info.m_nBlockSize;
 
 		pRasterBlock->m_nWidthBytes = ((pRasterBlock->m_nWidth 
-			* OgdcInt(m_info.m_nPixelFormat)) + 31) / 32 * 4 ;
+			* OgdcInt(m_info.m_arrBandInfo[0].m_nPixelFormat)) + 31) / 32 * 4 ;
 
 		//计算一下有效长度和有效的宽度
 		OgdcInt blockSize = m_info.m_nBlockSize;
@@ -626,6 +632,8 @@ OgdcRasterBlock* OgdcDatasetRasterMdb::LoadBlock( OgdcInt nRowBlock, OgdcInt nCo
 		pRasterBlock->SetModifiedFlag(FALSE);
 		recordset.Close();
 
+		m_rasterDict.SetAt(nIndex, pRasterBlock);
+
 		return pRasterBlock;
 	}
 	catch (CDaoException* e)
@@ -639,7 +647,7 @@ OgdcRasterBlock* OgdcDatasetRasterMdb::LoadBlock( OgdcInt nRowBlock, OgdcInt nCo
 	return NULL;
 }
 
-OgdcBool OgdcDatasetRasterMdb::SaveBlock( OgdcRasterBlock* pImgBlock )
+OgdcBool OgdcDatasetRasterMdb::SaveBlock( OgdcRasterBlock* pImgBlock,OgdcInt nBandIndex )
 {
 	if (pImgBlock == NULL)
 	{
@@ -655,9 +663,8 @@ OgdcBool OgdcDatasetRasterMdb::SaveBlock( OgdcRasterBlock* pImgBlock )
 			CString strSQL;
 			CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
 	
-			strSQL.Format(OGDCPCTSTR("SELECT * FROM [%s] "
-				"WHERE OGRow = %ld AND OGColumn = %ld"),
-				OGDCPCTSTR(m_info.m_strName), pImgBlock->m_nBlockRowIndex, 
+			strSQL.Format(_U("SELECT * FROM [%s] WHERE OGRow = %ld AND OGColumn = %ld"),
+				m_info.m_strName.Cstr(), pImgBlock->m_nBlockRowIndex, 
 				pImgBlock->m_nBlockColIndex);
 
 			recordset.Open(AFX_DAO_USE_DEFAULT_TYPE, strSQL);
@@ -693,80 +700,80 @@ OgdcBool OgdcDatasetRasterMdb::SaveBlock( OgdcRasterBlock* pImgBlock )
 	return TRUE;	
 }
 
-OgdcColor OgdcDatasetRasterMdb::GetPixel( OgdcInt nCol, OgdcInt nRow )
-{
-	if (nRow < 0 || nCol < 0)
-	{
-		return 0;
-	}
-	OgdcInt X = nCol % m_info.m_nBlockSize;
-	OgdcInt subCol = (OgdcInt)floor(OgdcDouble(nCol / m_info.m_nBlockSize));
-	OgdcInt Y = nRow % m_info.m_nBlockSize;
-	OgdcInt subRow = (OgdcInt)floor(OgdcDouble(nRow / m_info.m_nBlockSize));
-	OgdcInt nIndex = subRow * m_info.m_nColBlocks + subCol;
-	OgdcRasterBlock* pBlock = NULL;
+// OgdcColor OgdcDatasetRasterMdb::GetPixel( OgdcInt nCol, OgdcInt nRow )
+// {
+// 	if (nRow < 0 || nCol < 0)
+// 	{
+// 		return 0;
+// 	}
+// 	OgdcInt X = nCol % m_info.m_nBlockSize;
+// 	OgdcInt subCol = (OgdcInt)floor(OgdcDouble(nCol / m_info.m_nBlockSize));
+// 	OgdcInt Y = nRow % m_info.m_nBlockSize;
+// 	OgdcInt subRow = (OgdcInt)floor(OgdcDouble(nRow / m_info.m_nBlockSize));
+// 	OgdcInt nIndex = subRow * m_info.m_nColBlocks + subCol;
+// 	OgdcRasterBlock* pBlock = NULL;
+// 
+// 	if (m_rasterDict.Lookup(nIndex, pBlock))
+// 	{
+// 		if (pBlock == NULL || !pBlock->IsValid())
+// 		{
+// 			m_rasterDict.RemoveKey(nIndex);
+// 			pBlock = this->LoadBlock(subRow, subCol);
+// 			m_rasterDict.SetAt(nIndex, pBlock);
+// 		}
+// 	}
+// 	else
+// 	{
+// 		pBlock = this->LoadBlock(subRow, subCol);
+// 		m_rasterDict.SetAt(nIndex, pBlock);
+// 	}
+// 
+// 	if (pBlock != NULL)
+// 	{
+// 		return pBlock->GetPixel(X, Y);	
+// 	}
+// 	else
+// 	{
+// 		return 0;
+// 	}
+// }
+// 
+// void OgdcDatasetRasterMdb::SetPixel( OgdcInt nCol, OgdcInt nRow, OgdcColor nColor )
+// {
+// 	if (nRow < 0 || nCol < 0)
+// 	{
+// 		return;
+// 	}
+// 	OgdcInt X = nCol % m_info.m_nBlockSize;
+// 	OgdcInt subCol = (OgdcInt)floor(OgdcDouble(nCol / m_info.m_nBlockSize));
+// 	OgdcInt Y = nRow % m_info.m_nBlockSize;
+// 	OgdcInt subRow = (OgdcInt)floor(OgdcDouble(nRow / m_info.m_nBlockSize));
+// 	OgdcInt nIndex = subRow * m_info.m_nColBlocks + subCol;
+// 	OgdcRasterBlock* pBlock = NULL;
+// 	
+// 	if (m_rasterDict.Lookup(nIndex, pBlock))
+// 	{
+// 		if (pBlock == NULL || !pBlock->IsValid())
+// 		{
+// 			m_rasterDict.RemoveKey(nIndex);
+// 			pBlock = this->LoadBlock(subRow, subCol);
+// 			m_rasterDict.SetAt(nIndex, pBlock);
+// 		}
+// 	}
+// 	else
+// 	{
+// 		pBlock = this->LoadBlock(subRow, subCol);
+// 		m_rasterDict.SetAt(nIndex, pBlock);
+// 	}
+// 
+// 	if (pBlock != NULL)
+// 	{
+// 		pBlock->SetPixel(X, Y, nColor);
+// 		pBlock->SetModifiedFlag(TRUE);
+// 	}
+// }
 
-	if (m_rasterDict.Lookup(nIndex, pBlock))
-	{
-		if (pBlock == NULL || !pBlock->IsValid())
-		{
-			m_rasterDict.RemoveKey(nIndex);
-			pBlock = this->LoadBlock(subRow, subCol);
-			m_rasterDict.SetAt(nIndex, pBlock);
-		}
-	}
-	else
-	{
-		pBlock = this->LoadBlock(subRow, subCol);
-		m_rasterDict.SetAt(nIndex, pBlock);
-	}
-
-	if (pBlock != NULL)
-	{
-		return pBlock->GetPixel(X, Y);	
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-void OgdcDatasetRasterMdb::SetPixel( OgdcInt nCol, OgdcInt nRow, OgdcColor nColor )
-{
-	if (nRow < 0 || nCol < 0)
-	{
-		return;
-	}
-	OgdcInt X = nCol % m_info.m_nBlockSize;
-	OgdcInt subCol = (OgdcInt)floor(OgdcDouble(nCol / m_info.m_nBlockSize));
-	OgdcInt Y = nRow % m_info.m_nBlockSize;
-	OgdcInt subRow = (OgdcInt)floor(OgdcDouble(nRow / m_info.m_nBlockSize));
-	OgdcInt nIndex = subRow * m_info.m_nColBlocks + subCol;
-	OgdcRasterBlock* pBlock = NULL;
-	
-	if (m_rasterDict.Lookup(nIndex, pBlock))
-	{
-		if (pBlock == NULL || !pBlock->IsValid())
-		{
-			m_rasterDict.RemoveKey(nIndex);
-			pBlock = this->LoadBlock(subRow, subCol);
-			m_rasterDict.SetAt(nIndex, pBlock);
-		}
-	}
-	else
-	{
-		pBlock = this->LoadBlock(subRow, subCol);
-		m_rasterDict.SetAt(nIndex, pBlock);
-	}
-
-	if (pBlock != NULL)
-	{
-		pBlock->SetPixel(X, Y, nColor);
-		pBlock->SetModifiedFlag(TRUE);
-	}
-}
-
-OgdcDouble OgdcDatasetRasterMdb::GetValue( OgdcInt nCol, OgdcInt nRow )
+OgdcDouble OgdcDatasetRasterMdb::GetValue( OgdcInt nCol, OgdcInt nRow ,OgdcInt nBandIndex)
 {
 	if (nRow < 0 || nCol < 0)
 	{
@@ -804,7 +811,7 @@ OgdcDouble OgdcDatasetRasterMdb::GetValue( OgdcInt nCol, OgdcInt nRow )
 	}
 }
 
-void OgdcDatasetRasterMdb::SetValue( OgdcInt nCol, OgdcInt nRow, OgdcDouble dValue )
+void OgdcDatasetRasterMdb::SetValue( OgdcInt nCol, OgdcInt nRow, OgdcDouble dValue ,OgdcInt nBandIndex)
 {
 	if (nRow < 0 || nCol < 0)
 	{
@@ -839,191 +846,191 @@ void OgdcDatasetRasterMdb::SetValue( OgdcInt nCol, OgdcInt nRow, OgdcDouble dVal
 	}	
 }
 
-OgdcRasterBlock* OgdcDatasetRasterMdb::GetViewBlock( const OgdcRect2D& rcView, OgdcInt nDeviceWidth, OgdcInt nDeviceHeight )
-{
-	OgdcRect2D rcBounds = rcView;
-	rcBounds.Normalize();
-	rcBounds.IntersectRect(rcBounds, GetBounds());
-	
-	nDeviceWidth = OGDCROUND(rcBounds.Width()/rcView.Width()*nDeviceWidth);
-	nDeviceHeight = OGDCROUND(rcBounds.Height()/rcView.Height()*nDeviceHeight);
-
-	OgdcRect rcImage;
-	//地理坐标转化成像素坐标
-	XYToImg(rcBounds, rcImage);
-	
-	if (rcImage.Width() < 2 && rcImage.Height() < 2)
-	{
-		return NULL;
-	}
-
-	OgdcDatasetRasterMdb* pDtR = GetPyramidTier(rcImage.Width(), nDeviceWidth);
-
-	if (pDtR != NULL && pDtR != this)
-	{
-		if (!pDtR->IsOpen())
-		{
-			pDtR->Open();
-		}
-		pDtR->XYToImg(rcBounds, rcImage);
-		if (rcImage.Width() < 2 && rcImage.Height() < 2)
-		{
-			return NULL;
-		}
-		nDeviceWidth = rcImage.Width();
-		nDeviceHeight = rcImage.Height();
-		pDtR->ImgToXY(rcImage, rcBounds);
-	}
-	else
-	{
-		pDtR = this;
-		if (nDeviceWidth > rcImage.Width() || nDeviceHeight > rcImage.Height())
-		{
-			nDeviceWidth = rcImage.Width();
-			nDeviceHeight = rcImage.Height();
-			pDtR->ImgToXY(rcImage, rcBounds);
-		}
-		if (nDeviceWidth < 2 && nDeviceHeight < 2)
-		{
-			return NULL;
-		}
-	}	
-
-	OgdcRasterBlock* pResBlock = new OgdcRasterBlock;
-	pResBlock->m_nWidth = nDeviceWidth;
-	pResBlock->m_nHeight = nDeviceHeight;
-	pResBlock->m_nValidWidth = pResBlock->m_nWidth;
-	pResBlock->m_nValidHeight = pResBlock->m_nHeight;
-	pResBlock->m_nPixelFormat = GetPixelFormat();
-	pResBlock->m_rcBounds = rcBounds;
-	pResBlock->m_nWidthBytes = ((pResBlock->m_nWidth 
-		* OgdcInt(m_info.m_nPixelFormat)) + 31) / 32 * 4 ;
-	
-	if (GetType() == OgdcDataset::Grid)
-	{
-		pResBlock->m_nWidthBytes = ((pResBlock->m_nWidth * 32) + 31) / 32 * 4 ;
-		pResBlock->InitGrid((OgdcInt)GetNoValue());
-	}
-	else
-	{
-		pResBlock->Init();
-	}
-
-	OgdcInt nBlockRowStart =  rcImage.top / m_info.m_nBlockSize;
-	OgdcInt nBlockRowEnd =  (rcImage.bottom - 1) / m_info.m_nBlockSize;
-	OgdcInt nBlockColtart = rcImage.left / m_info.m_nBlockSize;
-	OgdcInt nBlockColEnd = (rcImage.right - 1) / m_info.m_nBlockSize;
-
-	OgdcDouble dMaxZ = 0;
-	OgdcDouble dMinZ = 0;
-	
-	OgdcRasterBlock* pSrcBlock = NULL;
-	for (OgdcInt i = nBlockRowStart; i <= nBlockRowEnd; i++)
-	{
-		for (OgdcInt j = nBlockColtart; j <= nBlockColEnd; j++)
-		{
-			OgdcInt nIndex = i * pDtR->m_info.m_nColBlocks + j;
-			if (pDtR->m_rasterDict.Lookup(nIndex, pSrcBlock))
-			{
-				if (pSrcBlock == NULL || !pSrcBlock->IsValid())
-				{
-					pDtR->m_rasterDict.RemoveKey(nIndex);
-					pSrcBlock = pDtR->LoadBlock(i, j);
-					pDtR->m_rasterDict.SetAt(nIndex, pSrcBlock);
-				}
-			}
-			else
-			{
-				pSrcBlock = pDtR->LoadBlock(i, j);
-				pDtR->m_rasterDict.SetAt(nIndex, pSrcBlock);
-			}
-
-			if (pSrcBlock != NULL)
-			{
-				//Load一个栅格块来填充可视栅格块
-				/////////////////////////////////////////////////
-
-				if (NULL == pResBlock || pSrcBlock == NULL)
-				{
-					return FALSE;
-				}
-				
-				PixelFormat srcIPF = pResBlock->m_nPixelFormat;
-				PixelFormat destIPF = pSrcBlock->m_nPixelFormat;
-				
-				if (srcIPF != destIPF)
-				{
-					return FALSE;
-				}
-				
-				OgdcRect2D rcDestBounds = pResBlock->m_rcBounds;
-				OgdcRect2D rcSrcBounds = pSrcBlock->m_rcBounds;
-				
-				if (!rcSrcBounds.IsIntersect(rcDestBounds))
-				{
-					return FALSE; 
-				}
-				
-				OgdcDouble dXDestRatio = rcDestBounds.Width() 
-					/ pResBlock->m_nValidWidth;
-				OgdcDouble dYDestRatio = rcDestBounds.Height() 
-					/ pResBlock->m_nValidHeight;
-				
-				OgdcDouble dXSrcRatio = rcSrcBounds.Width() 
-					/ pSrcBlock->m_nValidWidth;
-				OgdcDouble dYSrcRatio = rcSrcBounds.Height() 
-					/ pSrcBlock->m_nValidHeight;
-				
-				OgdcRect2D rcIntersectBounds = rcSrcBounds;
-				rcIntersectBounds.IntersectRect(rcIntersectBounds, rcDestBounds);
-				
-				// 算出相交区域在当前数据集的像素的左上角坐标和右下角坐标
-				OgdcInt nResLeft = (OgdcInt)floor(
-					(rcIntersectBounds.left - rcDestBounds.left) / dXDestRatio);
-				OgdcInt nResTop = (OgdcInt)floor(
-					(rcDestBounds.top - rcIntersectBounds.top) / dYDestRatio);
-				OgdcInt nResRight = (OgdcInt)ceil(
-					(rcIntersectBounds.right - rcDestBounds.left) / dXDestRatio);
-				OgdcInt nResBottom = (OgdcInt)ceil(
-					(rcDestBounds.top - rcIntersectBounds.bottom) / dYDestRatio);
-				nResRight = OGDCMIN(nResRight, pResBlock->m_nValidWidth - 1);
-				nResBottom = OGDCMIN(nResBottom, pResBlock->m_nValidHeight - 1);
-				
-				OgdcInt nSrcX = 0;
-				OgdcInt nSrcY = 0;
-				OgdcBool bRes = FALSE;
-		
-				for (OgdcInt row = nResTop; row <= nResBottom; row++)
-				{
-					nSrcY = (OgdcInt)floor((rcSrcBounds.top 
-						- (rcDestBounds.top - (row+0.5)*dYDestRatio)) / dYSrcRatio);
-					if(nSrcY < 0 || nSrcY >= pSrcBlock->m_nValidHeight)
-					{
-						continue;
-					}
-					for (OgdcInt col = nResLeft; col <= nResRight; col++)
-					{
-						nSrcX = (OgdcInt)floor(((rcDestBounds.left
-							+ (col+0.5) * dXDestRatio) - rcSrcBounds.left) / dXSrcRatio);
-						if (nSrcX < 0 || nSrcX >= pSrcBlock->m_nValidWidth)
-						{
-							continue;
-						}
-						pResBlock->SetValue(col, row, pSrcBlock->GetValue(nSrcX, nSrcY));
-						bRes = TRUE;
-					}
-				}
-				/////////////////////////////////////////////////
-			}
-		}
-	}
-	
-	if (pDtR != this)
-	{
-		pDtR->Close();
-	}
-	return pResBlock;
-}
+// OgdcRasterBlock* OgdcDatasetRasterMdb::GetViewBlock( const OgdcRect2D& rcView, OgdcInt nDeviceWidth, OgdcInt nDeviceHeight )
+// {
+// 	OgdcRect2D rcBounds = rcView;
+// 	rcBounds.Normalize();
+// 	rcBounds.IntersectRect(rcBounds, GetBounds());
+// 	
+// 	nDeviceWidth = OGDCROUND(rcBounds.Width()/rcView.Width()*nDeviceWidth);
+// 	nDeviceHeight = OGDCROUND(rcBounds.Height()/rcView.Height()*nDeviceHeight);
+// 
+// 	OgdcRect rcImage;
+// 	//地理坐标转化成像素坐标
+// 	XYToImg(rcBounds, rcImage);
+// 	
+// 	if (rcImage.Width() < 2 && rcImage.Height() < 2)
+// 	{
+// 		return NULL;
+// 	}
+// 
+// 	OgdcDatasetRasterMdb* pDtR = GetPyramidTier(rcImage.Width(), nDeviceWidth);
+// 
+// 	if (pDtR != NULL && pDtR != this)
+// 	{
+// 		if (!pDtR->IsOpen())
+// 		{
+// 			pDtR->Open();
+// 		}
+// 		pDtR->XYToImg(rcBounds, rcImage);
+// 		if (rcImage.Width() < 2 && rcImage.Height() < 2)
+// 		{
+// 			return NULL;
+// 		}
+// 		nDeviceWidth = rcImage.Width();
+// 		nDeviceHeight = rcImage.Height();
+// 		pDtR->ImgToXY(rcImage, rcBounds);
+// 	}
+// 	else
+// 	{
+// 		pDtR = this;
+// 		if (nDeviceWidth > rcImage.Width() || nDeviceHeight > rcImage.Height())
+// 		{
+// 			nDeviceWidth = rcImage.Width();
+// 			nDeviceHeight = rcImage.Height();
+// 			pDtR->ImgToXY(rcImage, rcBounds);
+// 		}
+// 		if (nDeviceWidth < 2 && nDeviceHeight < 2)
+// 		{
+// 			return NULL;
+// 		}
+// 	}	
+// 
+// 	OgdcRasterBlock* pResBlock = new OgdcRasterBlock;
+// 	pResBlock->m_nWidth = nDeviceWidth;
+// 	pResBlock->m_nHeight = nDeviceHeight;
+// 	pResBlock->m_nValidWidth = pResBlock->m_nWidth;
+// 	pResBlock->m_nValidHeight = pResBlock->m_nHeight;
+// 	pResBlock->m_nPixelFormat = GetPixelFormat();
+// 	pResBlock->m_rcBounds = rcBounds;
+// 	pResBlock->m_nWidthBytes = ((pResBlock->m_nWidth 
+// 		* OgdcInt(m_info.m_nPixelFormat)) + 31) / 32 * 4 ;
+// 	
+// 	if (GetType() == OgdcDataset::Grid)
+// 	{
+// 		pResBlock->m_nWidthBytes = ((pResBlock->m_nWidth * 32) + 31) / 32 * 4 ;
+// 		pResBlock->InitGrid((OgdcInt)GetNoValue());
+// 	}
+// 	else
+// 	{
+// 		pResBlock->Init();
+// 	}
+// 
+// 	OgdcInt nBlockRowStart =  rcImage.top / m_info.m_nBlockSize;
+// 	OgdcInt nBlockRowEnd =  (rcImage.bottom - 1) / m_info.m_nBlockSize;
+// 	OgdcInt nBlockColtart = rcImage.left / m_info.m_nBlockSize;
+// 	OgdcInt nBlockColEnd = (rcImage.right - 1) / m_info.m_nBlockSize;
+// 
+// 	OgdcDouble dMaxZ = 0;
+// 	OgdcDouble dMinZ = 0;
+// 	
+// 	OgdcRasterBlock* pSrcBlock = NULL;
+// 	for (OgdcInt i = nBlockRowStart; i <= nBlockRowEnd; i++)
+// 	{
+// 		for (OgdcInt j = nBlockColtart; j <= nBlockColEnd; j++)
+// 		{
+// 			OgdcInt nIndex = i * pDtR->m_info.m_nColBlocks + j;
+// 			if (pDtR->m_rasterDict.Lookup(nIndex, pSrcBlock))
+// 			{
+// 				if (pSrcBlock == NULL || !pSrcBlock->IsValid())
+// 				{
+// 					pDtR->m_rasterDict.RemoveKey(nIndex);
+// 					pSrcBlock = pDtR->LoadBlock(i, j);
+// 					pDtR->m_rasterDict.SetAt(nIndex, pSrcBlock);
+// 				}
+// 			}
+// 			else
+// 			{
+// 				pSrcBlock = pDtR->LoadBlock(i, j);
+// 				pDtR->m_rasterDict.SetAt(nIndex, pSrcBlock);
+// 			}
+// 
+// 			if (pSrcBlock != NULL)
+// 			{
+// 				//Load一个栅格块来填充可视栅格块
+// 				/////////////////////////////////////////////////
+// 
+// 				if (NULL == pResBlock || pSrcBlock == NULL)
+// 				{
+// 					return FALSE;
+// 				}
+// 				
+// 				PixelFormat srcIPF = pResBlock->m_nPixelFormat;
+// 				PixelFormat destIPF = pSrcBlock->m_nPixelFormat;
+// 				
+// 				if (srcIPF != destIPF)
+// 				{
+// 					return FALSE;
+// 				}
+// 				
+// 				OgdcRect2D rcDestBounds = pResBlock->m_rcBounds;
+// 				OgdcRect2D rcSrcBounds = pSrcBlock->m_rcBounds;
+// 				
+// 				if (!rcSrcBounds.IsIntersect(rcDestBounds))
+// 				{
+// 					return FALSE; 
+// 				}
+// 				
+// 				OgdcDouble dXDestRatio = rcDestBounds.Width() 
+// 					/ pResBlock->m_nValidWidth;
+// 				OgdcDouble dYDestRatio = rcDestBounds.Height() 
+// 					/ pResBlock->m_nValidHeight;
+// 				
+// 				OgdcDouble dXSrcRatio = rcSrcBounds.Width() 
+// 					/ pSrcBlock->m_nValidWidth;
+// 				OgdcDouble dYSrcRatio = rcSrcBounds.Height() 
+// 					/ pSrcBlock->m_nValidHeight;
+// 				
+// 				OgdcRect2D rcIntersectBounds = rcSrcBounds;
+// 				rcIntersectBounds.IntersectRect(rcIntersectBounds, rcDestBounds);
+// 				
+// 				// 算出相交区域在当前数据集的像素的左上角坐标和右下角坐标
+// 				OgdcInt nResLeft = (OgdcInt)floor(
+// 					(rcIntersectBounds.left - rcDestBounds.left) / dXDestRatio);
+// 				OgdcInt nResTop = (OgdcInt)floor(
+// 					(rcDestBounds.top - rcIntersectBounds.top) / dYDestRatio);
+// 				OgdcInt nResRight = (OgdcInt)ceil(
+// 					(rcIntersectBounds.right - rcDestBounds.left) / dXDestRatio);
+// 				OgdcInt nResBottom = (OgdcInt)ceil(
+// 					(rcDestBounds.top - rcIntersectBounds.bottom) / dYDestRatio);
+// 				nResRight = OGDCMIN(nResRight, pResBlock->m_nValidWidth - 1);
+// 				nResBottom = OGDCMIN(nResBottom, pResBlock->m_nValidHeight - 1);
+// 				
+// 				OgdcInt nSrcX = 0;
+// 				OgdcInt nSrcY = 0;
+// 				OgdcBool bRes = FALSE;
+// 		
+// 				for (OgdcInt row = nResTop; row <= nResBottom; row++)
+// 				{
+// 					nSrcY = (OgdcInt)floor((rcSrcBounds.top 
+// 						- (rcDestBounds.top - (row+0.5)*dYDestRatio)) / dYSrcRatio);
+// 					if(nSrcY < 0 || nSrcY >= pSrcBlock->m_nValidHeight)
+// 					{
+// 						continue;
+// 					}
+// 					for (OgdcInt col = nResLeft; col <= nResRight; col++)
+// 					{
+// 						nSrcX = (OgdcInt)floor(((rcDestBounds.left
+// 							+ (col+0.5) * dXDestRatio) - rcSrcBounds.left) / dXSrcRatio);
+// 						if (nSrcX < 0 || nSrcX >= pSrcBlock->m_nValidWidth)
+// 						{
+// 							continue;
+// 						}
+// 						pResBlock->SetValue(col, row, pSrcBlock->GetValue(nSrcX, nSrcY));
+// 						bRes = TRUE;
+// 					}
+// 				}
+// 				/////////////////////////////////////////////////
+// 			}
+// 		}
+// 	}
+// 	
+// 	if (pDtR != this)
+// 	{
+// 		pDtR->Close();
+// 	}
+// 	return pResBlock;
+// }
 
 OgdcBool OgdcDatasetRasterMdb::IsRaster()
 {
@@ -1102,7 +1109,7 @@ void OgdcDatasetRasterMdb::Close()
 	m_bOpened = FALSE;	
 }
 
-void OgdcDatasetRasterMdb::ReleaseAllBlocks()
+void OgdcDatasetRasterMdb::ReleaseAllBlocks(OgdcInt nBandIndex)
 {
 	OgdcRasterBlock *pBlock = NULL;
 	OgdcInt nIndex=0;
@@ -1154,15 +1161,13 @@ OgdcBool OgdcDatasetRasterMdb::Rename( const OgdcString& strNewName )
 	{
 
 		//更新OGImgRegister里的表名
-		strSQL.Format(OGDCPCTSTR("UPDATE OGImgRegister "
-			"SET OGDatasetName = '%s' WHERE OGDatasetName = '%s'"),
-			OGDCPCTSTR(strNewName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("UPDATE OGImgRegister SET OGDatasetName = '%s' WHERE OGDatasetName = '%s'"),
+			strNewName.Cstr(), m_info.m_strName.Cstr());
 		m_pDataSource->m_daoDatabase.Execute(strSQL);
 
 		//更新金字塔名
-		strSQL.Format(OGDCPCTSTR("UPDATE OGImgRegister "
-			"SET OGPyramid = '%s' WHERE OGPyramid = '%s'"),
-			OGDCPCTSTR(strNewName), OGDCPCTSTR(m_info.m_strName));
+		strSQL.Format(_U("UPDATE OGImgRegister SET OGPyramid = '%s' WHERE OGPyramid = '%s'"),
+			strNewName.Cstr(), m_info.m_strName.Cstr());
 		m_pDataSource->m_daoDatabase.Execute(strSQL);
 		rasterTable.Open(m_info.m_strName);
 		rasterTable.SetName(strNewName);
@@ -1191,9 +1196,8 @@ OgdcBool OgdcDatasetRasterMdb::SaveInfo()
 	}
 	CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
 	CString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT * FROM OGImgRegister "
-		"WHERE OGDatasetName = '%s' OR OGDatasetID = %d"), 
-		OGDCPCTSTR(m_info.m_strName), m_nID);
+	strSQL.Format(_U("SELECT * FROM OGImgRegister WHERE OGDatasetName = '%s' OR OGDatasetID = %d"), 
+		m_info.m_strName.Cstr(), m_nID);
 
 	CDaoTableDef tableDef(&m_pDataSource->m_daoDatabase);
 	try
@@ -1205,7 +1209,7 @@ OgdcBool OgdcDatasetRasterMdb::SaveInfo()
 		recordset.SetFieldValue (OGRF_DATASET_NAME,
 			COleVariant(m_info.m_strName, VT_BSTRT));
 		recordset.SetFieldValue (OGRF_DATASET_TYPE,long(m_info.m_nType));
-		recordset.SetFieldValue (OGIRF_PIXELFORMAT,(long)(m_info.m_nPixelFormat));
+		recordset.SetFieldValue (OGIRF_PIXELFORMAT,(long)(m_info.m_arrBandInfo[0].m_nPixelFormat));
 		recordset.SetFieldValue (OGIRF_WIDTH,long(m_info.m_nWidth));	
 		recordset.SetFieldValue (OGIRF_HEIGHT,long(m_info.m_nHeight));
 		recordset.SetFieldValue (OGIRF_EBLOCKSIZE,(long)(m_info.m_nBlockSize));
@@ -1213,8 +1217,8 @@ OgdcBool OgdcDatasetRasterMdb::SaveInfo()
 		recordset.SetFieldValue (OGIRF_TOP,m_info.m_rcBounds.top);
 		recordset.SetFieldValue (OGIRF_RIGHT,m_info.m_rcBounds.right);
 		recordset.SetFieldValue (OGIRF_BOTTOM,m_info.m_rcBounds.bottom);
-		recordset.SetFieldValue (OGIRF_MAXZ, m_info.m_dMaxZ);
-		recordset.SetFieldValue (OGIRF_MINZ, m_info.m_dMinZ);
+		recordset.SetFieldValue (OGIRF_MAXZ, m_info.m_arrBandInfo[0].m_dMaxZ);
+		recordset.SetFieldValue (OGIRF_MINZ, m_info.m_arrBandInfo[0].m_dMinZ);
 		recordset.Update ();
 		recordset.Close();
 	}
@@ -1238,8 +1242,7 @@ OgdcBool OgdcDatasetRasterMdb::RefreshInfo()
 	}
 	CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
 	OgdcString strSQL;
-	strSQL.Format(OGDCPCTSTR("SELECT * FROM OGImgRegister "
-		"WHERE OGDatasetID = %d"), m_nID);
+	strSQL.Format(_U("SELECT * FROM OGImgRegister WHERE OGDatasetID = %d"), m_nID);
 	CDaoTableDef tableDef(&m_pDataSource->m_daoDatabase);
 	COleVariant varValue;
 	try
@@ -1262,9 +1265,9 @@ OgdcBool OgdcDatasetRasterMdb::RefreshInfo()
 		recordset.GetFieldValue(OGIRF_HEIGHT,varValue);
 		this->m_info.m_nHeight = varValue.lVal;
 		recordset.GetFieldValue(OGIRF_PIXELFORMAT,varValue);
-		this->m_info.m_nWidthBytes  =  (this->m_info.m_nWidth 
+		this->m_info.m_arrBandInfo[0].m_nWidthBytes  =  (this->m_info.m_nWidth 
 			* OgdcInt(varValue.lVal) + 31) / 32 * 4 ;
-		this->m_info.m_nPixelFormat = (PixelFormat)varValue.lVal;
+		this->m_info.m_arrBandInfo[0].m_nPixelFormat = (PixelFormat)varValue.lVal;
 		recordset.GetFieldValue(OGIRF_EBLOCKSIZE,varValue);
 		this->m_info.m_nColBlocks  =  (OgdcInt)ceil(
 			double(this->m_info.m_nWidth) / double(varValue.lVal));
@@ -1291,48 +1294,6 @@ OgdcBool OgdcDatasetRasterMdb::IsModified() const
 void OgdcDatasetRasterMdb::SetModifiedFlag( OgdcBool bModified /*= TRUE*/ )
 {
 	m_bModified = bModified;
-}
-
-void OgdcDatasetRasterMdb::XYToImg( const OgdcRect2D& rectXY,OgdcRect& rectImg )
-{
-	m_rcViewGeoRef = m_info.m_rcBounds;
-	//分辨率
-	//水平方向地理坐标与影像映射比例.
-	m_imgRatio.cx = (m_rcViewGeoRef.Width()) / (OgdcDouble)GetWidth();	
-	//垂直方向地理坐标与影像映射比例.
-	m_imgRatio.cy = (m_rcViewGeoRef.Height()) / (OgdcDouble)GetHeight(); 
-
-	//地理坐标转化成像素坐标
-	rectImg.left =	(OgdcInt)floor(( rectXY.left - m_rcViewGeoRef.left ) 
-		/ m_imgRatio.cx);
-	rectImg.right = (OgdcInt)ceil(( rectXY.right - m_rcViewGeoRef.left ) 
-		/ m_imgRatio.cx);
-	//翻转垂直朝向.
-	rectImg.top	= (OgdcInt)floor(GetHeight() 
-		- (rectXY.top - m_rcViewGeoRef.bottom) / m_imgRatio.cy);	
-	//翻转垂直朝向.
-	rectImg.bottom = (OgdcInt)ceil(GetHeight() 
-		- (rectXY.bottom - m_rcViewGeoRef.bottom) / m_imgRatio.cy);	
-}
-
-void OgdcDatasetRasterMdb::ImgToXY( const OgdcRect& rectImg,OgdcRect2D& rectXY )
-{
-	m_rcViewGeoRef = m_info.m_rcBounds;
-	//分辨率
-	//水平方向地理坐标与影像映射比例.
-	m_imgRatio.cx = (m_rcViewGeoRef.Width()) / (OgdcDouble)GetWidth();	
-	//垂直方向地理坐标与影像映射比例.
-	m_imgRatio.cy = (m_rcViewGeoRef.Height()) / (OgdcDouble)GetHeight(); 
-
-	//像素坐标转化成地理坐标	
-	rectXY.left = (rectImg.left * m_imgRatio.cx + m_rcViewGeoRef.left);
-	rectXY.right = (rectImg.right * m_imgRatio.cx + m_rcViewGeoRef.left) ;
-	//翻转垂直朝向.
-	rectXY.top =  ((GetHeight() - rectImg.top) * m_imgRatio.cy 
-		+ m_rcViewGeoRef.bottom);
-	//翻转垂直朝向.
-	rectXY.bottom = ((GetHeight() - rectImg.bottom) * m_imgRatio.cy 
-		+ m_rcViewGeoRef.bottom);	
 }
 
 OgdcDatasetRasterMdb * OgdcDatasetRasterMdb::GetPyramidTier( OgdcInt nImgWidth, OgdcInt nDeviceWidth )
@@ -1368,9 +1329,9 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
 	
 	OgdcDatasetRasterMdb *pDatasetRaster = new OgdcDatasetRasterMdb(this->m_pDataSource);
 	OgdcString strName;
-	strName.Format("%sTier%d", OGDCPCTSTR(m_info.m_strName), nLevel); 
+	strName.Format(_U("%sTier%d"), m_info.m_strName.Cstr(), nLevel); 
 	//调色板,如果是黑白，默认加上调色板
-	if (rInfo.m_nPixelFormat== IPF_MONO)
+	if (rInfo.m_arrBandInfo[0].m_nPixelFormat== IPF_MONO)
 	{
 		PALETTEENTRY paletteentry;
 		paletteentry.peRed = 0;
@@ -1390,13 +1351,13 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
 	CDaoTableDef rasterTable(&m_pDataSource->m_daoDatabase);	
 	OgdcFieldInfos fieldInfos;
 
-	fieldInfos.AddField(OGDCPCTSTR("OGRow"), OgdcFieldInfo::INT32,
+	fieldInfos.AddField(_U("OGRow"), OgdcFieldInfo::INT32,
 		sizeof(OgdcLong), 0, FALSE, FALSE);
-	fieldInfos.AddField(OGDCPCTSTR("OGColumn"), OgdcFieldInfo::INT32,
+	fieldInfos.AddField(_U("OGColumn"), OgdcFieldInfo::INT32,
 		sizeof(OgdcLong), 0, FALSE, FALSE);
-	fieldInfos.AddField(OGDCPCTSTR("OGSize"), OgdcFieldInfo::INT32,
+	fieldInfos.AddField(_U("OGSize"), OgdcFieldInfo::INT32,
 		sizeof(OgdcLong), 0, FALSE, FALSE);
-	fieldInfos.AddField(OGDCPCTSTR("OGRaster"), 
+	fieldInfos.AddField(_U("OGRaster"), 
 		OgdcFieldInfo::LongBinary,0 , 0, FALSE, FALSE);
 
 	OgdcLong nFields = fieldInfos.GetSize();
@@ -1429,7 +1390,7 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
 	//下面要准备向注册表中写入信息
 	OgdcInt m_blockSizes;
  	//PixelFormat是关键
- 	switch (rInfo.m_nPixelFormat)
+ 	switch (rInfo.m_arrBandInfo[0].m_nPixelFormat)
  	{
  	case IPF_MONO ://1位,单色z
  		m_blockSizes = rInfo.m_nBlockSize * rInfo.m_nBlockSize / 8;
@@ -1468,7 +1429,7 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
 	CDaoRecordset recordset(&m_pDataSource->m_daoDatabase);
 	COleVariant lRecordMaxId;
 	CString strSQL;
-	strSQL.Format (OGDCPCTSTR("SELECT MAX(OGDatasetID) FROM OGImgRegister"));
+	strSQL.Format (_U("SELECT MAX(OGDatasetID) FROM OGImgRegister"));
 	try
 	{
 		recordset.Open (dbOpenSnapshot,strSQL);
@@ -1495,26 +1456,26 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
 	CDaoTableDef table(&m_pDataSource->m_daoDatabase);
 	try
 	{
-		table.Open(OGDCPCTSTR(OG_IMGREGISTER_TABLE));
+		table.Open(OG_IMGREGISTER_TABLE);
 		recordset.Open(&table);
  		recordset.AddNew ();
 
  		recordset.SetFieldValue (OGRF_ID,long(lMaxID));
  		recordset.SetFieldValue (OGRF_DATASET_NAME, COleVariant(strName, VT_BSTRT));
  		recordset.SetFieldValue (OGRF_DATASET_TYPE, long(rInfo.m_nType));
- 		recordset.SetFieldValue (OGIRF_PIXELFORMAT, long(rInfo.m_nPixelFormat));
+ 		recordset.SetFieldValue (OGIRF_PIXELFORMAT, long(rInfo.m_arrBandInfo[0].m_nPixelFormat));
  		recordset.SetFieldValue (OGIRF_WIDTH, long(rInfo.m_nWidth));	
  		recordset.SetFieldValue (OGIRF_HEIGHT, long(rInfo.m_nHeight));
  		recordset.SetFieldValue (OGIRF_EBLOCKSIZE, long(rInfo.m_nBlockSize));
-		recordset.SetFieldValue (OGIRF_PYRAMID, OGDCPCTSTR(rInfo.m_strName));
+		recordset.SetFieldValue (OGIRF_PYRAMID, rInfo.m_strName);
 		recordset.SetFieldValue (OGIRF_PYRAMIDLEVEL, (long)nLevel);
 		recordset.SetFieldValue (OGIRF_BLOCKSIZES, long(m_blockSizes));
 		recordset.SetFieldValue (OGIRF_LEFT, rInfo.m_rcBounds.left);
 		recordset.SetFieldValue (OGIRF_TOP, rInfo.m_rcBounds.top);
 		recordset.SetFieldValue (OGIRF_RIGHT, rInfo.m_rcBounds.right);
 		recordset.SetFieldValue (OGIRF_BOTTOM, rInfo.m_rcBounds.bottom);
-		recordset.SetFieldValue (OGIRF_MAXZ, this->m_info.m_dMaxZ);
-		recordset.SetFieldValue (OGIRF_MINZ, this->m_info.m_dMinZ);
+		recordset.SetFieldValue (OGIRF_MAXZ, this->m_info.m_arrBandInfo[0].m_dMaxZ);
+		recordset.SetFieldValue (OGIRF_MINZ, this->m_info.m_arrBandInfo[0].m_dMinZ);
 
 		recordset.Update ();
 		recordset.Close();
@@ -1543,7 +1504,7 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
  		lHeightRemain = rInfo.m_nBlockSize;
  	}
  	
- 	strSQL.Format( "SELECT * FROM [%s]", strName.Cstr());
+ 	strSQL.Format(_U( "SELECT * FROM [%s]"), strName.Cstr());
 	CDaoRecordset newRecord(&m_pDataSource->m_daoDatabase);
  	try
  	{
@@ -1584,12 +1545,12 @@ OgdcDatasetRasterMdb* OgdcDatasetRasterMdb::CreateDatasetPyramid( OgdcDatasetRas
 OgdcBool OgdcDatasetRasterMdb::SetGridColorTable( OgdcColorTable* pColorset )
 {
 
-	if (m_info.m_dMinZ == 0 && m_info.m_dMaxZ == 0)
+	if (m_info.m_arrBandInfo[0].m_dMinZ == 0 && m_info.m_arrBandInfo[0].m_dMaxZ == 0)
 	{		
-		if (pColorset->GetCeiling() != m_info.m_dMaxZ || pColorset->GetFloor() != m_info.m_dMinZ)
+		if (pColorset->GetCeiling() != m_info.m_arrBandInfo[0].m_dMaxZ || pColorset->GetFloor() != m_info.m_arrBandInfo[0].m_dMinZ)
 		{
-			m_info.m_dMinZ = pColorset->GetFloor();
-			m_info.m_dMaxZ = pColorset->GetCeiling();
+			m_info.m_arrBandInfo[0].m_dMinZ = pColorset->GetFloor();
+			m_info.m_arrBandInfo[0].m_dMaxZ = pColorset->GetCeiling();
 			SetModifiedFlag(TRUE);
 		}
 	}
@@ -1597,9 +1558,9 @@ OgdcBool OgdcDatasetRasterMdb::SetGridColorTable( OgdcColorTable* pColorset )
 	{
 		m_colorTable.CreateDefault();	
 
-		m_colorTable.SetCeiling(m_info.m_dMaxZ);
-		m_colorTable.SetWaterLevel(m_info.m_dMinZ);
-		m_colorTable.SetFloor(m_info.m_dMinZ);			
+		m_colorTable.SetCeiling(m_info.m_arrBandInfo[0].m_dMaxZ);
+		m_colorTable.SetWaterLevel(m_info.m_arrBandInfo[0].m_dMinZ);
+		m_colorTable.SetFloor(m_info.m_arrBandInfo[0].m_dMinZ);			
 	}
 	
 	return TRUE;

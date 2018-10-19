@@ -65,7 +65,8 @@ public:
 	OgdcDouble m_dStandardParallel1;
 	//! \brief 第二标准纬线
 	OgdcDouble m_dStandardParallel2;	
-
+	//! \brief 纠正角
+	OgdcDouble m_dRectifiedAngle;
 };
 
 }
