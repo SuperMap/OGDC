@@ -759,9 +759,9 @@ UGbool IFCConvector::ParseFile(std::wstring filename)
 					CreateIfcInstanceProperties(m_ifcModel, &ifcPropSet, it->first,m_units);
 					m_ifcProperty[it->first] = ifcPropSet;
 
-					int_t entity = sdaiGetInstanceType(it->first);
-					int_t index = 0;
-					CreateObjProList(it->first,entity, index);
+					//int_t entity = sdaiGetInstanceType(it->first);
+					//int_t index = 0;
+					//CreateObjProList(it->first,entity, index);
 				}
 				it++;
 				i++;
@@ -826,17 +826,17 @@ UGbool IFCConvector::ExportUDB(UGString filename, UGString datasetName)
 
 	// ´´½¨ÊôÐÔ×Ö¶Î
 	UGFieldInfos fieldInfos;
-	std::set<UGString>::iterator it = m_objPropList.begin();
-	while (it != m_objPropList.end())
-	{
-		UGFieldInfo fieldInfo;
-		fieldInfo.m_strName = *it;
-		fieldInfo.m_nType = UGFieldInfo::Text;
-		fieldInfo.m_nSize = 256;
-		fieldInfos.Add(fieldInfo);
-
-		it++;
-	}
+	std::set<UGString>::iterator it;// = m_objPropList.begin();
+// 	while (it != m_objPropList.end())
+// 	{
+// 		UGFieldInfo fieldInfo;
+// 		fieldInfo.m_strName = *it;
+// 		fieldInfo.m_nType = UGFieldInfo::Text;
+// 		fieldInfo.m_nSize = 256;
+// 		fieldInfos.Add(fieldInfo);
+// 
+// 		it++;
+// 	}
 
 	it = m_propList.begin();
 	UGuint i = 1;
@@ -881,6 +881,7 @@ UGbool IFCConvector::ExportUDB(UGString filename, UGString datasetName)
 
 	OgdcQueryDef def;
 	def.m_nCursorType = OgdcQueryDef::OpenDynamic;
+	def.m_nOptions = OgdcQueryDef::Both;
 	OgdcRecordset* pModelRecordSet = pModelDataVector->Query(def);
 
 	IFCObjToGeoModel(pModelRecordSet);
@@ -1129,10 +1130,10 @@ void IFCConvector::IFCObjToGeoModel(OgdcRecordset* pRecordset)
 
 				pRecordset->AddNew(pModelPro);
 
-				int_t entity = sdaiGetInstanceType(it->first);
-				int_t index = 0;
-				CreateObjProList(it->first,entity, index,pRecordset);
-				IFCPropToFiled(pRecordset, m_ifcProperty[it->first]);
+ 				int_t entity = sdaiGetInstanceType(it->first);
+ 				int_t index = 0;
+ 				//CreateObjProList(it->first,entity, index,pRecordset);
+ 				IFCPropToFiled(pRecordset, m_ifcProperty[it->first]);
 				pRecordset->Update();
 
 				delete pModelNode;
@@ -3282,8 +3283,8 @@ OGDC::OgdcString IFCConvector::NestedPropertyValue(int_t ifcEntityInstance, wcha
 			_i64tow_s(lineNo, buff, 500, 10);
 #else
 			_itow_s(lineNo, buff, 10);
-#endif
-			rvalue += UGString(buff);
+#endif		
+			rvalue += UGString(buff);		
 		}
 		else {
 			//rValue += "?";
@@ -3302,6 +3303,7 @@ OGDC::OgdcString IFCConvector::NestedPropertyValue(int_t ifcEntityInstance, wcha
 #else
 		_itow_s(integer, buff, 10);
 #endif
+
 		rvalue += UGString(buff);
 		break;
 	case  sdaiLOGICAL:
