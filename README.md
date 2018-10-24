@@ -14,7 +14,10 @@ OGDC 标准接口中提供了统一的接口对空间数据库进行操作。目
 		Geometry3D 包含OGDC中使用的模型对象的头文件；
 		GeometryCAD 包含OGDC中使用的清华山维对象的头文件；
 （4）SampleData ：范例数据。
-（5）Samples ：放置了OGDC的范例程序，包括一个应用层范例程序Viewer和一个Provider层示范程序 OgdcProviderMDB。
+（5）Samples ：放置了OGDC的范例程序，其中：
+		应用层范例程序Viewer：二维点线面文本，三维点线面，清华山维点线面文本的显示。
+		应用层范例程序IFCTools：IFC数据通过OGDC接口写入SuperMap的UDB数据源。
+		Provider层示范程序 OgdcProviderMDB：通过OGDC接口实现的MDB数据源。
 （6）license.txt ：最终用户许可协议 。
 
 更多信息参考 http://www.gisforum.net/bbs/index.asp?boardid=118
