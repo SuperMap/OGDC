@@ -38,7 +38,7 @@ public:
 	//! \brief 用文本内容字符串进行构造
 	//! \param strText [in] 文本内容字符串。
 	//! \param dAngle [in] 旋转角度,默认为0
-	GEOMETRY_APIF UGSubText(const UGString& strText, UGdouble dAngle=0);
+	GEOMETRY_APIF UGSubText(const UGString& strText, UGdouble dAngle=0, const UGString& strDynamicText = _U(""));
 	
 	//! \brief 得到旋转角度。
 	//! \return 返回旋转角度。
@@ -59,6 +59,18 @@ public:
 	//! \brief 赋值函数。
 	//! \param subText [in] 已有的文本子对象。
 	GEOMETRY_APIF void operator=(const UGSubText& subText);
+
+	//! \brief 得到动态文本标签内容。
+	//! \return 返回文本内容。
+	GEOMETRY_APIF UGString GetDynamicText() const;	
+
+	//! \brief 设置动态文本标签内容。
+	//! \param strText [in] 文本内容。
+	GEOMETRY_APIF void SetDynamicText(const UGString& strText);
+
+	//! \brief 获取文本类型。
+	//! \return 返回文本类型。
+	GEOMETRY_APIF UGint GetSign() const;
 	
 private:
 	// modified by zengzm 2007-4-27 
@@ -72,6 +84,11 @@ private:
 
 	//! \brief 文本内容字符串
 	UGString m_strText;
+
+	UGString m_strDynamicText;
+
+	//! \brief 文本类型标示：0表示普通文本，2019表示动态文本
+	UGint m_nSign;
 };
 
 

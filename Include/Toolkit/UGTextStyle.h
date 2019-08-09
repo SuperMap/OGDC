@@ -240,6 +240,10 @@ public:
 	//! 目前仅UGMap的m_showTimeTextStyle使用，其他慎用
 	void SetDefault();
 
+	//! \brief 获取字体是否向左倾斜
+	UGbool IsLeftItalic() const;
+	void SetLeftItalic(UGbool isLeftItalic);
+
 	// 内部给标签绘制背景时使用的，不做任何FromXML和ToXML，不要用来做其他用途 by gouyu 2014-8-18
 public:
 	UGint		m_backMode;				// 标签背景样式，目前只支持矩形和圆角矩形，且纯色的背景

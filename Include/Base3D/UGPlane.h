@@ -80,13 +80,22 @@ public:
 	void Translate(const UGdouble& dOffset);
 
 	//! \brief 计算由空间一点到面的平移向量
-	UGVector3d CalculateOffsetVector(const UGVector3d& vPt) const;
+	UGVector3d CalcOffsetVector(const UGVector3d& vPnt) const;
 
 	//! \brief 计算由空间一点到面上的垂直投影点
-	UGVector3d CalculateProjectPoint(const UGVector3d& vPt) const;
+	UGVector3d CalcPrjPnt(const UGVector3d& vPt) const;
 
 	//! \brief 判断空间点是否在该平面上
 	UGbool PtInPlane(const UGVector3d& vPt) const;
+
+	//! \brief 判断平面与线段是否相交
+	UGbool Intersect(const UGPoint3D& pntStart, const UGPoint3D& pntEnd, UGPoint3D& pntIntersect);
+
+	//! \brief 判断平面与直线是否相交
+	UGbool Intersect(const UGVector3d& vTangent, const UGPoint3D& pntThru, UGPoint3D& pntIntersect);
+
+	//! \brief 矩阵变换。
+	void Transform(const UGMatrix4d& mTrans);
 
 	//! \brief 获取一般式4参数
 	//! \return 返回的4参数是否有效
@@ -118,9 +127,17 @@ public:
 	//! \brief 设置面距离原点的距离。
 	void SetPlaneDistance(UGdouble dist);
 
+public:
 	//! \brief 根据三个点构造平面。
 	void Redefine(const UGVector3d& rkPoint0, const UGVector3d& rkPoint1, const UGVector3d& rkPoint2);
 
+	//! \brief 点法式。
+	void Redefine(const UGVector3d& vNormal, const UGVector3d& vPnt);
+
+	//! \brief 一般式。
+	void Redefine(const UGdouble& dA, const UGdouble& dB, const UGdouble& dC, const UGdouble& dD);
+
+public:
 	//! \从XML字符串读取参数设置
 	//! \param strXML XML字符串  [in]
 	//! \return 返回是否成功
@@ -130,8 +147,8 @@ public:
 	//! \param strXML XML字符串  [in]
 	//! \return 返回是否成功
 	UGbool ToXML(UGString& strXML);
-protected:
 
+protected:
 	//! \brief 成员面的法向量
 	UGVector3d m_vNormal;
 

@@ -26,10 +26,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "Base3D/UGReindexer.h"
+#include "Base3D/UGGrid.h"
 #include "Base3D/UGBoundingBox.h"
 #include "Toolkit/UGReferenced.h"
 #include "Toolkit/UGRefPtr.h"
+#include "Toolkit/UGSingleton.h"
 #include "Base3D/UGPolysDefine.h"
 
 namespace UGC
@@ -63,15 +64,15 @@ namespace UGC
 	//! \brief 索引数组。
 	typedef UGuint UGPolyIndex;
 	typedef std::vector<UGPolyIndex> UGPolyIndices;
-	typedef std::vector<UGPolyIndices> UGPolysIndices;
+	typedef std::vector<UGPolyIndices> UGPolyFacets;
 
 	//! \brief 顶点数组。
-	typedef UGVector3d UGPolysPoint;
-	typedef std::vector<UGPolysPoint> UGPolysPoints;
+	typedef UGVector3d UGPolyVertex;
+	typedef std::vector<UGPolyVertex> UGPolyVertices;
 
 	//! \brief 三维点在Polys结构中的位置信息。
-	typedef std::vector<UGPosition2> UGPolysPointPosition;
-	typedef std::vector<UGPolysPointPosition> UGPolysPointPositions;
+	typedef std::vector<UGPosition2> UGPolyVertexPosition;
+	typedef std::vector<UGPolyVertexPosition> UGPolyVertexPositions;
 
 	//! \brief 数据包的智能指针。
 	class UGPolysDataPackage;
@@ -125,29 +126,29 @@ namespace UGC
 
 		//! \brief 顶点数据。
 	public:
-		//! \brief 获取索引数据(只读)。
-		const UGPolysIndices& GetIds() const;
+		//! \brief 获取面索引数据(只读)。
+		const UGPolyFacets& GetFacets() const;
 
 		//! \brief 获取顶点数据(只读)。
-		const UGPolysPoints& GetPts() const;
+		const UGPolyVertices& GetPts() const;
 
 		//! \brief 获取顶点在Polys的位置信息(只读)。
-		const UGPolysPointPositions& GetPtPositions() const;
+		const UGPolyVertexPositions& GetPtPositions() const;
 
 		//! \brief 获取顶点(只读)。
-		const UGVector3d& GetPt(UGuint id) const;
+		const UGPolyVertex& GetPt(UGPolyIndex id) const;
 
 		//! \brief 获取顶点(导致多面体数据无效)。
-		UGVector3d& GetPtOfMutability(UGuint id);
+		UGPolyVertex& GetPtOfMutability(UGPolyIndex id);
 
-		//! \brief 索引数量。
-		UGuint GetNumIds(UGuint iPolyId) const;
+		//! \brief 面索引数量。
+		UGuint GetNumFacetIds(UGuint iFacetId) const;
 
 		//! \brief 顶点数量。
 		UGuint GetNumPts() const;
 
 		//! \brief 数据包索引总数。
-		UGuint GetNumPolysIds() const;
+		UGuint GetNumFacetsIds() const;
 		
 		//! \brief 设置/获取顶点数据的无效状态。
 		void SetDataPackageDirty(UGbool bDirty);
@@ -177,15 +178,62 @@ namespace UGC
 		//! \brief 获取纹理坐标
 		const UGUVWs& GetTexCoords(const UGPosition2& pos) const;
 
-		//! \brief 获取拓展位。
-		const std::vector<UGdouble>& GetExt(const UGPosition2& pos) const;
+		//! \brief 获取浮点型拓展位。
+		const std::vector<UGdouble>& GetRealExt(const UGPosition2& pos) const;
+
+		//! \brief 获取整数型拓展位。
+		const std::vector<UGuint>& GetIntegerExt(const UGPosition2& pos) const;
 
 
 		//! \brief 顶点数据处理。
 	public:
+		//! \brief 添加面。
+		void BeginSurface();
+		void EndSurface();
+
+		//! \brief 添加顶点。
+		void AddVertex(const UGPolyVertex& v);
+		void AddVertices(const UGPolyVertices& arrPts);
+
+		//! \brief 是否错误。
+		UGbool IsError() const;
+		void RollBack();
+
+		//! \brief 添加面。
+		void BeginFacet();
+		void EndFacet();
+
+		//! \brief 添加面内点索引。
+		void AddFacetId(UGPolyIndex id);
+		void AddFacet(const UGPolyIndices& arrIds);
+		void AddFacets(const UGPolyFacets& arrFacets);
+
+		//! \brief 获取纹理坐标
+		UGUVWs& GetTexCoords(const UGPosition2& pos);
+
+		//! \brief 获取浮点型拓展位。
+		std::vector<UGdouble>& GetRealExt(const UGPosition2& pos);
+
+		//! \brief 获取整数型拓展位。
+		std::vector<UGuint>& GetIntegerExt(const UGPosition2& pos);
+
+		//! \brief 获取点。
+		UGPolyPoint& GetPt(const UGPosition2& pos);
+
 		//! \brief 矩阵变换。
 		//! \param m4 [in] 变换矩阵。
 		void MatrixTransform(const UGMatrix4d& m4);
+
+		//! \brief 顶点索引模式。
+		UGbool IsOrient() const { return m_bOrientDataPackage; }
+		void SetOrient(UGbool bOrient) { m_bOrientDataPackage = bOrient; }
+
+		//! \brief 添加数据。
+		void AppendSurface(const UGPolyVertices& arrPts, const UGPolyFacets& arrFacets, const UGPolys& arrPolys = UGPolys());
+
+	public:
+		//! \brief 追加数据。
+		void Append(const UGPolysDataPackage* pPackage);
 
 
 	private:
@@ -211,19 +259,22 @@ namespace UGC
 		//! \brief 顶点数据包是否无效。
 		mutable UGbool m_bDataPackageIsDirty;
 
+		//! \brief 顶点包是否已经校正。
+		UGbool m_bOrientDataPackage;
+
 		//! \brief 多面体数据包。
 		mutable UGPolys m_polys;
 
 		//! \brief 顶点数据包。
-		mutable UGPolysIndices m_ids;
-		mutable UGPolysPoints m_pts;
-		mutable UGPolysPointPositions m_pps;
+		mutable UGPolyFacets m_facets;
+		mutable UGPolyVertices m_pts;
+		mutable UGPolyVertexPositions m_pvs;
 
 		//! \brief 数据包包围盒。
 		mutable UGBoundingBox m_boundingbox;
 
 		//! \brief 质心。
-		mutable UGVector3d m_baryCenter;
+		mutable UGVector3d m_vBaryCenter;
 	};
 
 	//! \brief 顶点结构。
@@ -231,7 +282,7 @@ namespace UGC
 	struct UGPolyPoint
 	{
 		//! \brief 顶点数组。
-		UGVector3d vertex;
+		UGPolyVertex vertex;
 
 		//! \brief 纹理坐标。
 		UGUVWs uvws;
@@ -239,11 +290,11 @@ namespace UGC
 		//! \brief 顶点属性。
 		UGAttribute iAttribute;
 
-		//! \brief 扩维数据(x, y, z), w0, w1, w2 ...
-		std::vector<UGdouble> ext;
+		//! \brief 浮点型拓展位，如拓展(x, y, z), w0, w1, w2 ...
+		std::vector<UGdouble> arrRealExts;
 
-		//! \brief 顶点颜色c0, c1, c2 ...
-		std::vector<UGuint> color;
+		//! \brief 整数型拓展位，如拓展顶点颜色c0, c1, c2 ...
+		std::vector<UGuint> arrIntExts;
 
 		//! \brief 构造函数。
 		UGPolyPoint() {}
@@ -267,8 +318,8 @@ namespace UGC
 			vertex	= pt.vertex;
 			uvws		= pt.uvws;
 			iAttribute = pt.iAttribute;
-			ext		= pt.ext;
-			color	= pt.color;
+			arrRealExts	= pt.arrRealExts;
+			arrIntExts	= pt.arrIntExts;
 		}
 
 		//! \brief 析构函数。
@@ -299,8 +350,8 @@ namespace UGC
 			vertex	= pt.vertex;
 			uvws		= pt.uvws;
 			iAttribute = pt.iAttribute;
-			ext		= pt.ext;
-			color	= pt.color;
+			arrRealExts	= pt.arrRealExts;
+			arrIntExts	= pt.arrIntExts;
 			return *this;
 		}
 
@@ -309,16 +360,144 @@ namespace UGC
 		UGVector3d GetVector2d() const { return UGVector3d(vertex.x, vertex.y, 0); }
 		UGPoint2D GetPoint2D() const { return UGPoint2D(vertex.x, vertex.y); }
 		UGPoint3D GetPoint3D() const { return UGPoint3D(vertex.x, vertex.y, vertex.z); }
+	};
 
-		UGbool IsEqual2D(const UGPolyPoint& pt) const { return GetVector2d() == pt.GetVector2d(); }
-		UGbool IsEqual2D(const UGVector3d& v3) const { return GetVector2d() == UGVector3d(v3.x, v3.y, 0.0); }
-		UGbool IsEqual2D(const UGPoint2D& p2) const { return GetPoint2D() == p2; }
-		UGbool IsEqual2D(const UGPoint3D& p3) const { return GetPoint2D() == UGPoint2D(p3.x, p3.y); }
+	// 曲面构建参数类。
+	struct UGSurfaceMeshParam : public UGOperationParam
+	{
+		//! \brief 离散采样点阵。
+		std::vector<UGPolyPoint> arrDotMatrix;
 
-		UGbool IsEqual3D(const UGPolyPoint& pt) const { return GetVector3d() == pt.GetVector3d(); }
-		UGbool IsEqual3D(const UGVector3d& v3) const { return GetVector3d() == v3; }
-		UGbool IsEqual3D(const UGPoint2D& p2) const { return GetPoint3D() == UGPoint3D(p2.x, p2.y, 0.0); }
-		UGbool IsEqual3D(const UGPoint3D& p3) const { return GetPoint3D() == p3; }
+		//! \brief 是否以UV坐标作为极坐标参数。
+		UGbool bPolarParametric;
+
+		UGSurfaceMeshParam() :
+			bPolarParametric(TRUE) {}
+
+		virtual UGBuilderOperation GetType() const { return builder; }
+	};
+
+	//! \brief 数据流。
+	template<class DATA_TYPE>
+	class UGStreamBuffer : public UGReferenced
+	{
+		//! \brief 构造函数、析构函数。
+	public:
+		UGStreamBuffer() {}
+		virtual ~UGStreamBuffer() {}
+
+	public:
+		//! \brief 数据类型。
+		typedef DATA_TYPE Type;
+
+	public:
+		//! \brief 数据缓存。
+		const Type& GetBuffer() const { return m_buffer; }
+		Type& GetBuffer() { return m_buffer; }
+		void SetBuffer(const Type& buffer) { m_buffer = buffer; }
+
+	protected:
+		//! \brief 数据缓存。
+		Type m_buffer;
+	};
+
+	template<typename MEMBER_TYPE>
+	class UGStreamArrayBuffer : public UGStreamBuffer<std::vector<MEMBER_TYPE> >
+	{
+	public:
+		UGuint GetSize() const { return this->m_buffer.size(); }
+		void SetSize(UGuint nSize) { this->m_buffer.resize(nSize); } 
+	};
+
+
+	template<typename MEMBER_TYPE>
+	class UGSingletonInstanceRef
+	{
+	private:
+		MEMBER_TYPE* m_pValue;
+		UGuint m_nRefCount;
+
+	public:
+		explicit UGSingletonInstanceRef(MEMBER_TYPE* pValue) : m_pValue(pValue), m_nRefCount(0) {}
+		~UGSingletonInstanceRef()
+		{
+			if (m_pValue != NULL)
+			{
+				delete m_pValue; m_pValue = NULL;
+			}
+		}
+
+	public:
+		MEMBER_TYPE* GetValue() const { return m_pValue; }
+
+		void AddRef() { ++m_nRefCount; }
+		void DecRef() { --m_nRefCount; }
+		UGuint GetRefCount() const { return m_nRefCount; }
+	};
+
+	template<typename Key, class Value>
+	class UGSingletonInstanceCollection
+	{
+	public:
+		typedef UGSingletonInstanceRef<Value> Instance;
+		typedef std::map<Key, Instance*> Collection;
+		typedef typename Collection::iterator CollectionIter;
+
+		UGSingletonInstanceCollection() : m_mutex(TRUE) {}
+		~UGSingletonInstanceCollection()
+		{
+			UGAutoLock locker(m_mutex);
+			for (CollectionIter iter = m_mapInstances.begin(); iter != m_mapInstances.end(); ++iter)
+			{
+				Instance* pInstance = iter->second;
+				if (pInstance != NULL)
+				{
+					delete pInstance; pInstance = NULL;
+				}
+			}
+			m_mapInstances.clear();
+		}
+
+		Value* GetValue(const Key& key)
+		{
+			Value* pValue = NULL;
+			Instance* pInstance = NULL;
+			UGAutoLock locker(m_mutex);
+			CollectionIter iter = m_mapInstances.find(key);	
+			if (iter != m_mapInstances.end() && iter->second != NULL)
+			{	
+				pInstance = iter->second;
+				pValue = pInstance->GetValue();
+			}
+			else
+			{
+				pValue = new Value();
+				pInstance = new Instance(pValue);
+				m_mapInstances[key] = pInstance;
+			}
+			pInstance->AddRef();
+			return pValue;
+		}
+
+		void RemoveValue(const Key& key)
+		{
+			UGAutoLock locker(m_mutex);
+			CollectionIter iter = m_mapInstances.find(key);	
+			if (iter != m_mapInstances.end() && iter->second != NULL)
+			{
+				Instance* pInstance = iter->second;
+				pInstance->DecRef();
+				if (pInstance->GetRefCount() == 0)
+				{
+					delete pInstance; pInstance = NULL;
+					m_mapInstances.erase(key);
+				}
+			}
+		}
+
+	private:
+		Collection m_mapInstances;
+		UGMutex m_mutex;
 	};
 }
 

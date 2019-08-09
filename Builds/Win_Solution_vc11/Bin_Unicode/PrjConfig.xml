@@ -20231,7 +20231,7 @@
 			<sml:Units>METER</sml:Units>
 			<sml:DistUnits>METER</sml:DistUnits>
 			<sml:GeoCoordType>4314</sml:GeoCoordType>
-			<sml:ProjectionType>43005</sml:ProjectionType>
+			<sml:ProjectionType>43006</sml:ProjectionType>
 			<sml:Parameters>
 				<sml:FalseEasting>1500000</sml:FalseEasting>
 				<sml:FalseNorthing>0</sml:FalseNorthing>
@@ -20252,7 +20252,7 @@
 			<sml:Units>METER</sml:Units>
 			<sml:DistUnits>METER</sml:DistUnits>
 			<sml:GeoCoordType>4314</sml:GeoCoordType>
-			<sml:ProjectionType>43005</sml:ProjectionType>
+			<sml:ProjectionType>43006</sml:ProjectionType>
 			<sml:Parameters>
 				<sml:FalseEasting>2500000</sml:FalseEasting>
 				<sml:FalseNorthing>0</sml:FalseNorthing>
@@ -20273,7 +20273,7 @@
 			<sml:Units>METER</sml:Units>
 			<sml:DistUnits>METER</sml:DistUnits>
 			<sml:GeoCoordType>4314</sml:GeoCoordType>
-			<sml:ProjectionType>43005</sml:ProjectionType>
+			<sml:ProjectionType>43006</sml:ProjectionType>
 			<sml:Parameters>
 				<sml:FalseEasting>3500000</sml:FalseEasting>
 				<sml:FalseNorthing>0</sml:FalseNorthing>
@@ -20294,7 +20294,7 @@
 			<sml:Units>METER</sml:Units>
 			<sml:DistUnits>METER</sml:DistUnits>
 			<sml:GeoCoordType>4314</sml:GeoCoordType>
-			<sml:ProjectionType>43005</sml:ProjectionType>
+			<sml:ProjectionType>43006</sml:ProjectionType>
 			<sml:Parameters>
 				<sml:FalseEasting>4500000</sml:FalseEasting>
 				<sml:FalseNorthing>0</sml:FalseNorthing>
@@ -20315,7 +20315,7 @@
 			<sml:Units>METER</sml:Units>
 			<sml:DistUnits>METER</sml:DistUnits>
 			<sml:GeoCoordType>4314</sml:GeoCoordType>
-			<sml:ProjectionType>43005</sml:ProjectionType>
+			<sml:ProjectionType>43006</sml:ProjectionType>
 			<sml:Parameters>
 				<sml:FalseEasting>5500000</sml:FalseEasting>
 				<sml:FalseNorthing>0</sml:FalseNorthing>

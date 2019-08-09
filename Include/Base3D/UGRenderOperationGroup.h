@@ -329,6 +329,9 @@ namespace UGC
 		//! \brief 移除所有Geometry
 		void RemoveAllGeometry();
 
+		//! \brief 移除指定Geometry
+		virtual void RemoveGeometry(UGString strName);
+
 		//! \brief 清空所有材质
 		void ClearMaterial3D() { m_mapMaterial3D.clear(); };
 
@@ -416,6 +419,9 @@ namespace UGC
 		//! \brief 获得子切片
 		std::vector<UGString>& GetFileNames();
 
+		//! \brief 获取子切片的包围球
+		std::map<UGString, UGBoundingSphere>& GetLODSphere();
+
 		//! \brief 切换范围模式
 		void SetRangeMode(UGRangeMode nMode) { m_nRangeMode = nMode; };
 
@@ -428,6 +434,9 @@ namespace UGC
 
 		//! \brief LOD切片名
 		std::vector<UGString> m_vecFileName;
+
+		//! \brief LOD切片包围盒
+		std::map<UGString, UGBoundingSphere> m_mapBoundingSphere;
 
 		//! \brief 切换范围模式
 		UGRangeMode m_nRangeMode;
@@ -468,6 +477,9 @@ namespace UGC
 		//! \param 替换的Geometry[in]
 		//! \param 是否删除原对象
 		void ReplaceGeometry(UGint nIndex, UGRenderOperationGeometry* pGeometry, UGbool bRelease = FALSE);
+
+		//! \brief 移除指定Geometry
+		virtual void RemoveGeometry(UGString strName);
 
 		//! \brief 清理Geometry
 		void Release();

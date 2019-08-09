@@ -234,7 +234,7 @@ public:
 	static UGint InvertMatrixd(const UGdouble m[16], UGdouble invOut[16]);
 
 	//! \brief 获取矩阵中的数据
-	void GetMatrixData(UGdouble data[4][4]);
+	void GetMatrixData(UGdouble data[4][4]) const;
 
 	//! \brief 获取矩阵的指针
 	UGdouble* GetPointer();

@@ -26,11 +26,105 @@
 #include "Base3D/UGColorValue3D.h"
 #include "UGTextureUnitState.h"
 #include "UGGpuProgram.h"
+#include "Base3D/UGVector3d.h"
 
 
 namespace UGC
 {
+	enum UGMaterialParamType
+	{
+		MAT_Unknown		  = 0,
+		//! \brief 金属粗糙度模型
+		MAT_PBRMetallicRough =	1,
+		//! \brief 镜面光高光模型
+		MAT_PBRSpecularGlossy = 2,
+	};
 
+	class BASE3D_API UGPBRParameter
+	{
+	public:
+		enum UGAlphaMode
+		{
+			PBRAM_UnKnown  = 0,
+			//! \brief 片元中alpha值输出为1.0,
+			PBRAM_OPAQUE	= 1,
+			//! \brief 片元进行alpha过滤
+			PBRAM_MASK	    = 2, 
+			//! \brief 片元的alpha值输出baseColor的alpha值
+			PBRAM_BLEND		= 3, 
+		};
+
+	public:
+		UGPBRParameter();
+		UGPBRParameter(const UGPBRParameter& other);
+		UGPBRParameter & operator=(const UGPBRParameter& other);
+		~UGPBRParameter();
+
+		//! \brief 材质类型
+		virtual UGMaterialParamType GetType() = 0;
+
+		static UGPBRParameter* CreateFrom(UGPBRParameter* pMaterial);
+
+	public:
+		//! \brief 控制自发光强度的因子
+		UGVector3d m_vec3EmissiveFactor;
+		//! \brief 自发光纹理 RGB纹理
+		UGString m_strEmissiveTexture;
+		//! \brief 法线纹理，物体表面的凹凸细节 float格式RGB纹理
+		UGString m_strNormalTexture;
+		//! \brief 遮挡图，用于物体表面凹凸性对光照的影响，比如缝隙处就暗 float灰度纹理
+		UGString m_strOcclusionTexture;
+		//! \brief 物体的基本颜色
+		UGVector4d m_vec4BaseColor;
+		//! \brief 物体基本颜色的纹理
+		UGString	m_strBaseColorTexture;
+		//! \brief UGAlphaMode
+		UGAlphaMode	m_AlphaMode;
+		//! \brief 当alphaMode为Mask时，着色器根据这个值和baseColor的Alpha值进行比较决定是否丢弃
+		UGfloat	 m_fAlphaCutoff;
+	};	
+
+	//! \brief 金属粗糙度模型的参数
+	class BASE3D_API UGPBRMetallicRough : public UGPBRParameter
+	{	
+	public:
+		UGPBRMetallicRough();
+		UGPBRMetallicRough(const UGPBRMetallicRough& other);
+		UGPBRMetallicRough & operator=(const UGPBRMetallicRough& other);
+		~UGPBRMetallicRough();
+
+		virtual UGMaterialParamType GetType() { return MAT_PBRMetallicRough;}
+	public:
+		//! \brief 金属度和粗糙性纹理,R通道存储金属度，G通道存储粗糙度
+		UGString m_strMetallicRoughnessTexture;
+		//! \brief 控制金属性强弱的因子
+		UGfloat m_fMetallicFactor;
+		//! \brief 控制粗糙性强弱的因子
+		UGfloat m_fRoughnessFactor;
+	};	
+
+	//! \brief 镜面光高光模型
+	class BASE3D_API UGPBRSpecularGlossy : public UGPBRParameter
+	{
+	public:
+		UGPBRSpecularGlossy();
+		UGPBRSpecularGlossy(const UGPBRSpecularGlossy& other);
+		UGPBRSpecularGlossy & operator=(const UGPBRSpecularGlossy& other);
+		~UGPBRSpecularGlossy();
+
+		virtual UGMaterialParamType GetType() { return MAT_PBRSpecularGlossy;}
+	public:
+		//! \brief 散射颜色
+		UGVector4d m_vec4DiffuseFactor;
+		//! \brief 镜面光颜色
+		UGVector3d m_vec3SpecularFactor;
+		//! \brief 高光强度
+		UGfloat m_fGlossinessFactor;
+		//! \brief 散射颜色纹理
+		UGString m_strDiffuseTexture;
+		//! \brief 镜面光高光强度纹理，RGB通道存镜面光颜色，A通道存高光强度
+		UGString m_strSpecularGlossinessTexture;
+	};	
 
 	//! \brief 封装的用于保存RO的渲染状态的结构体
 	class BASE3D_API UGPass  
@@ -38,7 +132,7 @@ namespace UGC
 		friend class UGRenderOperation3DOGRE;
 		friend class UGRenderOperationOverlayOGRE;
 		friend class UGGraphics3DOGRE;
-
+		friend class UGS3MBTools;
 	public:
 		UGPass();
 		UGPass(const UGPass& other);
@@ -457,6 +551,9 @@ namespace UGC
 		UGGpuProgramParametersSharedPtr GetShadowReceiverVertexParamPtr();
 		//这个Pass所使用的阴影接收片元着色器的参数
 		UGGpuProgramParametersSharedPtr GetShadowReceiverFragmentParamPtr();
+
+		//! \brief PBR材质
+		UGPBRParameter* m_pPRBMaterial;
 
 	private:
 		void _getBlendFlags(SceneBlendType type, SceneBlendFactor& source, SceneBlendFactor& dest);		

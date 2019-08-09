@@ -41,7 +41,7 @@
 <IsImageClearer>false</IsImageClearer>
 
 <!-- full screen anti-aliasing-->
-<IsSceneAntialias>true</IsSceneAntialias>
+<IsSceneAntialias>True</IsSceneAntialias>
 <SceneAntialiasValue>2</SceneAntialiasValue>
 
 <!--whether to support float texture-->
@@ -142,8 +142,6 @@
 
 <!-- SuperMap SDX+ for UDB Setting. Set "true" when create dataset raster to manage large number of blocks more efficiently, but may course unexpected errors in old versions.-->
 <UDBCreateRasterPro>false</UDBCreateRasterPro>
-
-<DTNameTableNameSame>false</DTNameTableNameSame>
 
 <!-- <OracleGeomStoreAsBlob>false</OracleGeomStoreAsBlob>-->
 
@@ -262,10 +260,23 @@
 <MapVectorTileGroupSize>4</MapVectorTileGroupSize>
   
  <!-- Use proj4 for prjcoord translate -->
-<IsTranslateUsePROJ4>false</IsTranslateUsePROJ4>
+<IsTranslateUsePROJ4>true</IsTranslateUsePROJ4>
 
  <!-- The count of threads in processing data, default is 4 -->
 <ProcessThreadsCount>4</ProcessThreadsCount>
+
+<!-- Drawing vector elements of map by other thread -->
+<MapThreadDrawingEnabled>true</MapThreadDrawingEnabled>
+
+<!-- Exclude overlapping small objects when drawing vector geometry -->
+<OverlapGeometryEnabled>false</OverlapGeometryEnabled>
+<!-- Multiple of resolution, [1,10] -->
+<OverlapGeometryThreshold>1.0</OverlapGeometryThreshold>
+<!-- mUltiple of pixel, [1,10] -->
+<OverlapGeometryPixel>1</OverlapGeometryPixel>
+
+<!-- render scene use render texture buffer-->
+<IsRenderSceneWithTextureBuffer>false</IsRenderSceneWithTextureBuffer>
 
 <!-- Wether RasterBinary Storage As Longraw,True yes,False No;Engine ugengtoolkit.cpp(1239)-->
 <!-- <OracleRasterStoreAslongraw>false</OracleRasterStoreAslongraw> -->
@@ -281,9 +292,6 @@
   
 <!-- Store Geometry as JsonXML in EngineMongo,True as JsonXML,False as Binary;EngineMongo 	ugdatasetvectormongo.cpp(130)-->
 <!-- <MongoGeoJSON>false</MongoGeoJSON> -->
-  
-<!-- When append recordset,set count of once commit,default,Tabular and point 1024,Others 128; EngineOracle	ugdatasetvectororc.cpp(4447) -->
-<!-- <EngineAppendOnceCount>false</EngineAppendOnceCount> -->
 
 <!-- Use by Compress of Zip,from 1 to 8,default 8-->
 <!-- Bigger means more memory but fater and higher compression ratio,Smaller means less memory but slowly and smaller compression ratio;Geometry ugdatacodec.cpp(670) -->

@@ -128,6 +128,9 @@ public:
 	//! \brief 包内所有骨架的包围盒，包含骨架的矩阵和包的矩阵
 	UGBoundingBox GetBoundingBox();
 
+	//! \brief 设置包围盒,包内所有骨架的包围盒，包含骨架的矩阵和包的矩阵
+	void SetBoundingBox(UGBoundingBox box);
+
 	//! \brief 单个骨架的包围盒
 	UGBoundingBox ComputeSkeletonBoundingBox(UGModelSkeletonPtr& pSkeleton);
 
@@ -138,7 +141,7 @@ public:
 	void SetPosition(UGMatrix4d mat);
 
 	//! \brief 获得位置
-	UGMatrix4d GetPosition() const ;
+	const UGMatrix4d& GetPosition() const ;
 
 	UGint GetShellDataSize();
 

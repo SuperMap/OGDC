@@ -188,10 +188,11 @@ struct UGReindexerTemplateCompareVec
 template<typename T>
 struct UGReindexerTemplateCompareVec1 : public UGReindexerTemplateCompareVec<T>
 {
+	typedef UGReindexerTemplateCompareVec1<T> Vec1;
 	UGReindexerTemplateCompareVec1() {}
 	UGReindexerTemplateCompareVec1(const T& _x) : x(_x) {}
-	virtual UGbool operator < (const UGReindexerTemplateCompareVec1<T>& other) const = 0;
-	virtual UGbool operator == (const UGReindexerTemplateCompareVec1<T>& other) const = 0;
+	virtual UGbool operator < (const Vec1& other) const = 0;
+	virtual UGbool operator == (const Vec1& other) const = 0;
 	virtual T operator [] (UGuint i) const
 	{
 		UGASSERT(i < 1);
@@ -243,10 +244,11 @@ struct UGReindexerTemplateCompareVec1D : public UGReindexerTemplateCompareVec1<T
 template<typename T>
 struct UGReindexerTemplateCompareVec2 : public UGReindexerTemplateCompareVec<T>
 {
+	typedef UGReindexerTemplateCompareVec2<T> Vec2;
 	UGReindexerTemplateCompareVec2() {}
 	UGReindexerTemplateCompareVec2(const T& _x, const T& _y) : x(_x), y(_y) {}
-	virtual UGbool operator < (const UGReindexerTemplateCompareVec2<T>& other) const = 0;
-	virtual UGbool operator == (const UGReindexerTemplateCompareVec2<T>& other) const = 0;
+	virtual UGbool operator < (const Vec2& other) const = 0;
+	virtual UGbool operator == (const Vec2& other) const = 0;
 	virtual T operator [] (UGuint i) const
 	{
 		UGASSERT(i < 2);
@@ -303,10 +305,11 @@ struct UGReindexerTemplateCompareVec2D : public UGReindexerTemplateCompareVec2<T
 template<typename T>
 struct UGReindexerTemplateCompareVec3 : public UGReindexerTemplateCompareVec<T>
 {
+	typedef UGReindexerTemplateCompareVec3<T> Vec3;
 	UGReindexerTemplateCompareVec3() {}
 	UGReindexerTemplateCompareVec3(const T& _x, const T& _y, const T& _z) : x(_x), y(_y), z(_z) {}
-	virtual UGbool operator < (const UGReindexerTemplateCompareVec3<T>& other) const = 0;
-	virtual UGbool operator == (const UGReindexerTemplateCompareVec3<T>& other) const = 0;
+	virtual UGbool operator < (const Vec3& other) const = 0;
+	virtual UGbool operator == (const Vec3& other) const = 0;
 	virtual T operator [] (UGuint i) const
 	{
 		UGASSERT(i < 3);
@@ -368,10 +371,11 @@ struct UGReindexerTemplateCompareVec3D : public UGReindexerTemplateCompareVec3<T
 template<typename T>
 struct UGReindexerTemplateCompareVec4 : public UGReindexerTemplateCompareVec<T>
 {
+	typedef UGReindexerTemplateCompareVec4<T> Vec4;
 	UGReindexerTemplateCompareVec4() {}
 	UGReindexerTemplateCompareVec4(const T& _x, const T& _y, const T& _z, const T& _w) : x(_x), y(_y), z(_z), w(_w) {}
-	virtual UGbool operator < (const UGReindexerTemplateCompareVec4<T>& other) const = 0;
-	virtual UGbool operator == (const UGReindexerTemplateCompareVec4<T>& other) const = 0;
+	virtual UGbool operator < (const Vec4& other) const = 0;
+	virtual UGbool operator == (const Vec4& other) const = 0;
 	virtual T operator [] (UGuint i) const
 	{
 		UGASSERT(i < 4);
@@ -556,6 +560,10 @@ class UGReindexerTemplate4D : public UGReindexerTemplate<CLASS_TYPE, UGReindexer
 {
 };
 
+//////////////////////////////////////////////////////////////////////////
+// The Sample Application
+
+//! \brief 重建索引器
 typedef UGReindexerTemplate1D<UGdouble> UGReindexer1d;
 typedef UGReindexerTemplate2D<UGVector3d, UGdouble> UGReindexer2d;
 typedef UGReindexerTemplate3D<UGVector3d, UGdouble> UGReindexer3d;
@@ -564,8 +572,45 @@ typedef UGReindexerTemplate4D<UGVector4d, UGdouble> UGReindexer4d;
 typedef UGReindexerTemplate2D<UGPoint2D, UGdouble> UGReindexerP2d;
 typedef UGReindexerTemplate3D<UGPoint3D, UGdouble> UGReindexerP3d;
 
-
+//! \brief 位置
 typedef UGReindexerTemplateCompareVec2N<UGuint> UGPosition2;
 typedef UGReindexerTemplateCompareVec3N<UGuint> UGPosition3;
+
+//! \brief 范围
+template<typename T>
+struct UGRange : public UGReindexerTemplateCompareVec2<T>
+{
+	UGRange() : UGReindexerTemplateCompareVec2<T>() {}
+	UGRange(const T& x, const T& y) : UGReindexerTemplateCompareVec2<T>(x, y) {}
+	virtual UGbool operator < (const UGReindexerTemplateCompareVec2<T>& other) const
+	{
+		return *this < other;
+	}
+	virtual UGbool operator == (const UGReindexerTemplateCompareVec2<T>& other) const
+	{
+		return *this == other;
+	}
+
+	const T& GetUpper() const { return this->y; }
+	const T& GetLower() const { return this->x; }
+
+	T GetRange() const { return GetUpper() - GetLower(); }
+
+	UGbool InRange(const T& value) const { return this->x <= value && value <= this->y; }
+
+	T Normalize(const T& value) const
+	{
+		const T& lower = GetLower();
+		const T& upper = GetUpper();
+		if (lower == upper)
+		{
+			return 0.5;
+		}
+		else
+		{
+			return (value - lower) / (upper - lower);
+		}
+	}
+};
 }
 #endif // !defined(AFX_UGREINDEXER_H__F49F1AC3_903C_4A44_9973_5C0374739A79__INCLUDED_)

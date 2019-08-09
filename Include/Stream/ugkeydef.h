@@ -7,6 +7,7 @@
 #define UG_MK_SHIFT            0x0004
 #define UG_MK_CONTROL          0x0008
 #define UG_MK_MBUTTON          0x0010
+#define UG_MK_ALT              0x0020
 
 
  /* Virtual Keys, Standard Set*/

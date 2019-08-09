@@ -146,6 +146,8 @@ public:
 		IST_WMS					= 2,
 		//! \brief WMTS图层
 		IST_WMTS				= 3,
+		//! \brief TMS图层
+		IST_TMS                 = 4,
 	};
     
 	//! \brief 插件类构造函数

@@ -169,6 +169,46 @@ public:
   };
 #endif
 
+//! \brief 自动锁。
+class UGAutoLock
+{
+public:
+	explicit UGAutoLock(UGMutex& locker) : m_locker(locker) { m_locker.lock(); }
+	virtual ~UGAutoLock() { m_locker.unlock(); }
+
+private:
+	UGMutex& m_locker;
+};
+
+//! \brief 读者操作锁。
+class UGReadLock
+{
+public:
+	explicit UGReadLock(UGReadWriteLock& locker) : m_locker(locker) { m_locker.readLock(); }
+	virtual ~UGReadLock() { m_locker.readUnlock(); }
+
+private:
+	UGReadLock(const UGReadLock&);
+	UGReadLock& operator= (const UGReadLock&);
+
+private:
+	UGReadWriteLock& m_locker;
+};
+
+//! \brief 作者操作锁。
+class UGWriteLock
+{
+public:
+	explicit UGWriteLock(UGReadWriteLock& locker) : m_locker(locker) { m_locker.writeLock(); }
+	virtual ~UGWriteLock() { m_locker.writeUnlock(); }
+
+private:
+	UGWriteLock(const UGWriteLock&);
+	UGWriteLock& operator= (const UGWriteLock&);
+
+private:
+	UGReadWriteLock& m_locker;
+};
 
 /**
 * A condition allows one or more threads to synchronize

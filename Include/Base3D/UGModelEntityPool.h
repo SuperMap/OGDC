@@ -283,17 +283,13 @@ public:
 	{
 		UGString strName;
 		std::map<UGString, std::vector<UGString> >::iterator it;
+		
 		for (it=mapEntityAtt.begin(); it != mapEntityAtt.end(); it++)
 		{
 			strName = it->first;
-			if(!m_bHash64)
-			{
-				m_vecHash.push_back(UGHashCode::FastStringToHashCode(strName));
-			}
-			else
-			{
-				m_vecHash64.push_back(UGHashCode::StringToHashCode64(strName));
-			}
+			UGlong lHash = GetHash(strName);
+			m_vecHash.push_back(lHash);
+			
 			m_mapEntityAtt[strName] = it->second;
 			
 			SetRename(strName);
@@ -313,7 +309,6 @@ public:
 	void Clear()
 	{
 		m_vecHash.clear();
-		m_vecHash64.clear();
 		m_mapEntityAtt.clear();
 		m_mapBounds.clear();
 		m_mapRename.clear();
@@ -337,18 +332,9 @@ public:
 	{
 		UGString strNameDes = strNameBase.IsEmpty() ? \
 			pEntity->m_strName : strNameBase;
-		if(!m_bHash64)
-		{
-			strNameDes = em->GetUnoccupiedHashInner(strNameDes);
-			UGint nHash = UGHashCode::FastStringToHashCode(strNameDes);
-			m_vecHash.push_back(nHash);
-		}
-		else
-		{
-			//名字重了就重了，数据库负责
-			UGlong lHash = UGHashCode::StringToHashCode64(strNameDes);
-			m_vecHash64.push_back(lHash);
-		}
+		strNameDes = em->GetUnoccupiedHashInner(strNameDes);
+		UGlong lHash = GetHash(strNameDes);
+		m_vecHash.push_back(lHash);
 
 		TEntity* pResult = new TEntity(strNameDes);
 		*pResult = *pEntity;
@@ -377,32 +363,16 @@ public:
 			m_mapEntity.erase(it);
 		}
 
-		if(m_bHash64)
+		UGlong lHash = GetHash(strName);
+		std::vector<UGlong>::iterator itHash = 
+			std::find(m_vecHash.begin(), m_vecHash.end(), lHash);
+		UGASSERT(itHash != m_vecHash.end());
+		if(itHash != m_vecHash.end())
 		{
-			//m_vecHash：一定有
-			UGint nHash = UGHashCode::FastStringToHashCode(strName);
-			std::vector<UGint>::iterator itHash = 
-				std::find(m_vecHash.begin(), m_vecHash.end(), nHash);
-			UGASSERT(itHash != m_vecHash.end());
-			if(itHash != m_vecHash.end())
-			{
-				m_vecHash.erase(itHash);
-				bFound = TRUE;
-			}	
+			m_vecHash.erase(itHash);
+			bFound = TRUE;
 		}
-		else
-		{
-			UGlong lHash = UGHashCode::StringToHashCode64(strName);
-			std::vector<UGlong>::iterator itHash = 
-				std::find(m_vecHash64.begin(), m_vecHash64.end(), lHash);
-// 			UGASSERT(itHash != m_vecHash64.end()); //不一定有
-			if(itHash != m_vecHash64.end())
-			{
-				m_vecHash64.erase(itHash);
-				bFound = TRUE;
-			}
-		}
-
+	
 		//m_mapEntityAtt：一定有
 		std::map<UGString, std::vector<UGString> >::iterator itAtt = m_mapEntityAtt.find(strName);
 		UGASSERT(itAtt != m_mapEntityAtt.end() || m_bHash64);
@@ -478,27 +448,15 @@ public:
 	//! \brief 是否是可用的名字
 	UGbool IsNameAvailable(const UGString strName)
 	{
-		if(m_bHash64)
-		{
-			return TRUE;
-		}
-
-		UGint nHash = UGHashCode::FastStringToHashCode(strName);
-		std::vector<UGint>::iterator iter = \
-			std::find(m_vecHash.begin(), m_vecHash.end(), \
-			nHash);
-		if(iter != m_vecHash.end())
-		{
-			return FALSE;
-		}
-		return TRUE;
+		UGlong lHash = GetHash(strName);
+		return  IsNameAvailable(lHash);
 	}
 
 	//! \brief 是否是可用的名字(Hash)
-	UGbool IsNameAvailable(const UGint nHash)
+	UGbool IsNameAvailable(const UGlong lHash)
 	{
-		std::vector<UGint>::iterator iter = \
-			std::find(m_vecHash.begin(), m_vecHash.end(), nHash);
+		std::vector<UGlong>::iterator iter = \
+			std::find(m_vecHash.begin(), m_vecHash.end(), lHash);
 		if(iter != m_vecHash.end())
 		{
 			return FALSE;
@@ -600,7 +558,14 @@ public:
 
 		m_mapEntity[pEntity->m_strName] = pEntity;
 
-		m_vecEntityUpdated.push_back(pEntity->m_strName);
+		std::vector<UGString>::iterator itFound = 
+			std::find(m_vecEntityUpdated.begin(), m_vecEntityUpdated.end(), pEntity->m_strName);
+		if(itFound == m_vecEntityUpdated.end())
+		{
+			//没找到再加入
+			m_vecEntityUpdated.push_back(pEntity->m_strName);
+		}
+
 		//属性也可能被改了
 		RefreshAtt(pEntity.Get());
 
@@ -849,34 +814,24 @@ public:
 		}
 	}
 
-	//! \brief 获取删除的对象
+	//! \brief 获取所有的Hash
 	void GetLoadedHash(std::vector<UGlong>& vecHash)
 	{
 		typename std::map<UGString, TEntityPtr>::iterator it;
-		if(m_bHash64)
+		for(it=m_mapEntity.begin(); it != m_mapEntity.end(); it++)
 		{
-			for(it=m_mapEntity.begin(); it != m_mapEntity.end(); it++)
-			{
-				vecHash.push_back(UGHashCode::FastStringToHashCode(it->first));
-			}
-		}
-		else
-		{
-			for(it=m_mapEntity.begin(); it != m_mapEntity.end(); it++)
-			{
-				vecHash.push_back(UGHashCode::StringToHashCode64(it->first));
-			}
-		}
+			vecHash.push_back(GetHash(it->first));
+		}		
 	}
 
 	//! \brief 获取实体名
-	void GetNames(std::vector<UGString>& vecHash)
+	void GetNames(std::vector<UGString>& vecName)
 	{
 		std::map<UGString, std::vector<UGString> >::iterator it = \
 			m_mapEntityAtt.begin();
 		for (; it != m_mapEntityAtt.end(); it++)
 		{
-			vecHash.push_back(it->first);
+			vecName.push_back(it->first);
 		}
 	}
 
@@ -892,6 +847,14 @@ public:
 	}
 
 private:
+	//! \brief 计算Hash值
+	UGlong GetHash(UGString strName)
+	{
+		UGlong lHash =  m_bHash64 ? UGHashCode::StringToHashCode64(strName) :
+			UGHashCode::FastStringToHashCode(strName);
+		return lHash;
+	}
+
 	//! \brief 设置重命名前后的对照表
 	void SetRename(const UGString strName)
 	{
@@ -916,10 +879,7 @@ private:
 
 private:
 	//! \brief 池中已存在的实体Hash:包含未加载的和内存的
-	std::vector<UGint> m_vecHash;
-
-	//! \brief 64位hash存储
-	std::vector<UGlong> m_vecHash64;
+	std::vector<UGlong> m_vecHash;
 
 	//! \brief 是否是 64位hash存储
 	UGbool m_bHash64;

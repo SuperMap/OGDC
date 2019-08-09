@@ -70,8 +70,8 @@ namespace UGC
 	enum UGBuilderOperation
 	{
 		no_operation,
-		linear_extrude, rotate_extrude, loft, blend, polygon_offsetting, straight_skeleton, envelop,
-		section_projection, plane_projection, flatten, shadow_volume, clip, mosaic, replace
+		linear_extrude, rotate_extrude, pipe_extrude, loft, blend, polygon_offsetting, straight_skeleton, envelop, builder,
+		section_projection, plane_projection, flatten, shadow_volume, clip, mosaic, replace, cull, match
 	};
 
 	//! \brief 纹理坐标类型。
@@ -163,6 +163,16 @@ namespace UGC
 		SolfConstraintPt	= 0x00000400, // 软约束点
 		HardConstraintPt	= 0x00000800, // 硬约束点
 		ClipPt			= 0x00001000, // 裁剪点
+	};
+
+	struct UGParam
+	{
+		/* 参数基类 */
+	};
+
+	struct UGObject
+	{
+		/* 对象基类 */
 	};
 
 	//! \brief 参数化对象参数类。
@@ -267,45 +277,54 @@ namespace UGC
 	};
 
 	//! \brief 字段属性。
-	class BASE3D_API UGAttribute
+	template<typename T>
+	class UGAttributeTemplate
 	{
 	public:
-		UGAttribute() : m_iAttribute(0) {}
-		~UGAttribute() {}
+		UGAttributeTemplate() : m_iAttribute(0) {}
+		UGAttributeTemplate(const UGAttributeTemplate<T>& other) { m_iAttribute = other.m_iAttribute; }
+		~UGAttributeTemplate() {}
 
-		UGAttribute(UGint iAttribute) { m_iAttribute = iAttribute; }
+		UGAttributeTemplate(T iAttribute) { m_iAttribute = iAttribute; }
 
-		UGbool operator==(const UGAttribute& other) const { return m_iAttribute == other.m_iAttribute; }
-		UGbool operator!=(const UGAttribute& other) const { return m_iAttribute != other.m_iAttribute; }
+		UGbool operator==(const UGAttributeTemplate<T>& other) const { return m_iAttribute == other.m_iAttribute; }
+		UGbool operator!=(const UGAttributeTemplate<T>& other) const { return m_iAttribute != other.m_iAttribute; }
 
-		UGbool Has(UGint attr) const { return (m_iAttribute & attr) != 0; }
-		void Add(UGint attr) { m_iAttribute |= attr; }
-		void Remove(UGint attr) { m_iAttribute &= ~attr; }
+		UGbool Has(T attr) const { return (m_iAttribute & attr) != 0; }
+		void Add(T attr) { m_iAttribute |= attr; }
+		void Remove(T attr) { m_iAttribute &= ~attr; }
 
-		UGint Get() const { return m_iAttribute; }
-		void Set(UGint attr) { m_iAttribute = attr; }
+		T Get() const { return m_iAttribute; }
+		void Set(T attr) { m_iAttribute = attr; }
 
 	private:
-		UGint m_iAttribute;
+		T m_iAttribute;
 	};
+	typedef UGAttributeTemplate<UGint> UGAttribute;
 
 	//! \brief 伪零值
 #define PSEUDO_ZERO 0.0001
 
-	//! \brief 裁剪操作参数集。
-	struct UGOperationParam
-	{
-		UGBuilderOperation	op;
-		UGKeepType			keep;
-		UGConstraintType		constraint;
-		UGdouble				radius;
-		UGColorValue3D		color;
+	//! \brief 地理上的高度极值
+	//! \remark 世界上最高的是珠穆朗玛峰(8848.13米)，最深的是马里亚纳海沟(-11034.0米)
+#define GEOGRAPHICAL_MAX_ALTITUDE 9000.0
+#define GEOGRAPHICAL_MIN_ALTITUDE -12000.0
 
-		UGOperationParam() : op(clip), keep(KeepInside), constraint(SoftConstraint), radius(0.0) {}
+	//! \brief 操作结果
+	//! \param failure代表操作失败，可能是参数问题。
+	//! \param nothing代表没有未处理，数据完好未修改。
+	//! \param success代表处理成功，数据已经修改。
+	enum UGOperationResult
+	{
+		failure = -1, nothing = 0, success = 1
 	};
 
-	//! \brief 裁剪面集。
 	class UGPolySet;
+	typedef std::vector<UGPolySet*> UGPolySetPtrs;
+	typedef std::vector<UGPolySet > UGPolySetObjs;
+	typedef UGPolySetPtrs UGPolySets;
+
+	//! \brief 裁剪面集。
 	struct UGClipPoly
 	{
 		UGPolySet*			pClipPoly;
@@ -315,7 +334,165 @@ namespace UGC
 		UGClipPoly() : pClipPoly(NULL), pRefSlopePoly(NULL), pSlopePoly(NULL) {}
 	};
 	typedef std::vector<UGClipPoly> UGClipPolys;
-	typedef std::vector<UGPolySet*> UGPolySets;
-}
 
+	struct UGOperationParam
+	{
+		virtual UGBuilderOperation GetType() const = 0;
+	};
+
+	//! \brief 裁剪操作参数集。
+	struct UGClipOperationParam : public UGOperationParam
+	{
+		UGBuilderOperation	op;
+		UGKeepType			keep;
+		UGConstraintType		constraint;
+		UGdouble				radius;
+		UGColorValue3D		color;
+
+		UGClipOperationParam() : op(clip), keep(KeepInside), constraint(SoftConstraint), radius(0.0) {}
+
+		virtual UGBuilderOperation GetType() const { return clip; }
+	};
+
+	//! \brief 剔除操作参数类。
+	struct UGCullOperationParam : public UGOperationParam
+	{
+		UGKeepType			keep;
+		UGdouble				minz;
+		UGdouble				maxz;
+
+		UGCullOperationParam() : keep(KeepOutside), minz(GEOGRAPHICAL_MIN_ALTITUDE), maxz(GEOGRAPHICAL_MAX_ALTITUDE) {}
+
+		virtual UGBuilderOperation GetType() const { return cull; }
+	};
+
+	//! \brief 拉伸参数类。
+	struct UGLinearExtrudeParam : public UGOperationParam
+	{
+		//! \brief 面枚举
+		enum Face { bottom = 0x1, top = 0x2, side = 0x4 };
+
+		//! \brief 拉伸高度(沿z轴方向)，取值范围(0, ∞)。
+		UGdouble dHeight;
+
+		//! \brief 是否生成纹理坐标
+		UGbool bCreateTexCoord;
+
+		//! \brief 绕z轴旋转的角度，取值范围(-∞, ∞)。
+		UGdouble dTwist;
+
+		//! \brief 模型拉伸过程中在X和Y方向的缩放比例，取值范围(0, ∞)。
+		UGdouble dScaleX;
+		UGdouble dScaleY;
+
+		//! \brief 构建过程中的采样切片数量，采用默认值即可，取值范围[1, ∞)。
+		UGuint nSlices;
+
+		//! \brief 是否成一组
+		UGbool bGroup;
+
+		//! \brief 是否有LOD层级
+		UGbool bHasLOD;
+
+		//! \brief 生成模型面属性
+		UGAttribute attr;
+
+		UGLinearExtrudeParam() : 
+			dHeight(1.0), 
+			bCreateTexCoord(FALSE), 
+			dTwist(0.0), 
+			dScaleX(1.0), dScaleY(1.0), 
+			nSlices(1), 
+			bGroup(TRUE), 
+			bHasLOD(TRUE),
+			attr(bottom | side | top) {}
+
+		virtual UGBuilderOperation GetType() const { return linear_extrude; }
+	};
+
+	//! \brief 车削参数类。
+	struct UGRotateExtrudeParam : public UGOperationParam
+	{
+		//! \brief 面枚举
+		enum Face { start = 0x1, end = 0x2, ring = 0x4 };
+
+		//! \brief 旋转角度，取值范围[-360, 0) U (0, 360]。
+		UGdouble dAngle;
+
+		//! \brief 构建过程中的采样切片数量，采用默认值即可，取值范围[1, ∞)。
+		UGuint nSlices;
+
+		//! \brief 是否成一组
+		UGbool bGroup;
+
+		//! \brief 是否有LOD层级
+		UGbool bHasLOD;
+
+		//! \brief 生成模型面属性
+		UGAttribute attr;
+
+		UGRotateExtrudeParam() : 
+			dAngle(360.0), 
+			nSlices(1), 
+			bGroup(TRUE), 
+			bHasLOD(TRUE),
+			attr(ring | start | end) {}
+
+		virtual UGBuilderOperation GetType() const { return rotate_extrude; }
+	};
+
+	//! \brief 放样参数类。
+	struct UGPipeExtrudeParam : public UGOperationParam
+	{
+		//! \brief 面枚举
+		enum Face { start = 0x1, end = 0x2, side = 0x4 };
+
+		//! \brief 是否生成纹理坐标
+		UGbool bCreateTexCoord;
+
+		//! \brief 衔接角类型。
+		UGJoinType eJoinType;
+
+		//! \brief 构建过程中的采样切片数量，采用默认值即可，取值范围[1, ∞)。
+		UGuint nSlices;
+
+		//! \brief 是否成一组
+		UGbool bGroup;
+
+		//! \brief 是否有LOD层级
+		UGbool bHasLOD;
+
+		//! \brief 生成模型面属性
+		UGAttribute attr;
+
+		UGPipeExtrudeParam() : 
+			bCreateTexCoord(FALSE), 
+			eJoinType(Miter),
+			nSlices(1), 
+			bGroup(TRUE), 
+			bHasLOD(TRUE),
+			attr(side | start | end) {}
+
+		virtual UGBuilderOperation GetType() const { return pipe_extrude; }
+	};
+
+	//! \brief 匹配参数类。
+	struct UGMatchOperationParam : public UGOperationParam
+	{
+		//! \brief 依附类型。
+		enum Attach { top, bottom };
+
+		//! \brief 采样间隔。
+		UGdouble dGranularity;
+
+		//! \brief 依附类型。
+		Attach eAttach;
+
+		UGMatchOperationParam() :
+			dGranularity(0.0),
+			eAttach(top) {}
+
+		virtual UGBuilderOperation GetType() const { return match; }
+	};
+}
 #endif

@@ -93,6 +93,11 @@ public:
 	//! \brief 通过TextureData解析出MipMap信息
 	void MakeInfoFromTextureData();
 
+	//! \brief 对纹理数据进行缩放
+	//! \brief nMaxW nMaxH 宽高限制； =0 表示不限制
+	//! \brief 返回 comp
+	static UGint ScaleTextureData(UGTextureData* pTextureData, const UGint nMaxW=0, const UGint nMaxH=0);
+
 public:
 	UGString m_strName;
 

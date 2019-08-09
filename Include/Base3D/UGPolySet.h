@@ -129,6 +129,11 @@ namespace UGC
 		UGbool GetGenerateNormal() const { return m_bGenerateNormal; }
 		void SetGenerateNormal(UGbool bGenerateNormal) { m_bGenerateNormal = bGenerateNormal; }
 
+		//! \brief 是否生成颜色。
+		UGbool IsGenerateColor() const { return m_bGenerateColor; }
+		UGbool GetGenerateColor() const { return m_bGenerateColor; }
+		void SetGenerateColor(UGbool bGenerateColor) { m_bGenerateColor = bGenerateColor; }
+
 		//! \brief 是否将z值作为属性不参与运算。
 		UGbool IsZValAsAttribute() const { return m_bZValAsAttribute; }
 		void SetZValAsAttritute(UGbool bZValAsAttribute) { m_bZValAsAttribute = bZValAsAttribute; }
@@ -197,41 +202,80 @@ namespace UGC
 			const UGVector3d& vRotate = UGVector3d::ZERO);
 
 	public:
-		//! \brief 获取数据包中的索引包。
-		const UGPolysIndices& GetIds() const { return m_pPolysDataPackage->GetIds(); }
+		//! \brief 添加面。
+		void BeginSurface();
+		void EndSurface();
 
-		//! \brief 获取数据包中的顶点包。
-		const UGPolysPoints& GetPts() const { return m_pPolysDataPackage->GetPts(); }
-		UGVector3d& GetPtOfMutability(UGuint id) { return m_pPolysDataPackage->GetPtOfMutability(id); }
-		const UGVector3d& GetPt(UGuint id) const { return m_pPolysDataPackage->GetPt(id); }
+		//! \brief 添加顶点。
+		void AddVertex(const UGPolyVertex& v);
+		void AddVertices(const UGPolyVertices& arrPts);
 
-		//! \brief 获取顶点在Polys的位置信息。
-		const UGPolysPointPositions& GetPtPositions() const { return m_pPolysDataPackage->GetPtPositions(); }
+		//! \brief 是否错误。
+		UGbool IsError() const;
+		void RollBack();
 
-		//! \brief 获取数据包中顶点数量。
-		UGuint GetNumPts() const { return m_pPolysDataPackage->GetNumPts(); }
+		//! \brief 添加面。
+		void BeginFacet();
+		void EndFacet();
 
-		//! \brief 获取数据包中索引总数量。
-		UGuint GetNumPolysIds() const { return m_pPolysDataPackage->GetNumPolysIds(); }
-
-		//! \brief 获取数据包中多面体点总数量。
-		UGuint GetNumPolysPts() const { return m_pPolysDataPackage->GetNumPolysPts(); }
-
-		//! \brief 获取数据包中的多面体数据。
-		const UGPolys& GetPolys() const { return m_pPolysDataPackage->GetPolys(); }
-		UGPolys& GetPolysOfMutability() { return m_pPolysDataPackage->GetPolysOfMutability(); }
+		//! \brief 添加面内点索引。
+		void AddFacetId(UGPolyIndex id);
+		void AddFacet(const UGPolyIndices& arrIds);
+		void AddFacets(const UGPolyFacets& arrFacets);
 
 		//! \brief 获取纹理坐标
-		const UGUVWs& GetTexCoords(const UGPosition2& pos) const { return m_pPolysDataPackage->GetTexCoords(pos); }
+		UGUVWs& GetTexCoords(const UGPosition2& pos);
 
-		//! \brief 获取拓展字段
-		const std::vector<UGdouble>& GetExt(const UGPosition2& pos) const { return m_pPolysDataPackage->GetExt(pos); }
+		//! \brief 获取浮点型拓展位。
+		std::vector<UGdouble>& GetRealExt(const UGPosition2& pos);
+
+		//! \brief 获取整数型拓展位。
+		std::vector<UGuint>& GetIntegerExt(const UGPosition2& pos);
+
+	public:
+		//! \brief 获取数据包中的面索引包。
+		const UGPolyFacets& GetFacets() const;
+
+		const UGPolysDataPackage* GetPolysDataPackage() const;
+
+		UGbool IsOrient() const;
+		void SetOrient(UGbool bOrient);
+
+		//! \brief 获取数据包中的顶点包。
+		const UGPolyVertices& GetPts() const;
+		UGPolyVertex& GetPtOfMutability(UGPolyIndex id);
+		const UGPolyVertex& GetPt(UGPolyIndex id) const;
+
+		//! \brief 获取顶点在Polys的位置信息。
+		const UGPolyVertexPositions& GetPtPositions() const;
+
+		//! \brief 获取数据包中顶点数量。
+		UGuint GetNumPts() const;
+
+		//! \brief 获取数据包中索引总数量。
+		UGuint GetNumFacetsIds() const;
+
+		//! \brief 获取数据包中多面体点总数量。
+		UGuint GetNumPolysPts() const;
+
+		//! \brief 获取数据包中的多面体数据。
+		const UGPolys& GetPolys() const;
+		UGPolys& GetPolysOfMutability();
+
+		//! \brief 获取纹理坐标
+		const UGUVWs& GetTexCoords(const UGPosition2& pos) const;
+
+		//! \brief 获取浮点型拓展字段
+		const std::vector<UGdouble>& GetRealExt(const UGPosition2& pos) const;
+
+		//! \brief 获取整数型拓展字段
+		const std::vector<UGuint>& GetIntegerExt(const UGPosition2& pos) const;
 
 		//! \brief 获取所存储的多边形数量。
-		UGuint GetNumPolys() const { return m_pPolysDataPackage->GetNumPolys(); }
+		UGuint GetNumPolys() const;
 
 		//! \brief 所存储的多边形数量是否为空。
-		UGbool IsEmpty() const { return m_pPolysDataPackage->IsEmpty(); }
+		UGbool IsEmpty() const;
 
 		//! \brief 是否拓扑校正。
 		UGbool IsSanitized() const { return m_bSanitized; }
@@ -245,6 +289,7 @@ namespace UGC
 		//! \brief 设置三角化状态。
 		void SetTriangulated(UGbool bTriangulated) { m_bTriangulated = bTriangulated; }
 
+	public:
 		//! \brief 追加默认多边形。
 		void AppendPoly();
 
@@ -310,6 +355,7 @@ namespace UGC
 		//! \brief 追加多个多边形。
 		void AppendPolys(const UGPolys& polys);
 
+	public:
 		//! \brief 平移。
 		//! \param vecTranslation [in] 平移向量。
 		void Translate(const UGVector3d& vOffset);
@@ -321,31 +367,17 @@ namespace UGC
 		void Rotate(const UGVector3d& vNormal);
 		void Rotate(const UGVector3d& vToNormal, const UGVector3d& vFromNormal);
 
-		//! \brief 绕原点旋转。
-		void RotateOriPt();
-
-		//! \brief 绕X轴翻转。
-		void FlipX();
-		//! \brief 绕Y轴翻转。
-		void FlipY();
-		//! \brief 绕Z轴翻转。
-		void FlipZ();
-
-		//! \brief 翻转。
-		//! \remark 调用Mirror实现。
-		void Flip(const UGVector3d& normal);
-
-		//! \brief 镜像。
-		//! \param normal [in] 镜像参照向量。
-		void Mirror(const UGVector3d& normal);
-
 		//! \brief 缩放。
 		//! \param vecScale [in] 缩放参数。
 		void Scale(const UGVector3d& vScale);
 		void Scale(const UGdouble& x, const UGdouble& y, const UGdouble& z);
 
+		//! \brief 镜像。
+		//! \param normal [in] 镜像参照向量。
+		void Mirror(const UGPlane& plane);
+
 		//! \brief 翻转。
-		void Reverse();
+		void Reverse(UGbool bSplitFirst = TRUE);
 
 		//! \brief 位置量。
 		void SetPosition(const UGVector3d& vPos) { m_vPosition = vPos; }
@@ -375,26 +407,32 @@ namespace UGC
 		//! \param arrIndexPackage [out] 模型索引。
 		//! \param bSimple [in] 是否精简顶点数组。
 		//! \attention 传入参数pVertexDataPackage不能为NULL。
-		void GetTriMesh(
-			UGVertexDataPackage* pVertexDataPackage, 
-			UGArray<UGIndexPackage*>& arrIndexPackage) const;
-		void GetTriMesh(
-			UGVertexDataPackageExact* pVertexDataPackage,
-			UGArray<UGIndexPackage*>& arrIndexPackage) const;
+		void GetTriMesh(UGVertexDataPackage* pVertexDataPackage, UGArray<UGIndexPackage*>& arrIndexPackage) const;
+		void GetTriMesh(UGVertexDataPackageExact* pVertexDataPackage, UGArray<UGIndexPackage*>& arrIndexPackage) const;
+
+		void GetTriMesh(std::vector<UGTINPoint>& arrPts, std::vector<UGuint>& arrIds) const;
+
+		UGbool FromTriMesh(const UGVertexDataPackage* pVertexDataPackage, const UGArray<UGIndexPackage*>& arrIndexPackage);
+		UGbool FromTriMesh(const UGVertexDataPackageExact* pVertexDataPackage, const UGArray<UGIndexPackage*>& arrIndexPackage);
+
+		UGbool FromTriMesh(const std::vector<UGTINPoint>& arrPts, const std::vector<UGuint>& arrIds, UGbool bHasUV = FALSE, UGbool bIgnoreInvalid = FALSE);
 
 		//! \brief 曲度细分。
 		//! \param dGranularity [in] 细分粒度，经纬度按度数，平面坐标按米。
 		//! \return -1代表错误，0代表未修改，1代表已修改。
-		UGint ComputeLineSubDivision(UGdouble dGranularity = DTOR);
-		UGint ComputeRegionSubDivision(UGdouble dGranularity = DTOR);
-		UGint ComputeTINSubDivision(UGdouble dGranularity = DTOR);
+		UGOperationResult ComputeLineSubDivision(UGdouble dGranularity = DTOR);
+		UGOperationResult ComputeRegionSubDivision(UGdouble dGranularity = DTOR);
+		UGOperationResult ComputeTINSubDivision(UGdouble dGranularity = DTOR);
 
 		//! \brief 简化曲度。
 		//! \param dGranularity [in] 简化粒度，按度数。
 		//! \return -1代表错误，0代表未修改，1代表已修改。
-		UGint ReduceLineSubDivision(UGdouble dGranularity = DTOR);
-		UGint ReduceRegionSubDivision(UGdouble dGranularity = DTOR);
-		UGint ReduceTINSubDivision(UGdouble dGranularity = DTOR);
+		UGOperationResult ReduceLineSubDivision(UGdouble dGranularity = DTOR);
+		UGOperationResult ReduceRegionSubDivision(UGdouble dGranularity = DTOR);
+		UGOperationResult ReduceTINSubDivision(UGdouble dGranularity = DTOR);
+
+		//! \brief 对齐网格。
+		void QuantizeVertices();
 		
 		//! \brief 三角化多面体。
 		UGbool Tessellate();
@@ -436,12 +474,7 @@ namespace UGC
 		static UGPolySet* Make(const UGPoly& vecBorderPt, const UGPoly& vecInnerPt = UGPoly());
 
 		//! \brief 由TIN顶点和索引构建三角网。
-		static UGPolySet* Make(const std::vector<UGTINPoint>& pts, \
-			const std::vector<UGuint>& ids, UGbool bHasUV = FALSE, \
-			UGbool bIgnoreInvalid = TRUE, UGbool bIsTerrainFile = FALSE);
-
-		//! \brief 是否是无效三角形（TIN）
-		static UGbool IsInvalidTri(const UGTINPoint& pnt0, const UGTINPoint& pnt1, const UGTINPoint& pnt2, UGbool bIsTerrainFile);
+		static UGPolySet* Make(const std::vector<UGTINPoint>& arrPts, const std::vector<UGuint>& arrIds, UGbool bHasUV = FALSE, UGbool bIgnoreInvalid = FALSE);
 
 		//! \brief 场景模型UGModelNode与快速建模模型的相互转换。
 		//! \remark 参数bHighPrecision表示是否采用高精度，TRUE表示采用double双精度，FALSE表示采用float单精度。
@@ -452,32 +485,27 @@ namespace UGC
 		static UGPolySet* CreatePolySetFromModelNode(/*const */UGModelNode* pModelNode);
 		static UGPolySet* CreatePolySetFromPatch(UGModelPagedPatch* pPatch);
 		static UGPolySet* CreatePolySetFromGeode(UGModelGeode* pGeode);
-		static UGPolySet* CreatePolySetFromSkeleton(/*const */UGModelSkeleton* pSkeleton, const UGMatrix4d& geodeMT);
+		static UGPolySet* CreatePolySetFromSkeleton(/*const */UGModelSkeleton* pSkeleton, const UGMatrix4d& mGeodeTrans = UGMatrix4d());
+		static UGPolySet* CreatePolySetFromROGeometry(/*const */UGRenderOperationGeometry* pGeometry, const UGMatrix4d& mGeodeTrans = UGMatrix4d());
+
+		UGbool FromSkeleton(UGModelSkeleton* pSkeleton);
+		UGbool ToSkeleton(UGModelSkeleton* pSkeleton) const;
 
 		//! \brief 从点云中创建三角网。
 		static UGPolySet* CreatePolySetFromPtCloud(UGPoly& pts);
 
 	public:
-		//! \brief 根据二维多边形<b>线性挤出</b>三维模型。
-		//! \detail 线性挤出是一种创建三维模型的方式，根据高度将XY平面上的二维多边形沿着Z轴拉伸生成三维模型。
-		//! \param dHeight [in] 拉伸高度(沿z轴方向)，取值范围(0, ∞)。
-		//! \param bCreateTexCoordight [in] 是否生成纹理坐标
-		//! \param dTwist [in] 绕z轴旋转的角度，取值范围(-∞, ∞)。
-		//! \param dScaleX [in] 模型拉伸过程中在X方向的缩放比例，取值范围(0, ∞)。
-		//! \param dScaleY [in] 模型拉伸过程中在Y方向的缩放比例，取值范围(0, ∞)。
-		//! \param nSlices [in] 拉伸过程中的采样切片数量，采用默认值即可，取值范围[1, ∞)。
-		virtual UGbool LinearExtrude(
-			UGdouble dHeight,
-			UGbool bCreateTexCoord = FALSE,
-			UGdouble dTwist = 0.0,
-			UGdouble dScaleX = 1.0,
-			UGdouble dScaleY = 1.0,
-			UGuint nSlices = 1);
+		//! \brief 线性拉伸。
+		//! \remark 又称 拉伸、挤出，将XY平面上的二维多边形沿着指定方向拉伸生成三维模型。
+		virtual UGbool LinearExtrude(const UGLinearExtrudeParam& param, UGPolySetObjs& arrObjs);
 
-		//! \brief 根据二维多边形<b>旋转挤出</b>三维模型。
-		//! \detail 线性挤出是一种创建三维模型的方式，根据角度将XY平面上的二维多边形沿着Z轴旋转生成三维模型。
-		//! \param sAngle [in] 旋转角度，取值范围[-360, 0) U (0, 360]。
-		virtual UGbool RotateExtrude(UGdouble dAngle = 360);
+		//! \brief 旋转拉伸。
+		//! \remark 又称 转体、车削，将XY平面上的二维多边形沿着指定角度旋转生成三维模型。
+		virtual UGbool RotateExtrude(const UGRotateExtrudeParam& param, UGPolySetObjs& arrObjs);
+
+		//! \brief 管状拉伸。
+		//! \remark 又称 放样，将XY平面上的二维多边形沿着指定线路放样生成三维模型。
+		virtual UGbool PipeExtrude(const UGPoly& spine, const UGPipeExtrudeParam& param, UGPolySetObjs& arrObjs);
 
 		//! \brief 放样。
 		//! \param pCrossSections [in] 放样横截面。
@@ -490,6 +518,11 @@ namespace UGC
 			UGbool bCreateTexCoord = false,
 			UGuint uChamferFactor = 10, 
 			UGbool bIsSym = FALSE);
+
+		//! \brief 3D曲面建模。
+		//! \param bParametric [in] 是否参数化建模。
+		//! \return 3D曲面模型。
+		virtual UGbool MakeSurfaceMesh(const UGSurfaceMeshParam& param);
 
 		//! \brief 融合。
 		//! \param arrPolySets [in] 被融合对象。
@@ -518,71 +551,110 @@ namespace UGC
 		//! \param type [in] 外拓边衔接类型。
 		virtual UGbool PolygonOffsetting(UGdouble dOffset, UGJoinType type = Miter);
 
-		//! \brief 由三角网构建闭合体。
+		//! \brief 模型轮廓。
 		//! \param dZ [in] 构成闭合体的z值高度。
 		//! \param dTolarence [in] 高度误差范围
 		//! \param bHasTextureCoord [in]是否保留边界纹理坐标。
 		virtual UGbool Envelop(UGdouble dZ, UGdouble dTolarence = 0.0, UGbool bHasTextureCoord = FALSE);
 
-		//! \brief 剔除三角面。
-		//! \param arrBoundingSpheres [in] 包围球列表。
-		//! \param bKeepInside [in] 保留内部，否则剔除掉内部。
-		//! \return 返回-1代表操作失败，0代表全部保留，1代表部分保留或者全被剔除掉。
-		virtual UGint Cull(
-			const std::vector<UGBoundingSphere>& arrBoundingSpheres,
-			UGbool bKeepInside = FALSE);
-
 		//! \brief 多边形布尔运算(二维)。
 		UGbool BooleanOperation2D(const UGPolySet& ps, UGBooleanOperationType opType);
 
 	public:
-		//! \brief 调整三角网。
-		//! \param arrClipPolys [in] 裁剪结构。
+		//! \brief 修改模型。
+		//! \param pOperationPolys [in] 修改参照数据。
+		//! \param params [in] 修改参数。
+		//! \param pClipedTris [in] 是否保留被修改掉的三角网。
+		//! \param dTol [in] 容差，影响精度和性能。
+		//! \return failure代表操作失败，nothing代表全部保留，success代表更新。
+		UGOperationResult Operate(
+			const void* pOperationPolys,
+			const UGOperationParam* pOperationParam,
+			UGPolySet* pReserve = NULL,
+			UGdouble dTol = EP);
+
+		//! \brief 影响模型。
+		UGOperationResult Effect(
+			void* pEffectPolys,
+			const UGOperationParam* pEffectParam,
+			UGPolySet* pReverse = NULL,
+			UGdouble dTol = EP);
+
+	private:
+		//! \brief 裁剪三角网。
+		//! \param arrClipPolys [in] 裁剪面集。
 		//! \param params [in] 裁剪参数。
-		//! \param pClipedTris [in] 是否保留被裁剪掉的三角形。
-		//! \param dTol [in] 容差，影响精度和速度。
-		//! \return 返回-1代表操作失败，0代表全部保留，1代表部分保留或者全被裁剪掉。
-		UGint AdjustSurface(
+		//! \param pClipedTris [in] 是否保留被裁剪掉的三角网。
+		//! \param dTol [in] 容差，影响精度和性能。
+		//! \return failure代表操作失败，nothing代表全部保留，success代表部分保留或者全被裁剪掉。
+		UGOperationResult OperateSurface(
 			const UGClipPolys& arrClipPolys,
-			const UGOperationParam& param,
+			const UGClipOperationParam& param,
 			UGPolySet* pClipedTris = NULL,
 			UGdouble dTol = EP);
 
+		//! \brief 剔除三角网。
+		//! \param arrCullPolys [in] 剔除面集。
+		//! \param params [in] 剔除参数。
+		//! \param pCulledTris [in] 是否保留被剔除掉的三角网。
+		//! \param dTol [in] 容差，影响精度和性能。
+		//! \return failure代表操作失败，nothing代表全部保留，success代表剔除成功。
+		UGOperationResult OperateSurface(
+			const UGPolySets& arrCullPolys,
+			const UGCullOperationParam& param,
+			UGPolySet* pCulledTris = NULL,
+			UGdouble dTol = EP);
+
+	public:
 		//! \brief 裁剪。
 		//! \param arrClipPolys [in] 裁剪面。
 		//! \param eKeepType [in] 保留类型。
 		//! \param eConstraintType [in] 约束类型。
 		//! \param pClipedTris [in] 是否保留被裁剪掉的三角形。
 		//! \param dTol [in] 容差，影响精度和速度。
-		//! \return 返回-1代表操作失败，0代表全部保留，1代表部分保留或者全被裁剪掉。
-		UGint Clip(
+		//! \return failure代表操作失败，nothing代表未处理，success代表更新。
+		UGOperationResult Clip(
 			const UGPolySets& arrClipPolys, 
 			UGKeepType eKeepType = KeepInside, 
 			UGConstraintType eConstraintType = SoftConstraint,
 			UGPolySet* pClipedTris = NULL,
 			UGdouble dTol = EP);
 
-		//! \brief 替换。
-		//! \brief 替换面。
+		//! \brief 压平。
+		//! \param arrFlattenPolys [in] 压平面。
+		//! \param eKeepType [in] 保留类型。
 		//! \param eConstraintType [in] 约束类型。
-		//! \param pClipedTris [in] 是否保留被裁剪掉的三角形。
+		//! \param dFlattenHigh [in] 压平高度。
 		//! \param dTol [in] 容差，影响精度和速度。
-		//! \return 返回-1代表操作失败，0代表未处理，1代表更新。
-		UGint Replace(
-			const UGPolySets& arrClipPolys,
+		//! \return failure代表操作失败，nothing代表未处理，success代表更新。
+		UGOperationResult Flatten(
+			const UGPolySets& arrFlattenPolys,
+			UGKeepType eKeepType = KeepInside, 
 			UGConstraintType eConstraintType = SoftConstraint,
-			UGPolySet* pClipedTris = NULL,
+			UGdouble dFlattenHigh = 0.0,
+			UGdouble dTol = EP);
+
+		//! \brief 替换。
+		//! \param arrReplacePolys [in] 替换面。
+		//! \param eConstraintType [in] 约束类型。
+		//! \param pReplacedTris [in] 是否保留被替换掉的三角形。
+		//! \param dTol [in] 容差，影响精度和速度。
+		//! \return failure代表操作失败，nothing代表未处理，success代表更新。
+		UGOperationResult Replace(
+			const UGPolySets& arrReplacePolys,
+			UGConstraintType eConstraintType = SoftConstraint,
+			UGPolySet* pReplacedTris = NULL,
 			UGdouble dTol = EP);
 
 		//! \brief 镶嵌。
-		//! \param arrClipPolys [in] 镶嵌面。硬约束。
+		//! \param arrMosaicPolys [in] 镶嵌面。硬约束。
 		//! \param arrRefOffsettings [in] 参考护坡面。生成带护坡的镶嵌面时必须指定。
 		//! \param dSlopeRadius [in] 坡度缓冲距离，可选项，优化性能。
 		//! \param arrOffsettings [in] 护坡面。软约束。可选项，优化性能。
 		//! \param dTol [in] 容差，影响精度和速度。
-		//! \return 返回-1代表操作失败，0代表全部保留，1代表已经更新三角网数据。
-		UGint Mosaic(
-			const UGPolySets& arrClipPolys,
+		//! \return failure代表操作失败，nothing代表未处理，success代表更新。
+		UGOperationResult Mosaic(
+			const UGPolySets& arrMosaicPolys,
 			const UGPolySets& arrRefOffsettings = UGPolySets(),
 			UGdouble dSlopeRadius = 0.0,
 			const UGPolySets& arrOffsettings = UGPolySets(),
@@ -590,11 +662,10 @@ namespace UGC
 
 		//! \brief 插值高度。
 		//! \param arrInterPolys [in] 待插值数据。
-		//! \param bKeepMinValue [in] 是否取最低点高度。
-		//! \return 返回-1代表操作失败，0代表未修改，1代表已经更新插值数据。
-		UGint InterpHigh(
+		//! \return failure代表操作失败，nothing代表未处理，success代表更新。
+		UGOperationResult InterpHigh(
 			const UGPolySets& arrInterpPolys,
-			UGbool bKeepMinValue = TRUE) const;
+			const UGMatchOperationParam& param) const;
 
 	private:
 		//! \brief 分离范围内网的三角形。
@@ -610,11 +681,11 @@ namespace UGC
 			const UGPolySets& arrSoftPolys);
 
 		 //! \brief 插值高度。
-		UGint InterpHigh(
+		UGOperationResult InterpHigh(
 			std::vector<UGdouble>& vecZValues,
 			const std::vector<UGPoint2D>& vecXYValues,
-			const UGRect2D& rcXYBounds = UGRect2D(),
-			UGbool bKeepMinValue = TRUE) const;
+			const UGMatchOperationParam& param,
+			const UGRect2D& rcXYBounds = UGRect2D()) const;
 
 	public:
 		//! \brief 提取三角网的边界点。
@@ -676,6 +747,10 @@ namespace UGC
 		//! \brief 计算三维多面体中心点。
 		const UGVector3d& GetPolyhedronCenter() const;
 
+		//! \brief 计算多面体的容积。
+		//! \brief 模型是闭合体才有意义。
+		UGdouble GetPolyhedronVolume() const;
+
 		//! \brief 折线拐角抛光平滑处理。
 		//! \param vecCurved [out] 抛光平滑后的点。
 		//! \param vecLine [in] 折线路径。
@@ -711,11 +786,11 @@ namespace UGC
 		static UGbool IsIntersected(const UGBoundingBox& box1, const UGBoundingBox& box2);
 
 		//! \brief 导入文件。
-		UGbool ImportOFF(const std::string& path);
+		UGbool ImportOFF(const UGString& strFileName);
 		UGbool ImportDXF(const std::string& path);
 
 		//! \brief 导出文件。
-		UGbool ExportOFF(const std::string& path) const;
+		UGbool ExportOFF(const UGString& strFileName) const;
 		UGbool ExportDXF(const std::string& path) const;
 
 		//! \brief 输出UGPolySet数据。
@@ -870,13 +945,26 @@ namespace UGC
 		//! \brief 生成纹理坐标。
 		UGbool GenerateTexCoord();
 
+	private:
 		//! \brief 按照面法线将面分包。
 		//! \param package [out] 三角面分包数据。
 		//! \param dAngle [in] 面法线容差度数，取值范围[0, 180]。
 		UGbool SplitPolysPackage(UGPolysPackage& package, UGdouble dAngle = 0.0) const;
 
+		//! \brief 按照拓扑连接性将面分包。
+		UGbool SplitPolysPackage(std::list<UGPolyList>& package) const;
+
+	public:
 		//! \brief 去除无效三角面，前提必须是已经三角化。
-		void DeleteUnValidPoly();
+		UGOperationResult RemoveInvalidPoly();
+
+		//! \brief 移除重复的面。
+		//! \return 返回-1代表操作失败，0代表没有重复的面，1代表已经语移除成功。
+		UGOperationResult RemoveDuplicatePoly();
+
+		//! \brief 校正拓扑。
+		//! \return 返回-1代表操作失败，0代表没有可校正的面，1代表已经校正成功。
+		UGOperationResult CorrectTopology();
 
 	private:
 		//! \brief 矩形。
@@ -932,8 +1020,7 @@ namespace UGC
 		void AddSlice(const UGPolySet* pPolygon2d,
 			const UGdouble& dRotate1, const UGdouble& dRotate2, 
 			const UGdouble& dHeight1, const UGdouble& dHeight2, 
-			const UGVector3d& vScale1, const UGVector3d& vScale2,
-			UGbool bCreateTexCoord = false);
+			const UGVector3d& vScale1, const UGVector3d& vScale2, UGbool bClosedRing);
 
 		//! \brief 获取侧面拉伸点信息
 		UGPolyPoint GetSlicePoint(const UGPolyPoint& srcPoint, UGdouble dHeight, const UGMatrix4d& matTran, UGbool bBotom = FALSE);
@@ -970,7 +1057,7 @@ namespace UGC
 		//! \brief 生成侧面纹理坐标
 		//! \param vecShapes [in] 拉伸体截面几何体数组。
 		//! \param param [in] 图片纹理参数。
-		UGbool GenerateSliceTexCoord(UGPolySets& vecShapes, const UGUVWMapParam& param);
+		UGbool GenerateSliceTexCoord(UGPolySets& arrSides);
 		
 		//! \brief 计算矢量面各顶点纹理坐标。
 		//! \param poly [in] 拉伸体底面几何体。
@@ -1025,6 +1112,9 @@ namespace UGC
 
 		//! \brief 是否生成纹理坐标。
 		UGbool m_bGenerateMappingCoords;
+
+		//! \brief 是否生成颜色。
+		UGbool m_bGenerateColor;
 
 		//! \brief 是否将z值作为属性不参与运算。
 		UGbool m_bZValAsAttribute;

@@ -98,6 +98,9 @@ public:
 	//! \param bForward 转化方向, true代表从UGRefTranslator的源(Src)转化到目的(Des), false则相反
 	virtual void PJConvert( UGRefTranslator *pPJTranslator, UGbool bForward = true);
 
+	//! \brief 根据投影转化器的设置和转化方向要求,对Geodes进行投影转化
+	virtual void PJConvertForGeode(std::vector<UGModelGeode *> geodes,UGRefTranslator *pPJTranslator,UGMatrix4d matGeoModel,UGMatrix4d matGeoModelSphere,UGbool bForward);
+
 	//! \brief 从经纬坐标系统转化为投影坐标系统
 	//! \param pCoordSys 投影坐标系统
 	virtual void PJForward( UGPrjCoordSys *pCoordSys );
@@ -138,7 +141,10 @@ public:
 
 	void SetSpherePlaced(UGbool bSpherePlaced);
 
-	UGbool GetSpherePlaced();
+	UGbool GetSpherePlaced() const;
+
+	//! \brief 按用户指定的位置进行矩阵变换。
+	void ReMultiplyMatrix(const UGPoint3D& pntUserDefined, const UGMatrix4d& mTrans);
 
 	//! \brief 修改:模型的放置点位置(m_pntPos)-->模型的实际中心点
 	//! \brief 在 SaveGeoData 中调用
@@ -202,7 +208,7 @@ public:
 		UGbool bDegree = TRUE, UGGeoLine3D *pSurfaceLine = NULL);
 
 	void SetModelNode(UGModelNode* pGroup,UGbool bOwned = FALSE);
-	UGModelNode* GetModelNode();
+	UGModelNode* GetModelNode() const;
 
 	//! \brief 根据m_pntScale m_pntRotate m_pntPos构造矩阵；
 	//! \brief 该 矩阵+ModelNode=UGGeoModelPro
