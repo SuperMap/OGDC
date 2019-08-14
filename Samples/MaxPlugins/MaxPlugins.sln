@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Max2014Plugin", "Max2014Plugin\Max2014Plugin.vcxproj", "{9DCD8481-D445-4551-A5D2-C34714539CBE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Debug|Win32.Build.0 = Debug|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Debug|x64.ActiveCfg = Debug|x64
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Release|Win32.ActiveCfg = Release|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Release|Win32.Build.0 = Release|Win32
+		{9DCD8481-D445-4551-A5D2-C34714539CBE}.Release|x64.ActiveCfg = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

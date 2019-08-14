@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMenuGUP.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGSuActions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MaxPluginres.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGBIMExporter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMaxModelProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGSingleNodeSceneExporter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMaxLogFile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMaxProcessBar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMaxToolkit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMtlToNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGMenuDec.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UGExportBIMDec.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="maxRequiredFun.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGBIMExporter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGMaxModelProcess.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGSingleNodeSceneExporter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGMaxLogFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGMaxProcessBar.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGMaxToolkit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UGMtlToNode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MaxPlugin.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="logo.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
