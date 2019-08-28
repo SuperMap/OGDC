@@ -1,7 +1,0 @@
-<RCC>
-  <qresource prefix="IFCTools">
-    <file>Resources/add.png</file>
-    <file>Resources/edit_add.png</file>
-    <file>Resources/edit_remove.png</file>
-  </qresource>
-</RCC>
