@@ -17,4 +17,4 @@
 1.将3dsmax场景中未隐藏的Node分别导出为一个S3MB文件；
 2.将3dsmax场景中未隐藏的Node导出到UDB中。
 
-使用注意事项：环境配置完成后，请先将MaxPlugins\LibShared\OpenSceneGraph-3.2\Build\Lib\x64\debug路径下的osg100-osgd和osg100-osgUtild文件解压后，再使用插件。
+使用注意事项：环境配置完成后，请先对MaxPlugins\LibShared\OpenSceneGraph-3.2\Build\Lib\x64\debug路径下的osg100-osgd和osg100-osgUtild文件使用右键“解压到当前文件夹”命令，进行解压后，再使用插件。
