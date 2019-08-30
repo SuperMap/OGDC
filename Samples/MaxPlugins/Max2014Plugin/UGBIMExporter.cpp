@@ -960,6 +960,23 @@ namespace UGC
 			pParms->SetFilePathName(strTexPath);
 			UGArray<UGImageData*> aryImageData;
 			UGFileParseToolkit::GetImageData(pParms, aryImageData, TRUE);
+			if (eType == UGFileType::BMP)
+			{
+				//翻转
+					UGbyte* pdata =	(UGbyte*)aryImageData[0]->pBits;
+					int nWidthBytes = aryImageData[0]->nWidthBytes;
+					UGbyte* ptmp = new UGbyte[nWidthBytes];
+					int iLine = 0;
+					UGint nHeight = aryImageData[0]->nHeight;
+					for (;iLine<nHeight/2;iLine++)
+					{
+						memcpy(ptmp, pdata+iLine*nWidthBytes, nWidthBytes);
+						memcpy(pdata+iLine*nWidthBytes, pdata+(nHeight-iLine-1)*nWidthBytes, nWidthBytes);
+						memcpy(pdata+(nHeight-iLine-1)*nWidthBytes, ptmp, nWidthBytes);
+					}
+					delete[] ptmp;
+					ptmp = NULL;
+			}
 
 			if (aryImageData.GetSize() > 0)
 			{
@@ -1145,7 +1162,11 @@ namespace UGC
 				}
 				else//如果进这里，说明图片类型目前还不支持，会崩溃
 				{
-					pTextureData->m_pBuffer = (UGuchar*)aryImageData[0]->pBits;
+					bool result = UGFileParseToolkit::GetTextureData(m_strTexPath,pTextureData);
+					if (!result)
+					{
+						return NULL;
+					}
 				}
 
 				return pTextureData;
