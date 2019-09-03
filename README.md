@@ -18,7 +18,7 @@ OGDC 标准接口中提供了统一的接口对空间数据库进行操作。目
 		应用层范例程序Viewer：二维点线面文本，三维点线面，清华山维点线面文本的显示。
 		应用层范例程序IFCTools：IFC数据通过OGDC接口写入SuperMap的UDB数据源。
 		Provider层示范程序 OgdcProviderMDB：通过OGDC接口实现的MDB数据源。
-		3dsMax模型插件：3dsMax场景模型通过OGDC接口写入SuperMap的UDB或直接通过S3MB接口导出S3MB。
+		3ds max模型插件：3ds max场景模型通过OGDC接口写入SuperMap的UDB或直接通过S3MB接口导出S3MB。
 （6）license.txt ：最终用户许可协议 。
 
 更多信息参考 http://www.gisforum.net/bbs/index.asp?boardid=118
