@@ -142,9 +142,9 @@ public:
 	//! \param inStrDest 文件生成的目标地址
 	//! \param inTexSrc 纹理所在的路径
 	//! \param bCopyTex 是否要拷贝纹理
-	UGSingleNodeSceneExporter(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bCopyTex=TRUE, UGC::UGbool bIsBIM = FALSE);
+	UGSingleNodeSceneExporter(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bExportAll, UGC::UGbool bCopyTex=TRUE, UGC::UGbool bIsBIM = FALSE);
 
-	void InitParams(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bCopyTex=TRUE, UGC::UGbool bIsBIM = FALSE);
+	void InitParams(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc,UGC::UGbool bExportAll, UGC::UGbool bCopyTex=TRUE, UGC::UGbool bIsBIM = FALSE);
 	//!\ 3DMAX进行遍历节点时所执行的操作，必须实现
 	virtual int	callback( INode *pNode );
 
@@ -194,5 +194,7 @@ private:
 	UGC::UGbool m_bCopyTexture;
 	//!\ 标示是否是BIM数据
 	UGC::UGbool m_bIsBIM;
+	//!\ 标示是否全部导出
+	UGC::UGbool m_bExportAll;
 };
 #endif

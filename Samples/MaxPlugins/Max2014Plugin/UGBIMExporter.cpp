@@ -9,6 +9,8 @@
 #include "decomp.h"
 #include "contextids.h "
 #include"ISTDPLUG.H"
+#include <fstream>
+#include<iostream>
 
 #include "MaxPluginres.h"
 
@@ -276,6 +278,16 @@ namespace UGC
 				{
 					//指向同一引用
 					pRefernceGeode->AddSkeleton(pGeode->GetSkeleton(pGeode->GetEntityNames(UGModelEntity::METype::etSkeleton)[nSkeleton]));
+				}
+				for (UGint nTexture = 0; nTexture < pGeode->GetEntityNames(UGModelEntity::METype::etTexture).size(); nTexture++)
+				{
+					//指向同一引用
+					pRefernceGeode->AddTexture(pGeode->GetTexture(pGeode->GetEntityNames(UGModelEntity::METype::etTexture)[nTexture]));
+				}
+				for (UGint nMaterial = 0; nMaterial < pGeode->GetEntityNames(UGModelEntity::METype::etMaterial).size(); nMaterial++)
+				{
+					//指向同一引用
+					pRefernceGeode->AddMaterial(pGeode->GetMaterial(pGeode->GetEntityNames(UGModelEntity::METype::etMaterial)[nMaterial]));
 				}
 				m_ModelGroup.push_back(pRefernceGeode);
 			}
@@ -717,7 +729,7 @@ namespace UGC
 				bmt=(BitmapTex*)tx;
 				UGString strFileName;
 				strTexPath = bmt->GetFullName();
-				UGint nIndex = strTexPath.Find(_U("("));
+				UGint nIndex = strTexPath.ReverseFind(_U("("));
 				nIndex = strTexPath.GetLength() - nIndex - 1;
 				if (nIndex > 0)
 				{
@@ -1009,7 +1021,7 @@ namespace UGC
 				if(nBitPixel == 24 || nBitPixel == 32)
 				{
 					// 把图片缩放到最合适的范围内
-					comp = nBitPixel/8;
+					comp = aryImageData[0]->btBitsPixel/8;
 					UGuint nAdjustW = UGMathEngine::NextP2(nWidth);
 					UGuint nAdjustH = UGMathEngine::NextP2(nHeight);
 					UGuchar* pDest = new UGuchar[nAdjustW * nAdjustH * comp];
@@ -1053,7 +1065,7 @@ namespace UGC
 					delete[] pRGBAData;
 					delete[] pDest;
 				}
-				else if(nBitPixel ==8)
+				else if(nBitPixel == 8)
 				{
 					UGuint comp = 4;
 					pTextureData->m_enFormat = PF_BYTE_RGBA;
@@ -1135,17 +1147,17 @@ namespace UGC
 							if(bPalette && nValue >=0 && 
 								aryImageData[0]->palette.GetSize() > nValue)
 							{	
-								pDataDes[4*i+0] = aryImageData[0]->palette.GetAt(nValue).peRed;
-								pDataDes[4*i+1] = aryImageData[0]->palette.GetAt(nValue).peGreen;
-								pDataDes[4*i+2] = aryImageData[0]->palette.GetAt(nValue).peBlue;
-								pDataDes[4*i+3] = nValueA;
+								pDataDes[4*i/2+0] = aryImageData[0]->palette.GetAt(nValue).peRed;
+								pDataDes[4*i/2+1] = aryImageData[0]->palette.GetAt(nValue).peGreen;
+								pDataDes[4*i/2+2] = aryImageData[0]->palette.GetAt(nValue).peBlue;
+								pDataDes[4*i/2+3] = nValueA;
 							}
 							else
 							{
-								pDataDes[4*i+0] = nValue;
-								pDataDes[4*i+1] = nValue;
-								pDataDes[4*i+2] = nValue;
-								pDataDes[4*i+3] = nValueA;
+								pDataDes[4*i/2+0] = nValue;
+								pDataDes[4*i/2+1] = nValue;
+								pDataDes[4*i/2+2] = nValue;
+								pDataDes[4*i/2+3] = nValueA;
 							}
 						}
 						UGuchar* pOut = NULL;
@@ -1160,11 +1172,61 @@ namespace UGC
 						delete [] pDataDes;
 					}
 				}
+				else if(nBitPixel == 160)
+				{
+					UGuint comp = 4;
+					pTextureData->m_enFormat = PF_BYTE_RGBA;
+					pTextureData->m_nHeight = aryImageData[0]->nHeight;
+					pTextureData->m_nWidth = aryImageData[0]->nWidth;
+					if(pTextureData->m_pBuffer != NULL)
+					{
+						delete pTextureData->m_pBuffer;
+						pTextureData->m_pBuffer = NULL;
+					}
+
+					UGint nSize = aryImageData[0]->nHeight*aryImageData[0]->nWidth*comp;
+					pTextureData->m_pBuffer = new UGuchar[nSize];
+					UGuchar* pDataDes = pTextureData->m_pBuffer;
+
+					UGbool bPalette = aryImageData[0]->btPlanes > 0;
+
+					if(aryImageData[0]->btBitsPixel == 160)
+					{
+						UGint nSizeOrg = aryImageData[0]->nHeight*aryImageData[0]->nWidth;
+						UGushort* pDataSrc = (UGushort*)aryImageData[0]->pBits;
+						for (UGint i=0; i<nSizeOrg; i++)
+						{
+							UGuchar nValueR = pDataSrc[i] / 256;
+							{
+								pDataDes[4 * i + 0] = nValueR;
+								pDataDes[4 * i + 1] = nValueR;
+								pDataDes[4 * i + 2] = nValueR;
+								pDataDes[4 * i + 3] = 255 - nValueR;
+							}
+						}
+
+
+						UGuchar* pOut = NULL;
+						UGuint nSize =UGImageOperator::Encode(4, pTextureData->m_nWidth, pTextureData->m_nHeight, pDataDes, &pOut, UGDataCodec::enrS3TCDXTN,TRUE);
+
+						pTextureData->m_nSize = nSize;
+						pTextureData->m_pBuffer = pOut;
+						pTextureData->m_nWidth = pTextureData->m_nWidth;
+						pTextureData->m_nHeight = pTextureData->m_nHeight;
+						pTextureData->m_CompressType = UGDataCodec::enrS3TCDXTN;
+						delete [] pDataDes;
+					}
+				}
 				else//如果进这里，说明图片类型目前还不支持，会崩溃
 				{
-					bool result = UGFileParseToolkit::GetTextureData(m_strTexPath,pTextureData);
+					delete aryImageData[0];
+					bool result = UGFileParseToolkit::GetTextureData(strTexPath ,pTextureData,TRUE);
 					if (!result)
 					{
+						//ofstream ofs("C:\\Users\\lvjz\\Desktop\\testData\\test.txt", ios::out || ios::app);
+						//ofs << strTexPath;
+						//ofs << "\n";
+						//ofs.close();
 						return NULL;
 					}
 				}
@@ -1636,6 +1698,81 @@ namespace UGC
 		return TRUE;
 	}
 
+	bool ExportOgdcDataset(UGGeoModelPro* pGomodelPro)
+	{
+		//创建并打开OGDC数据源
+		UGString UDBSever = L" c://DataSource.udb";
+		OGDC::OgdcDataSource* pUDBDataSource;
+		pUDBDataSource = OgdcProviderManager::CreateOgdcDataSource(OGDC::oeFile);
+		pUDBDataSource->m_nEngineClass = 2;
+		pUDBDataSource->m_connection.m_strServer = UDBSever;
+		pUDBDataSource->Create();
+		if (!((OGDC::OgdcDataSource*)pUDBDataSource)->Open())
+		{
+			delete pUDBDataSource;
+			return FALSE;
+		}
+		//创建并打开OGDC数据集
+		UGString DatasetName = L"OgdcDataset";
+		OGDC::OgdcDataset *pDataset = pUDBDataSource->GetDataset(DatasetName);
+		OGDC::OgdcDatasetVector* pDatasetVector = (OGDC::OgdcDatasetVector*)pDataset;
+		if (NULL == pDataset)
+		{
+			OGDC::OgdcDatasetVectorInfo tempDatasetVectorInfo;
+			tempDatasetVectorInfo.m_strName = DatasetName;
+			tempDatasetVectorInfo.m_nType = OGDC::OgdcDataset::Model;
+
+			pDatasetVector = pUDBDataSource->CreateDatasetVector(tempDatasetVectorInfo);
+			bool IsPlanar = false;//是否导出为平面
+			if (!IsPlanar)
+			{
+				OGDC::OgdcCoordSys prjCoordSys;
+				prjCoordSys.SetEarth(6378137, 0.00335281066474748, 10000);
+				pDatasetVector->SetCoordSys(prjCoordSys);
+			}
+			else
+			{
+				OGDC::OgdcCoordSys prjCoordSys;
+				pDatasetVector->SetCoordSys(prjCoordSys);
+			}
+			//创建字段
+			UGString m_strModelName = _U("ModelName");
+			UGString m_strId = _U("ID");
+
+			OGDC::OgdcFieldInfos fieldInfos;
+
+			m_strModelName = pDatasetVector->GetUnoccupiedFieldName(m_strModelName);
+			bool result = fieldInfos.AddField(m_strModelName, OgdcFieldInfo::FieldType::Text, 255);
+			m_strId = pDatasetVector->GetUnoccupiedFieldName(m_strId);
+			result = fieldInfos.AddField(m_strId, OgdcFieldInfo::FieldType::INT32, 4);
+			pDatasetVector->CreateFields(fieldInfos);
+		}
+
+		//创建OGDC记录集
+		OgdcQueryDef queryDef;
+		pDataset->Open();
+		queryDef.m_nType = OgdcQueryDef::General;
+		queryDef.m_nOptions = OgdcQueryDef::Both;
+		queryDef.m_nCursorType = OgdcQueryDef::OpenDynamic;
+		OGDC::OgdcRecordset* pRecordset = pDatasetVector->Query(queryDef);
+		if (NULL == pRecordset)
+		{
+			return FALSE;
+		}
+
+		//记录集更新
+		pRecordset->AddNew(pGomodelPro);
+		UGString modelName = L"模型A";
+		pRecordset->SetFieldValue(L"ModelName", modelName);
+		int id = 1;
+		UGVariant varId(id);
+		pRecordset->SetFieldValue(L"ID", varId);
+		bool result = pRecordset->Update();
+		pRecordset->Close();
+		//pDataset->SaveInfo();//这句话需要注释掉，因为目前会出现bounds异常。
+		pUDBDataSource->Close();
+		return TRUE;
+	}
 	/*UGbool UGBIMExporter::ExportCADDataSet(ExportParameter para)
 	{
 		OGDC::OgdcDataSource* pUDBDataSource;

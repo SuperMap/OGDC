@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="MaxPluginres.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="UGBatchMaxImporter.h" />
     <ClInclude Include="UGBIMExporter.h" />
     <ClInclude Include="UGExportBIMDec.h" />
     <ClInclude Include="UGMaxLogFile.h" />
@@ -35,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="maxRequiredFun.cpp" />
+    <ClCompile Include="UGBatchMaxImporter.cpp" />
     <ClCompile Include="UGBIMExporter.cpp" />
     <ClCompile Include="UGMaxLogFile.cpp" />
     <ClCompile Include="UGMaxModelProcess.cpp" />
@@ -44,7 +46,9 @@
     <ClCompile Include="UGSingleNodeSceneExporter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="MaxPlugin.rc" />
+    <ResourceCompile Include="MaxPlugin.rc">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AFX_TARG_ENU;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="logo.bmp" />
@@ -125,6 +129,9 @@
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>AFX_TARG_CHS;AFX_RESOURCE_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

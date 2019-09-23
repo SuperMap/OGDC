@@ -30,6 +30,7 @@
 
 #include "MaxPluginres.h"
 #include "UGSingleNodeSceneExporter.h"
+#include "UGBatchMaxImporter.h"
 
 #include "OGDC/OgdcDataSource.h"
 #include "OGDC/OgdcProviderManager.h"
@@ -38,6 +39,471 @@
 //using namespace UGC;
 //!  \在此添加响应菜单项动作的类，需要继承ActionItemStandin，并实现以下几个方法，其中ExecuteAction为响应函数。主要功能负责
 //!  \界面响应，以及界面信息的收集。
+
+
+//!  \下面是批量导入界面类的编写。
+class BatchImport :public ActionItem
+{
+	friend INT_PTR CALLBACK BatchImportProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+public:
+	BatchImport(HINSTANCE outHInstance)
+	{
+		hInstance = outHInstance;
+		m_bPlanar = FALSE;
+		m_bIsRemoveDupVertex = FALSE;
+		m_bIsIngore = FALSE;
+		m_bIsExportNormal = TRUE;
+	}
+	~BatchImport()
+	{
+	}
+
+	BOOL IsEnabled() { return TRUE; }
+	BOOL IsItemVisible() { return TRUE; }
+	virtual BOOL IsChecked() { return FALSE; }
+	virtual void DeleteThis() { delete this; }
+	virtual int GetId() { return m_id; }
+#ifndef MAX2014 
+	virtual MaxIcon* GetIcon() { return NULL; }
+#endif
+
+	void Init(int id, const TCHAR *mText, const TCHAR *bText, const TCHAR *cText, const TCHAR *dText)
+	{
+		m_id = id;
+		m_menuText = mText;
+		m_buttonText.printf(_T("%s"), bText);
+		m_descText.printf(_T("%s"), dText);
+		m_catText.printf(_T("%s"), cText);
+	}
+
+	void GetMenuText(TSTR& menuText) { menuText = this->m_menuText; }
+	virtual void GetButtonText(TSTR& buttonText) { buttonText = this->m_buttonText; }
+	void GetDescriptionText(TSTR& descText) { descText = this->m_descText; }
+	void GetCategoryText(TSTR& catText) { catText = this->m_catText; }
+	UGArray<UGC::UGString> GetDataSets(OgdcString StrPathName, OGDC::OgdcInt type)
+	{
+		OGDC::OgdcDataSource* pUDBDataSource;
+		if (!UGC::UGFile::GetExt(StrPathName).CompareNoCase(_U(".udb")))
+		{
+			pUDBDataSource = OgdcProviderManager::CreateOgdcDataSource(OGDC::oeFile);
+		}
+		pUDBDataSource->m_nEngineClass = 2;
+		pUDBDataSource->m_connection.m_strServer = StrPathName;
+		UGArray<UGC::UGString> datasetNames;
+		if (!((OGDC::OgdcDataSource*)pUDBDataSource)->Open())
+		{
+			delete pUDBDataSource;
+			return datasetNames;
+		}
+		for (OgdcInt i = 0; i < pUDBDataSource->GetDatasetCount(); i++)
+		{
+			OgdcDataset* pDataset = pUDBDataSource->GetDataset(i);
+			if (pDataset->GetType() == type)
+			{
+				datasetNames.Add(pDataset->GetName());
+			}
+		}
+
+		delete pUDBDataSource;
+		return datasetNames;
+	}
+
+	//! \动作响应函数
+	BOOL ExecuteAction()
+	{
+		//! brief 1.批量导入3ds
+		//UGString rootPath3DS=UGMaxToolkit::GetInputPath("请选择模型文件所在路径",0,GetCOREInterface()->GetMAXHWnd(),false);
+		//if(rootPath3DS.IsEmpty())return TRUE;
+		//GetCOREInterface()->ImportFromFile(rootPath3DS.Cstr(),TRUE,&Class_ID(0x74573fe8, 0x4d366cbe));
+		//////////////////////////////
+
+		//! brief 2.批量导入max
+		//! brief 第一步:配置相关属性信息
+		int result = DialogBoxParam(hInstance,
+			MAKEINTRESOURCE(IDD_BATCHIMPORTMAX),
+			GetCOREInterface()->GetMAXHWnd(),
+			BatchImportProc,
+			(LPARAM)this);
+
+		if (result <= 0)
+		{
+			return FALSE;
+		}
+		UGC::UGString strModelDir = UGC::UGFile::GetDir(m_strDataSourceName);
+		UGC::UGFile::MkDir(strModelDir);
+
+		if (m_bPlanar)
+		{
+			m_maxImporter.SetParams(m_dPlaneX, m_dPlaneY, m_dPlaneZ, m_strMaxDir, m_strDataSourceName, m_strDataSetName,
+				 m_bPlanar, m_bIsIngore, m_bIsRemoveDupVertex,m_bIsExportNormal, m_bExportAll);
+		}
+		else
+		{
+			m_maxImporter.SetParams(m_dLon, m_dLat, m_dAlt, m_strMaxDir, m_strDataSourceName, m_strDataSetName,
+				 m_bPlanar, m_bIsIngore, m_bIsRemoveDupVertex,m_bIsExportNormal, m_bExportAll);
+		}
+
+		m_maxImporter.DoImport();
+		return TRUE;
+	}
+private:
+	HINSTANCE hInstance;
+public:
+	UGBatchMaxImporter m_maxImporter;
+	UGC::UGdouble m_dLon, m_dLat, m_dAlt;
+	UGC::UGdouble m_dPlaneX, m_dPlaneY, m_dPlaneZ;
+
+	UGC::UGdouble m_dXOffset;
+	UGC::UGdouble m_dYOffset;
+
+	UGC::UGString m_strMaxDir;
+
+	UGC::UGString m_strDataSourceName;
+	UGC::UGString m_strDataSetName;
+	UGC::UGString m_strPRJXMLPath;
+	UGC::UGbool m_bPlanePRJ;
+	UGC::UGbool m_bPlanar;
+	UGC::UGbool m_bIsBIM;
+	UGC::UGbool m_bIsRemoveDupVertex;
+	UGC::UGbool m_bIsIngore;
+	UGC::UGbool m_bIsExportNormal;
+	UGC::UGbool m_bExportAll;
+
+	int m_id;
+	TSTR m_menuText, m_buttonText, m_descText, m_catText;
+};
+static INT_PTR CALLBACK ModelDatasetProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	static UGC::UGString* pDataset;
+	switch (message) {
+	case WM_INITDIALOG:
+	{
+		SetWindowContextHelpId(hDlg, idh_3dsexp_export);
+		pDataset = (UGC::UGString*) lParam;
+		CenterWindow(hDlg, GetParent(hDlg));
+		return FALSE;
+	}
+	case WM_DESTROY:
+		return FALSE;
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+		{
+			LPTSTR pDatasetLPName = new TCHAR[20];
+			GetDlgItemText(hDlg, IDC_DATASETNAME, pDatasetLPName, 20);
+			if (!UGMaxToolkit::IslegalName(pDatasetLPName))
+			{
+				MessageBox(hDlg, _U("数据集名称不合法"), _U("注意"), MB_OK | MB_ICONERROR);
+				delete[] pDatasetLPName;
+				return FALSE;
+			}
+			*pDataset = pDatasetLPName;
+			delete[] pDatasetLPName;
+			EndDialog(hDlg, 1);
+			return TRUE;
+		}
+
+		case IDCANCEL:
+			EndDialog(hDlg, 0);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+static INT_PTR CALLBACK BatchImportProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	static BatchImport* batchImport = NULL;
+	switch (message)
+	{
+	case WM_INITDIALOG:
+	{
+		SetWindowContextHelpId(hDlg, idh_3dsexp_export);
+		batchImport = (BatchImport*)lParam;
+		CenterWindow(hDlg, GetParent(hDlg));
+
+		UGMaxLogFile* pProjectionHolder = UGMaxLogFile::GetMaxLogFile();
+		SetDlgItemText(hDlg, IDC_LONGT, pProjectionHolder->GetLontitude().Cstr());
+		SetDlgItemText(hDlg, IDC_LATIt, pProjectionHolder->GetLatitude().Cstr());
+		SetDlgItemText(hDlg, IDC_ALTIT, pProjectionHolder->GetAltitude().Cstr());
+		//球面坐标、平面坐标分开设置
+		CheckDlgButton(hDlg, IDC_EARTHPOS, BST_CHECKED);
+		SetDlgItemText(hDlg, IDC_PLANEX, pProjectionHolder->GetPlaneX().Cstr());
+		SetDlgItemText(hDlg, IDC_PLANEY, pProjectionHolder->GetPlaneY().Cstr());
+		SetDlgItemText(hDlg, IDC_PLANEZ, pProjectionHolder->GetPlaneZ().Cstr());
+		HWND hwdTemp;
+		hwdTemp = GetDlgItem(hDlg, IDC_PLANEX);
+		EnableWindow(hwdTemp, FALSE);
+		hwdTemp = GetDlgItem(hDlg, IDC_PLANEY);
+		EnableWindow(hwdTemp, FALSE);
+		hwdTemp = GetDlgItem(hDlg, IDC_PLANEZ);
+		EnableWindow(hwdTemp, FALSE);
+
+		CheckDlgButton(hDlg, IDC_EXPORTVISIBLE2, BST_CHECKED);
+		hwdTemp = GetDlgItem(hDlg, IDC_EXPORTVISIBLE2);
+		EnableWindow(hwdTemp, TRUE);
+
+		CheckDlgButton(hDlg, IDC_CHC_LOD1, BST_CHECKED);
+		hwdTemp = GetDlgItem(hDlg, IDC_CHC_LOD1);
+		EnableWindow(hwdTemp, TRUE);
+
+		CheckDlgButton(hDlg, IDC_CHC_WITHOUTNORMAL1, BST_UNCHECKED);
+		hwdTemp = GetDlgItem(hDlg, IDC_CHC_WITHOUTNORMAL1);
+		EnableWindow(hwdTemp, TRUE);
+
+		return FALSE;
+	}
+	case WM_DESTROY:
+		return FALSE;
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+		{
+			LPTSTR longitudeC = new TCHAR[20];
+			LPTSTR latitudeC = new TCHAR[20];
+			LPTSTR altitudeC = new TCHAR[20];
+			LPTSTR planexC = new TCHAR[20];
+			LPTSTR planeyC = new TCHAR[20];
+			LPTSTR planezC = new TCHAR[20];
+			GetDlgItemText(hDlg, IDC_LONGT, longitudeC, 20);
+			GetDlgItemText(hDlg, IDC_LATIt, latitudeC, 20);
+			GetDlgItemText(hDlg, IDC_ALTIT, altitudeC, 20);
+			GetDlgItemText(hDlg, IDC_PLANEX, planexC, 20);
+			GetDlgItemText(hDlg, IDC_PLANEY, planeyC, 20);
+			GetDlgItemText(hDlg, IDC_PLANEZ, planezC, 20);
+
+			batchImport->m_bPlanar = IsDlgButtonChecked(hDlg, IDC_PLANEPOS) ? TRUE : FALSE;
+
+			batchImport->m_bIsBIM = TRUE;
+			batchImport->m_bIsIngore = IsDlgButtonChecked(hDlg, IDC_CHC_LOD1) ? TRUE : FALSE;
+			batchImport->m_bIsExportNormal = IsDlgButtonChecked(hDlg, IDC_CHC_WITHOUTNORMAL1) ? FALSE : TRUE;
+			batchImport->m_bIsRemoveDupVertex = IsDlgButtonChecked(hDlg, IDC_CHC_REMOVE1) ?  TRUE : FALSE;
+
+			UGMaxLogFile* pProjectionHolder = UGMaxLogFile::GetMaxLogFile();
+			if (!batchImport->m_bPlanar)
+			{
+				if ((!UGMaxToolkit::IsFloat(longitudeC)) || (!UGMaxToolkit::IsFloat(latitudeC)) || (!UGMaxToolkit::IsFloat(altitudeC)))
+				{
+					UGC::UGStringEx warning;
+					warning.LoadResString(UGS_MAX_LATLONG_HINT);
+					UGC::UGStringEx hint;
+					hint.LoadResString(UGS_MAX_HINT);
+					MessageBox(hDlg, warning, hint, MB_OK | MB_ICONERROR);
+					delete[] longitudeC;
+					delete[] latitudeC;
+					delete[] altitudeC;
+					return FALSE;
+				}
+				if (!UGMaxToolkit::IsCorrectSphericalD((char*)longitudeC, (char*)latitudeC))
+				{
+					UGC::UGStringEx warning;
+					warning.LoadResString(UGS_MAX_LATLONG_WARNING);
+					UGC::UGStringEx hint;
+					hint.LoadResString(UGS_MAX_HINT);
+					MessageBox(hDlg, warning, hint, MB_OK | MB_ICONERROR);
+					delete[] longitudeC;
+					delete[] latitudeC;
+					delete[] altitudeC;
+					return FALSE;
+				}
+				if (IsDlgButtonChecked(hDlg, IDC_EXPORTALL2))
+				{
+					batchImport->m_bExportAll = TRUE;
+				}
+				else
+				{
+					batchImport->m_bExportAll = FALSE;
+				}
+				pProjectionHolder->SetLontitude(longitudeC);
+				pProjectionHolder->SetLatitude(latitudeC);
+				pProjectionHolder->SetAltitude(altitudeC);
+				//	Modify by lina 2014-3-4
+#ifdef _UGUNICODE
+				UGC::UGString lonTemp(longitudeC);
+				batchImport->m_dLon = lonTemp.ToDouble();//lina
+				UGC::UGString latTemp(latitudeC);
+				batchImport->m_dLat = latTemp.ToDouble();
+				UGC::UGString altitTemp(altitudeC);
+				batchImport->m_dAlt = altitTemp.ToDouble();
+#else
+				batchImport->m_dLon = atof(longitudeC);
+				batchImport->m_dLat = atof(latitudeC);
+				batchImport->m_dAlt = atof(altitudeC);
+#endif
+
+				delete[] longitudeC;
+				delete[] latitudeC;
+				delete[] altitudeC;
+			}
+			else
+			{
+				if ((!UGMaxToolkit::IsFloat(planexC)) || (!UGMaxToolkit::IsFloat(planeyC)) || (!UGMaxToolkit::IsFloat(planezC)))
+				{
+					UGC::UGStringEx warning;
+					warning.LoadResString(UGS_MAX_PLANEXYZ_HINT);
+					UGC::UGStringEx hint;
+					hint.LoadResString(UGS_MAX_HINT);
+					MessageBox(hDlg, warning, hint, MB_OK | MB_ICONERROR);
+					delete[] planexC;
+					delete[] planeyC;
+					delete[] planezC;
+					return FALSE;
+				}
+				pProjectionHolder->SetPlaneX(planexC);
+				pProjectionHolder->SetPlaneY(planeyC);
+				pProjectionHolder->SetPlaneZ(planezC);
+				//	Modify by lina 2014-3-4
+#ifdef _UGUNICODE
+				UGC::UGString lonTemp(planexC);
+				batchImport->m_dPlaneX = lonTemp.ToDouble();//lina
+				UGC::UGString latTemp(planeyC);
+				batchImport->m_dPlaneY = latTemp.ToDouble();
+				UGC::UGString altitTemp(planezC);
+				batchImport->m_dPlaneZ = altitTemp.ToDouble();
+#else
+				batchImport->m_dPlaneX = atof(planexC);
+				batchImport->m_dPlaneY = atof(planeyC);
+				batchImport->m_dPlaneZ = atof(planezC);
+#endif
+				delete[] planexC;
+				delete[] planeyC;
+				delete[] planezC;
+			}
+			if (!UGC::UGFile::IsExist(batchImport->m_strDataSourceName))
+			{
+				UGC::UGStringEx warning;
+				warning.LoadResString(UGS_INVALID_DS_PATH);
+				UGC::UGStringEx hint;
+				hint.LoadResString(UGS_MAX_HINT);
+				MessageBox(hDlg, warning, hint, MB_OK | MB_ICONERROR);
+				return FALSE;
+			}
+
+			LPTSTR pMaxDir = new TCHAR[MAX_PATH];
+			GetDlgItemText(hDlg, IDC_MAXDIR, pMaxDir, MAX_PATH);
+			batchImport->m_strMaxDir = pMaxDir;
+			delete[] pMaxDir;
+
+			LPTSTR pDatasetLPName = new TCHAR[20];
+			GetDlgItemText(hDlg, IDC_DATASETS, pDatasetLPName, 20);
+			batchImport->m_strDataSetName = pDatasetLPName;
+			UGC::UGString strDatesetName = pDatasetLPName;
+			if (strDatesetName.IsEmpty())
+			{
+				UGC::UGStringEx warning;
+				warning.LoadResString(UGS_MAX_DATASET_NAME_IS_NULL);
+				UGC::UGStringEx hint;
+				hint.LoadResString(UGS_MAX_HINT);
+				MessageBox(hDlg, warning, hint, MB_OK | MB_ICONERROR);
+				delete[] pDatasetLPName;
+				return FALSE;
+			}
+			delete pDatasetLPName;
+			EndDialog(hDlg, 1);
+			return TRUE;
+		}
+		case IDC_EARTHPOS:
+		{
+
+			HWND hwdTemp;
+			hwdTemp = GetDlgItem(hDlg, IDC_LONGT);
+			EnableWindow(hwdTemp, TRUE);
+			hwdTemp = GetDlgItem(hDlg, IDC_LATIt);
+			EnableWindow(hwdTemp, TRUE);
+			hwdTemp = GetDlgItem(hDlg, IDC_ALTIT);
+			EnableWindow(hwdTemp, TRUE);
+
+			hwdTemp = GetDlgItem(hDlg, IDC_PLANEX);
+			EnableWindow(hwdTemp, FALSE);
+			hwdTemp = GetDlgItem(hDlg, IDC_PLANEY);
+			EnableWindow(hwdTemp, FALSE);
+			hwdTemp = GetDlgItem(hDlg, IDC_PLANEZ);
+			EnableWindow(hwdTemp, FALSE);
+			return FALSE;
+		}
+		case IDC_PLANEPOS:
+		{
+			HWND hwdTemp;
+			hwdTemp = GetDlgItem(hDlg, IDC_LONGT);
+			EnableWindow(hwdTemp, FALSE);
+			hwdTemp = GetDlgItem(hDlg, IDC_LATIt);
+			EnableWindow(hwdTemp, FALSE);
+			hwdTemp = GetDlgItem(hDlg, IDC_ALTIT);
+			EnableWindow(hwdTemp, FALSE);
+
+			hwdTemp = GetDlgItem(hDlg, IDC_PLANEX);
+			EnableWindow(hwdTemp, TRUE);
+			hwdTemp = GetDlgItem(hDlg, IDC_PLANEY);
+			EnableWindow(hwdTemp, TRUE);
+			hwdTemp = GetDlgItem(hDlg, IDC_PLANEZ);
+			EnableWindow(hwdTemp, TRUE);
+			return FALSE;
+		}
+		case IDC_DATASOURCE:
+		{
+			OPENFILENAME a;
+			TCHAR szFile[MAX_PATH];
+			ZeroMemory(&a, sizeof(a));
+			a.lStructSize = sizeof(a);
+			a.hwndOwner = hDlg;
+			a.lpstrFile = szFile;
+			a.lpstrFile[0] = '\0';
+			a.nMaxFile = sizeof(szFile);
+			a.lpstrFilter = _U("UDB Files\0*.udb\0");
+			a.nFilterIndex = 1;
+			a.lpstrFileTitle = NULL;
+			a.nMaxFileTitle = 0;
+			a.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+			GetOpenFileName(&a);;
+			UGC::UGString StrPathName(szFile);
+			if (!UGC::UGFile::IsExist(StrPathName))
+				return FALSE;
+			SetDlgItemText(hDlg, IDC_EXPORTPATH, szFile);
+			batchImport->m_strDataSourceName = StrPathName;
+			UGArray<UGC::UGString> existedDatasets = batchImport->GetDataSets(StrPathName, OGDC::OgdcDataset::Model);
+			HWND texLevelTp = GetDlgItem(hDlg, IDC_DATASETS);
+			SendMessage(texLevelTp, CB_RESETCONTENT, 0, 0);
+			UGC::UGint numDataset = existedDatasets.GetSize();
+			UGC::UGint i = 0;
+			for (; i < numDataset; i++)
+			{
+				UGC::UGString strDatasetName = existedDatasets.GetAt(i);
+				TCHAR *pDatasetName = (TCHAR *)strDatasetName.Cstr();
+				SendMessage(texLevelTp, CB_ADDSTRING, 0, (LPARAM)pDatasetName);
+			}
+			SendMessage(texLevelTp, CB_SETCURSEL, 0, 0);
+			return FALSE;
+		}
+		case IDC_CREATEDATASET:
+		{
+			DialogBoxParam(hInstance,
+				MAKEINTRESOURCE(IDD_DATASETNAME),
+				hDlg,
+				ModelDatasetProc,
+				(LPARAM)&(batchImport->m_strDataSetName));
+			if ((batchImport->m_strDataSetName).IsEmpty())
+				return FALSE;
+			HWND texLevelTp = GetDlgItem(hDlg, IDC_DATASETS);
+			TCHAR *pDatasetName = (TCHAR *)(batchImport->m_strDataSetName).Cstr();
+			SendMessage(texLevelTp, CB_INSERTSTRING, 0, (LPARAM)pDatasetName);
+			SendMessage(texLevelTp, CB_SETCURSEL, 0, 0);
+			return FALSE;
+		}
+		case IDC_btMAXDIR:
+		{
+			TCHAR dispathname[MAX_PATH];
+			GetDlgItemText(hDlg, IDC_MAXDIR, dispathname, MAX_PATH);
+			UGC::UGStringEx warning;
+			warning.LoadResString(UGS_MAX_TEXTURE_PATH_HINT);
+			batchImport->m_strMaxDir = UGMaxToolkit::GetInputPath((TCHAR*)warning.Cstr(), IDC_MAXDIR, hDlg, true, dispathname);
+			return FALSE;
+		}
+		case IDCANCEL:
+			EndDialog(hDlg, 0);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 
 //!  \下面是批量导出S3MB的编写。
 class BatchExport:public ActionItem
@@ -195,44 +661,7 @@ BOOL BatchExport::ExecuteAction()
 		return TRUE;
 	}
 }
-static INT_PTR CALLBACK ModelDatasetProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	static UGC::UGString* pDataset;
-	switch(message) {
-	case WM_INITDIALOG:
-		{   
-			SetWindowContextHelpId(hDlg, idh_3dsexp_export);
-			pDataset = (UGC::UGString*) lParam;
-			CenterWindow(hDlg,GetParent(hDlg));
-			return FALSE;
-		}
-	case WM_DESTROY:
-		return FALSE;
-	case WM_COMMAND:
-		switch(LOWORD(wParam)) {
-		case IDOK:
-			{
-				LPTSTR pDatasetLPName=new TCHAR[20];
-				GetDlgItemText(hDlg,IDC_DATASETNAME,pDatasetLPName,20); 
-				if(!UGMaxToolkit::IslegalName(pDatasetLPName))
-				{
-					MessageBox(hDlg,_U("数据集名称不合法"),_U("注意"),MB_OK|MB_ICONERROR);
-					delete[] pDatasetLPName;
-					return FALSE;
-				}
-				*pDataset = pDatasetLPName;
-				delete[] pDatasetLPName;
-				EndDialog(hDlg, 1);
-				return TRUE;
-			}
 
-		case IDCANCEL:
-			EndDialog(hDlg, 0);
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
 #ifdef MAX2014 
 //!  \下面是导出BIM数据到数据集
 class BIMExport:public ActionItem
@@ -327,7 +756,7 @@ public:
 		UGC::UGbool bIsExportMaterialColor = !m_bIsIgnore;
 		bimProcess.SetIsExportMaterialColor(bIsExportMaterialColor);
 		bimProcess.SetIsExportNormal(m_bIsExportNormal);
-		m_BIMExporter.InitParams(&bimProcess,strModelDir,m_strTexPath,TRUE,TRUE);
+		m_BIMExporter.InitParams(&bimProcess,strModelDir,m_strTexPath, m_bExportAll,TRUE,TRUE);
 		m_BIMExporter.SetModelRelative(0.0,0.0,0); 
 		UGMaxProcessBar maxProcessBar(hInstance,GetCOREInterface()->GetMAXHWnd());
 		maxProcessBar.Start();
@@ -429,6 +858,7 @@ public:
 	UGC::UGString m_strPRJXMLPath;
 	UGC::UGbool m_bPlanePRJ;
 	UGC::UGbool m_bPlanar;
+	UGC::UGbool m_bExportAll;
 	UGSingleNodeSceneExporter m_BIMExporter;
 	int m_id;
 	UGC::UGbool m_isLOD;
@@ -469,6 +899,10 @@ static INT_PTR CALLBACK BIMExportProc(HWND hDlg, UINT message, WPARAM wParam, LP
 			hwdTemp=GetDlgItem(hDlg,IDC_PLANEZ);
 			EnableWindow(hwdTemp,FALSE);
 
+			//导出选项
+			CheckDlgButton(hDlg, IDC_EXPORTVISIBLE, BST_CHECKED);
+
+			//纹理路径
 			UGC::UGString pathNameCurrent(GetCOREInterface()->GetCurFilePath());
 			UGC::UGString pathNameCurrentDir=UGC::UGFile::GetDir(pathNameCurrent);
 			bimExport->m_strTexPath=pathNameCurrentDir;
@@ -518,7 +952,15 @@ static INT_PTR CALLBACK BIMExportProc(HWND hDlg, UINT message, WPARAM wParam, LP
 				else
 				{
 					bimExport->m_bPlanar = FALSE;
-				}			
+				}	
+				if (IsDlgButtonChecked(hDlg,IDC_EXPORTALL))
+				{
+					bimExport->m_bExportAll = TRUE;
+				}
+				else
+				{
+					bimExport->m_bExportAll = FALSE;
+				}
 				if (IsDlgButtonChecked(hDlg,IDC_CHC_LOD))
 				{
 					bimExport->m_bIsIgnore = TRUE;
@@ -809,6 +1251,12 @@ void UGSuActions::AppendOperation(ActionTable* pTab)
 	UGC::UGStringEx catText = _U("SuperMapActions");
 
 	int actionIndex=1;
+
+	//!  \批量导入模型
+	BatchImport* pBatchImport = new BatchImport(hInstance);
+	name.LoadResString(UGS_MAX_BATCH_IMPORT);
+	pBatchImport->Init(actionIndex++, name, _U(""), catText, _U("Batch Import"));
+	pTab->AppendOperation(pBatchImport);
 	
 	//!  \批量导出模型
 	BatchExport* pBatchExport = new BatchExport(hInstance);

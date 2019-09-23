@@ -10,14 +10,16 @@
 #define IDD_EXPORTOPTIONS               101
 #define IDD_PROCESS                     110
 #define IDD_ABOUT                       111
-#define IDB_Logo                        114
+#define IDB_LOGO                        114
 #define IDD_BATCHIMPORT                 121
+#define IDD_DIALOG1                     129
+#define IDD_BATCHIMPORTMAX              129
+#define IDD_DIALOG2                     133
 #define IDD_EXPORTSingle                183
 #define IDD_DATASETNAME                 188
 #define IDD_EXPORTBIM                   190
 #define IDC_CHC_WITHOUTNORMAL           1014
 #define IDC_CHC_REMOVE                  1015
-#define IDC_BYOBJECT                    1016
 #define IDC_CHC_LOD                     1016
 #define IDC_BYMATERIAL                  1017
 #define IDC_1LAYER                      1018
@@ -82,11 +84,20 @@
 #define IDC_IMPORTTERRAIN_LAT           1098
 #define IDC_IMPORTTERRAIN_FANWEI        1100
 #define IDC_IMPORTTERRAIN_JINGDU        1101
+#define IDC_MAXDIR                      1110
 #define IDC_TERRAIN_PATH2               1112
+#define IDC_btMAXDIR                    1112
 #define IDC_RADIO1                      1113
 #define IDC_EARTHPOS                    1113
 #define IDC_PLANEPOS                    1114
-#define IDC_DYNAMIC_LOD2                1114
+#define IDC_EXPORTVISIBLE               1115
+#define IDC_CHECK_LOD                   1115
+#define IDC_CHECK_LOD1                  1115
+#define IDC_EXPORTALL                   1116
+#define IDC_EXPORTVISIBLE2              1116
+#define IDC_EXPORTALL2                  1117
+#define IDC_CHC_REMOVE1                 1118
+#define IDC_CHC_WITHOUTNORMAL1          1119
 #define IDC_RADIO3                      1121
 #define IDC_RADIO4                      1124
 #define IDC_CHECK1                      1127
@@ -103,6 +114,7 @@
 #define IDC_LATFIELD                    1146
 #define IDC_BATCHDATASOURCE             1147
 #define IDC_BATCHPOSTIONDATASOURCE      1148
+#define IDC_CHC_LOD1                    1200
 #define IDC_BTN_LOD                     2000
 #define IDC_EXPORTS3MB                  2007
 #define IDS_TH_3DSTUDIO                 40216
@@ -137,9 +149,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        123
+#define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1107
+#define _APS_NEXT_CONTROL_VALUE         1120
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

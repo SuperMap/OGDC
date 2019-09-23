@@ -4,8 +4,9 @@
 #include "decomp.h"
 #include "Base3D/UGQuaternion4d.h"
 
-UGSingleNodeSceneExporter::UGSingleNodeSceneExporter(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bCopyTex, UGC::UGbool bIsBIM)
+UGSingleNodeSceneExporter::UGSingleNodeSceneExporter(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bExportAll, UGC::UGbool bCopyTex, UGC::UGbool bIsBIM)
 {
+	m_bExportAll = bExportAll;
 	m_pModelProcess=pInModelProcess;
 	m_strTexDest=strTexDest;
 	if (strTexSrc.GetAt(strTexSrc.GetLength()-1)!='\\')
@@ -21,8 +22,9 @@ UGSingleNodeSceneExporter::UGSingleNodeSceneExporter(UGMaxModelProcess *pInModel
 	myExpInterface.InitScene();
 }
 
-void UGSingleNodeSceneExporter::InitParams(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bCopyTex, UGC::UGbool bIsBIM)
+void UGSingleNodeSceneExporter::InitParams(UGMaxModelProcess *pInModelProcess,UGC::UGString strTexDest,UGC::UGString strTexSrc, UGC::UGbool bExportAll, UGC::UGbool bCopyTex, UGC::UGbool bIsBIM)
 {
+	m_bExportAll = bExportAll;
 	m_pModelProcess=pInModelProcess;
 	m_strTexDest=strTexDest;
 	if (strTexSrc.GetAt(strTexSrc.GetLength()-1)!='\\')
@@ -40,7 +42,7 @@ void UGSingleNodeSceneExporter::InitParams(UGMaxModelProcess *pInModelProcess,UG
 
 int UGSingleNodeSceneExporter::callback( INode *pNode )
 {
-	if (pNode->IsHidden() || pNode->IsObjectHidden())
+	if (!m_bExportAll &&  (pNode->IsHidden() || pNode->IsObjectHidden()))
 	{
 		return TREE_CONTINUE;
 	}

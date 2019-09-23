@@ -67,6 +67,12 @@ void UGMenuGUP::AppendMenu(){
 	IMenuItem* pMenuItem;
 	ActionItem* pSuAI;
 
+	//!\ 添加批量导入
+	pMenuItem = GetIMenuItem();
+	pSuAI = pSuAT->GetAction(actionIndex++);
+	pMenuItem->SetActionItem(pSuAI);
+	pSuMenu->AddItem(pMenuItem);
+
 	//!\ 添加导出模型文件
 	pMenuItem=GetIMenuItem();
 	pSuAI=pSuAT->GetAction(actionIndex++);
