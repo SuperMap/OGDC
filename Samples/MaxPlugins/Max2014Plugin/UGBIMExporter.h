@@ -184,7 +184,7 @@ namespace UGC
 
 		//! \brief 存储需要导出的模型
 		std::vector<UGModelGeode*> m_ModelGroup;
-
+		std::vector<UGModelGeode*> m_ModelInstanceGroup;
 		//! \brief 进度条
 		UGMaxProcessBar* m_pMaxProcessBar;
 	};

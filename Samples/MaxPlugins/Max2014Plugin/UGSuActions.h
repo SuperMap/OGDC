@@ -652,7 +652,7 @@ BOOL BatchExport::ExecuteAction()
 	UGMaxProcessBar maxProcessBar(hInstance,GetCOREInterface()->GetMAXHWnd());
 	maxProcessBar.SetWeight(1.0);
 	maxProcessBar.Start();
-	UGSingleNodeSceneExporter exporter(pExportProcessor,filePathName,strTexPath, TRUE,bBIM);
+	UGSingleNodeSceneExporter exporter(pExportProcessor,filePathName,strTexPath,FALSE, TRUE,bBIM);
 	exporter.SetModelRelative(0.0,0.0,altitude);
 	exporter.SetProcessBar(&maxProcessBar);
 	if (m_strModelFileType.CompareNoCase(_U(".s3mb")) == 0)

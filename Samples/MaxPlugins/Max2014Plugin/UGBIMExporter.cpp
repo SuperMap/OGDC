@@ -250,6 +250,7 @@ namespace UGC
 
 		pGeode->SetPosition(mat);
 		m_ModelGroup.push_back(pGeode);
+		m_ModelInstanceGroup.push_back(pGeode);
 		return TRUE;
 	}
 
@@ -1622,6 +1623,7 @@ namespace UGC
 			return FALSE;
 		}
 		UGFileParseManager::DestroyFileParser(pFileParser);
+		delete pGomodelPro;
 		return TRUE;
 	}
 
@@ -1690,6 +1692,12 @@ namespace UGC
 				UGVariant varId(m_mapId[modelName]);
 				pRecordset->SetFieldValue(m_strId,varId);
 				bool result = pRecordset->Update();
+			}
+			vector<UGModelGeode*>::iterator iter = find(m_ModelInstanceGroup.begin(), m_ModelInstanceGroup.end(), m_ModelGroup[i]);
+			if (iter!= m_ModelInstanceGroup.end())
+			{
+				delete pGomodelPro;
+				pGomodelPro = NULL;
 			}
 		}
 		pRecordset->Close();
