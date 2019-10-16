@@ -12,13 +12,20 @@ UGC::UGModelSkeleton* ModelTools::buildSkeleton(SkeletonInfo info)
 	}
 	//顶点索引
 	UGIndexPackage* m_pIndexPack = new UGIndexPackage();
-	m_pIndexPack->m_enIndexType = info.nVerticesCount < 65536 ? IT_16BIT : IT_32BIT;
-	m_pIndexPack->SetIndexNum(info.nIndexCount);
-	if (m_pIndexPack->m_enIndexType == IT_16BIT)
+	//如果info.nVerticesCount == info.nUVCount 则将下面的 IT_16BIT_2 与 IT_32BIT_2 分别改为IT_16BIT 和 IT_32BIT
+	//然后将第二句改为 m_pIndexPack->SetIndexNum(info.nIndexCount);
+	//并去掉if和else中的第二个for循环
+	m_pIndexPack->m_enIndexType = info.nVerticesCount < 65536 ? IT_16BIT_2 : IT_32BIT_2;
+	m_pIndexPack->SetIndexNum(info.nIndexCount * 2);
+	if (m_pIndexPack->m_enIndexType == IT_16BIT_2)
 	{
 		for (int i = 0; i < info.nIndexCount; i++)
 		{
 			m_pIndexPack->m_pIndexes[i] = (UGushort)info.pVerticesIndex[i];
+		}
+		for (int i =0;i < info.nIndexCount ; i++)
+		{
+			m_pIndexPack->m_pIndexes[i+info.nIndexCount] = i;
 		}
 	}
 	else
@@ -27,6 +34,10 @@ UGC::UGModelSkeleton* ModelTools::buildSkeleton(SkeletonInfo info)
 		for (int i = 0; i < info.nIndexCount; i++)
 		{
 			pUintIndex[i] = info.pVerticesIndex[i];
+		}
+		for (int i =0;i < info.nIndexCount ; i++)
+		{
+			m_pIndexPack->m_pIndexes[i+info.nIndexCount] = i;
 		}
 	}
 	//法线
