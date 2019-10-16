@@ -1,0 +1,3 @@
+1.将Samples\MaxPlugins\Bin_Unicode_x64下的文件拷到Builds\Win_Solution_vc11\Bin_Unicode_x64下，后者为环境变量，运行OGDC_Sample的release版；
+   将Samples\MaxPlugins\BinD_Unicode_x64下的文件拷到Builds\Win_Solution_vc11\BinD_Unicode_x64下，后者为环境变量，调试OGDC_Sample的debug版。
+2.需要重新写生成UDB的路径和纹理的路径
