@@ -124,13 +124,13 @@ int MtlToNode::ProcessMtl(Mtl* mtl, INode *pNode, TriObject *pObj, UGbool bDelet
 		Mtl* pShaked = mtl->GetSubMtl(1);
 		Mtl* pOrigin = mtl->GetSubMtl(0);
 		
-		if(pShaked != NULL)
-		{
-			ProcessMtl(mtl->GetSubMtl(1), pNode, pObj, bDeleteTriObj);
-		}
-		else if(pOrigin != NULL)
+		if( pOrigin != NULL)
 		{
 			ProcessMtl(mtl->GetSubMtl(0), pNode, pObj, bDeleteTriObj);
+		}
+		else if(pShaked != NULL)//目前暂不支持烘焙
+		{
+			ProcessMtl(mtl->GetSubMtl(1), pNode, pObj, bDeleteTriObj);
 		}		
 	}
 	else
