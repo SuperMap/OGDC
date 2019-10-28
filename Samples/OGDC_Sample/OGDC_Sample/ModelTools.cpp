@@ -64,7 +64,7 @@ UGC::UGModelSkeleton* ModelTools::buildSkeleton(SkeletonInfo info)
 		m_pVertexPackExact->m_pTexCoords[0] = info.pUVs;
 	}
 	//设置骨架名称
-	pSkeleton->m_strName.FromStd(info.skeletonName);
+	pSkeleton->m_strName.FromStd(info.skeletonName,UGString::Default);
 	pSkeleton->SetExactDataPackRef(m_pVertexPackExact, m_pIndexPack);
 	pSkeleton->ComputerBoundingBox();
 	return pSkeleton;
@@ -78,11 +78,11 @@ UGC::UGModelMaterial* ModelTools::buildMaterial(UGColorValue3D ugc_color, vector
 	vector<UGString> UGtexturePaths;
 	for (int i = 0; i < vecTexturePaths.size(); i++)
 	{
-		Temp.FromStd(vecTexturePaths[i]);
+		Temp.FromStd(vecTexturePaths[i],UGString::Default);
 		UGtexturePaths.push_back(Temp);
 		materialName += Temp;
 	}
-	Temp.FromStd(std::to_string(ugc_color.GetAsLongRGBA()));
+	Temp.FromStd(std::to_string(ugc_color.GetAsLongRGBA()),UGString::Default);
 	materialName += Temp;
 	//设置材质的材质名，必须唯一
 	pMaterial->m_strName = materialName;
@@ -112,7 +112,7 @@ UGC::UGModelTexture* ModelTools::buildTexture(string texturePath)
 {
 	UGModelTexture* pTexture = new UGModelTexture();
 	UGString strFileName;
-	strFileName.FromStd(texturePath);
+	strFileName.FromStd(texturePath,UGString::Default);
 	if (pTexture->m_strName.IsEmpty())
 	{
 		pTexture->m_strName = UGFile::GetTitle(strFileName);

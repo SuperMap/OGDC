@@ -99,7 +99,7 @@ int main()
 	UGColorValue3D color;
 	color.SetValue(1, 1, 1, 1);
 	vector<string> vecTexturePaths;
-	vecTexturePaths.push_back("D:/Code/OGDC_Sample/modelTexture.jpg");
+	vecTexturePaths.push_back("./modelTexture.jpg");
 	UGModelMaterial* pMaterial = ModelTools::buildMaterial(color, vecTexturePaths);
 	//纹理信息
 	vector<UGModelTexture*>vecTexture;
@@ -140,12 +140,12 @@ int main()
 
 
 
-	OgdcString sever = L"D:/Code/llSource.udb";
+	OgdcString sever = L"./llSource.udb";
 	//创建并打开数据源
 	OgdcDataSource* pDs = OGDCTools::CreateAndOpenDataSource(sever);
 	//创建数据集
 	OgdcString strName=pDs->GetUnoccupiedDatasetName(L"OGDCSample");
-	OgdcDatasetVector* datasetVector = OGDCTools::CreateOrOpenDataSetVector(pDs,strName);
+	OgdcDatasetVector* datasetVector = OGDCTools::CreateOrOpenDataSetVector(pDs,strName,isLonLat);
 	//创建记录集
 	OgdcRecordset* recordset = OGDCTools::CreateRecordset(datasetVector);
 	//记录集更新

@@ -18,7 +18,7 @@ OgdcDataSource* OGDCTools::CreateAndOpenDataSource(OgdcString sever)
 	return pUDBDataSource;
 }
 
-OgdcDatasetVector* OGDCTools::CreateOrOpenDataSetVector(OgdcDataSource*& pUDBDataSource,OgdcString DatasetName)
+OgdcDatasetVector* OGDCTools::CreateOrOpenDataSetVector(OgdcDataSource*& pUDBDataSource,OgdcString DatasetName,bool isLonLat)
 {
 	if (pUDBDataSource == NULL)
 	{
@@ -34,9 +34,8 @@ OgdcDatasetVector* OGDCTools::CreateOrOpenDataSetVector(OgdcDataSource*& pUDBDat
 		tempDatasetVectorInfo.m_nType = OGDC::OgdcDataset::Model;
 
 		pDatasetVector = pUDBDataSource->CreateDatasetVector(tempDatasetVectorInfo);
-		//是否导出为平面
-		bool IsPlanar = false;
-		if (!IsPlanar)
+		//导出为球面还是平面
+		if (isLonLat)
 		{
 			OGDC::OgdcCoordSys prjCoordSys;
 			prjCoordSys.SetEarth(6378137, 0.00335281066474748, 10000);
