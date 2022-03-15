@@ -26,4 +26,4 @@ OGDC 标准接口中提供了统一的接口对空间数据库进行操作。目
 
 （6）license.txt ：最终用户许可协议 。
 
-更多信息参考 http://www.gisforum.net/bbs/index.asp?boardid=118
+
